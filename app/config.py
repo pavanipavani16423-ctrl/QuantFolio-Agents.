@@ -9,8 +9,11 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 ROOT = Path(__file__).resolve().parents[1]
 
+# Groq (October 2026): gpt-oss-120b is the strongest model on the free tier with reliable tool
+# calling / structured output. The judge uses a different model on purpose: Groq rate limits
+# are per model, so agents and judge do not compete for the same token budget.
 DEFAULT_LLM_MODELS = {
-    "groq": "llama-3.3-70b-versatile",
+    "groq": "openai/gpt-oss-120b",
     "openai": "gpt-4.1-mini",
     "anthropic": "claude-haiku-5-5",
     "ollama": "qwen2.5:7b",
@@ -18,7 +21,7 @@ DEFAULT_LLM_MODELS = {
 }
 
 DEFAULT_JUDGE_MODELS = {
-    "groq": "llama-3.3-70b-versatile",
+    "groq": "qwen/qwen3.8-27b,openai/gpt-oss-120b",
     "openai": "gpt-4.1-mini",
     "anthropic": "claude-haiku-5-5",
     "ollama": "qwen2.5:7b",
@@ -44,7 +47,9 @@ class Settings(BaseSettings):
     llm_provider: Literal["mock", "groq", "openai", "anthropic", "ollama"] = "mock"
     llm_model: str | None = None
     llm_temperature: float = 0.0
-    llm_timeout_seconds: float = 60.0
+    llm_timeout_seconds: float = 120.0
+    llm_max_retries: int = 6  # the SDK waits for the rate-limit window (Retry-After) between tries
+    llm_reasoning_effort: str = "low"  # for reasoning models (gpt-oss): fewer tokens, lower latency
     groq_api_key: SecretStr | None = None
     openai_api_key: SecretStr | None = None
     anthropic_api_key: SecretStr | None = None
@@ -101,11 +106,7 @@ class Settings(BaseSettings):
 
     @property
     def resolved_judge_model(self) -> str:
-        if self.judge_model:
-            return self.judge_model
-        if self.judge_provider is None and self.llm_model:
-            return self.llm_model
-        return DEFAULT_JUDGE_MODELS[self.resolved_judge_provider]
+        return self.judge_model or DEFAULT_JUDGE_MODELS[self.resolved_judge_provider]
 
     def api_key_for(self, provider: str) -> str | None:
         secret = {

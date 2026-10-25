@@ -84,7 +84,8 @@ Every score is registered as a Langfuse **score config** on startup
 | `quantum_approximation_ratio` | deterministic | QAOA approximation ratio |
 | `human_approved` | boolean | the advisor's decision |
 
-RAGAS metrics need an LLM judge (Groq by default). Without a key they are skipped and the
+RAGAS metrics need an LLM judge (Groq by default: a pool of `qwen/qwen3.8-27b` and
+`openai/gpt-oss-120b`, used in turn, each judge call visible as a `judge.*` generation). Without a key they are skipped and the
 run says so; they are never filled with made-up values.
 
 ## 3. Dataset and experiments

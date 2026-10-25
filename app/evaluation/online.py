@@ -109,7 +109,7 @@ async def ragas_scores(settings: Settings, question: str, answer: str, contexts:
     jobs = [
         _metric("rag_faithfulness", Faithfulness(llm=judge).ascore(
             user_input=question, response=answer, retrieved_contexts=contexts)),
-        _metric("rag_answer_relevancy", AnswerRelevancy(llm=judge, embeddings=embeddings).ascore(
+        _metric("rag_answer_relevancy", AnswerRelevancy(llm=judge, embeddings=embeddings, strictness=2).ascore(
             user_input=question, response=answer)),
         _metric("rag_context_precision", ContextPrecisionWithoutReference(llm=judge).ascore(
             user_input=question, response=answer, retrieved_contexts=contexts)),
@@ -121,9 +121,15 @@ async def ragas_scores(settings: Settings, question: str, answer: str, contexts:
     ]
     scores: dict[str, dict] = {}
     notes: list[str] = []
-    # sequential keeps a free-tier rate limit happy; each metric is still a few judge calls
-    for job in jobs:
-        name, value, reason = await job
+    # a few metrics at a time: faster than one by one, gentle enough for free-tier rate limits
+    # (the SDK waits and retries on HTTP 429)
+    limit = asyncio.Semaphore(3)
+
+    async def bounded(job):  # noqa: ANN001, ANN202
+        async with limit:
+            return await job
+
+    for name, value, reason in await asyncio.gather(*(bounded(j) for j in jobs)):
         if value is None:
             notes.append(f"{name} not scored: {reason}")
             continue
@@ -133,9 +139,17 @@ async def ragas_scores(settings: Settings, question: str, answer: str, contexts:
     return scores, judge.model_name, notes
 
 
+def judge_context(source: dict[str, Any]) -> str:
+    company = source["title"].split(" - ")[0]
+    return f"{company} - {source.get('section') or source['doc_type']}\n{source['text'][:900]}"
+
+
 async def evaluate_run(settings: Settings, state: dict[str, Any]) -> dict[str, Any]:
     research = state["research"]
     contexts = [s["text"] for s in research["sources"]]
+    # The judge sees what the research LLM saw: the trimmed passage plus its label. Filings say
+    # "we" and "our products"; without the label the judge cannot tell whose risk it is.
+    judged_contexts = [judge_context(s) for s in research["sources"][:6]]
     memo = state["memo"]
     memo_text = "\n".join([memo["headline"], memo["summary"], *memo["key_changes"], *memo["risks"],
                            memo["quantum_note"]])
@@ -176,7 +190,7 @@ async def evaluate_run(settings: Settings, state: dict[str, Any]) -> dict[str, A
     judge_name = None
     if settings.online_evaluation:
         llm_scores, judge_name, notes = await ragas_scores(
-            settings, research["question"], research["answer"], contexts, memo_text,
+            settings, research["question"], research["answer"], judged_contexts, memo_text,
             json.dumps(state.get("memo_facts", {}), default=str))
         scores.update(llm_scores)
     return {"scores": scores, "judge": judge_name, "notes": notes}

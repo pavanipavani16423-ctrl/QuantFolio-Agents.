@@ -6,6 +6,7 @@
 """
 
 import asyncio
+import json
 import time
 from typing import Any, TypeVar
 
@@ -22,24 +23,43 @@ T = TypeVar("T", bound=BaseModel)
 
 
 class TracedJudgeLLM(InstructorBaseRagasLLM):
-    def __init__(self, chat: Any, model_name: str, timeout: float = 90.0) -> None:
-        self.chat = chat
-        self.model_name = model_name
+    """A pool of judge models used in turn (round robin). Free-tier rate limits are per model,
+    so a pool multiplies throughput, and when one model fails a call (e.g. a malformed tool
+    call) the next one retries it."""
+
+    def __init__(self, chat: Any, model_name: str, timeout: float = 120.0,
+                 pool: list[tuple[Any, str]] | None = None) -> None:
+        self.pool = pool or [(chat, model_name)]
+        self.model_name = " + ".join(name for _, name in self.pool)
         self.timeout = timeout
         self.calls = 0
         self.tokens = 0
+        self._next = 0
 
     async def agenerate(self, prompt: str, response_model: type[T]) -> T:
         tracer = get_tracer()
-        runnable = self.chat.with_structured_output(response_model, include_raw=True)
         last: Exception | None = None
-        for attempt in (1, 2):
+        start = self._next
+        self._next = (self._next + 1) % len(self.pool)
+        order = [self.pool[(start + i) % len(self.pool)] for i in range(len(self.pool))]
+        # first a tool call (structured output) on each model; if a provider rejects the tool
+        # call (Groq "tool_use_failed" on long prompts), ask for plain JSON with the schema
+        attempts = [(chat, name, "function_calling") for chat, name in order]
+        attempts += [(chat, name, "json_mode") for chat, name in order]
+        schema_hint = (
+            "\n\nReturn ONLY a JSON object that matches this JSON schema, with no other text:\n"
+            + json.dumps(response_model.model_json_schema())
+        )
+        for attempt, (chat, model_name, method) in enumerate(attempts, 1):
+            runnable = chat.with_structured_output(response_model, include_raw=True, method=method)
+            message = prompt + schema_hint if method == "json_mode" else prompt
             with tracer.section(f"judge.{response_model.__name__}", as_type="generation",
-                                model=self.model_name, input=prompt[:6000],
-                                metadata={"role": "RAGAS judge", "attempt": attempt}) as gen:
+                                model=model_name, input=prompt[:6000],
+                                metadata={"role": "RAGAS judge", "attempt": attempt,
+                                          "method": method}) as gen:
                 started = time.perf_counter()
                 try:
-                    out = await asyncio.wait_for(runnable.ainvoke([HumanMessage(content=prompt)]),
+                    out = await asyncio.wait_for(runnable.ainvoke([HumanMessage(content=message)]),
                                                  timeout=self.timeout)
                     parsed = out.get("parsed")
                     if parsed is None:
@@ -67,11 +87,18 @@ def make_judge(settings: Settings) -> TracedJudgeLLM | None:
     provider = settings.resolved_judge_provider
     if provider == "mock" or not settings.provider_ready(provider):
         return None
-    try:
-        chat = create_chat_model(settings, provider, settings.resolved_judge_model, max_tokens=4096)
-    except LLMConfigError:
+    pool = []
+    # JUDGE_MODEL may list several models separated by commas: they are used in turn
+    for model in [m.strip() for m in settings.resolved_judge_model.split(",") if m.strip()]:
+        try:
+            # verdicts are short; a small cap keeps each request under per-minute output limits
+            pool.append((create_chat_model(settings, provider, model, max_tokens=900),
+                         f"{provider}:{model}"))
+        except LLMConfigError:
+            continue
+    if not pool:
         return None
-    return TracedJudgeLLM(chat, f"{provider}:{settings.resolved_judge_model}")
+    return TracedJudgeLLM(None, "", pool=pool)
 
 
 class FastEmbedEmbeddings(BaseRagasEmbedding):

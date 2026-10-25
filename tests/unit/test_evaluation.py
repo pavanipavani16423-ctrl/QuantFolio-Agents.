@@ -32,15 +32,21 @@ def test_rule_extraction_accuracy() -> None:
 class _StructuredFake:
     """A stand-in chat model: `with_structured_output` returns canned objects by schema name."""
 
-    def __init__(self, answers: dict[str, dict]) -> None:
+    def __init__(self, answers: dict[str, dict], fail_tool_calls: bool = False) -> None:
         self.answers = answers
+        self.fail_tool_calls = fail_tool_calls
+        self.methods: list[str] = []
 
-    def with_structured_output(self, schema: type[BaseModel], include_raw: bool = False):  # noqa: ANN201, FBT001
-        answers = self.answers
+    def with_structured_output(self, schema: type[BaseModel], include_raw: bool = False,  # noqa: ANN201, FBT001
+                               method: str = "function_calling"):
+        fake = self
 
         class _Runnable:
             async def ainvoke(self, _messages):  # noqa: ANN001, ANN202
-                return {"parsed": schema.model_validate(answers[schema.__name__]), "raw": None}
+                fake.methods.append(method)
+                if fake.fail_tool_calls and method == "function_calling":
+                    raise RuntimeError("tool_use_failed")
+                return {"parsed": schema.model_validate(fake.answers[schema.__name__]), "raw": None}
 
         return _Runnable()
 
@@ -62,3 +68,17 @@ async def test_ragas_faithfulness_runs_through_the_traced_judge() -> None:
         retrieved_contexts=["Apple designs and sells iPhones."])
     assert result.value == pytest.approx(0.5)
     assert judge.calls == 2
+
+
+@pytest.mark.anyio
+async def test_judge_pool_falls_back_to_json_mode_when_tool_calls_fail() -> None:
+    from ragas.metrics.collections.faithfulness.util import StatementGeneratorOutput
+
+    answers = {"StatementGeneratorOutput": {"statements": ["A."]}}
+    first, second = _StructuredFake(answers, fail_tool_calls=True), _StructuredFake(answers, fail_tool_calls=True)
+    judge = TracedJudgeLLM(None, "", pool=[(first, "m1"), (second, "m2")])
+    out = await judge.agenerate("prompt", StatementGeneratorOutput)
+    assert out.statements == ["A."]
+    # both models' tool calls failed, then the first model answered in JSON mode
+    assert first.methods == ["function_calling", "json_mode"] and second.methods == ["function_calling"]
+    assert judge.model_name == "m1 + m2"

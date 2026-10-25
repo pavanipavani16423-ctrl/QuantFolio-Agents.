@@ -99,7 +99,10 @@ async def run_research(ctx: RunContext, question: str, tickers: list[str]) -> Re
     sources += _sources([h for h in facts if h["chunk_id"] not in {s.chunk_id for s in sources}],
                         len(sources) + 1)
 
-    numbered = "\n\n".join(f"[{s.n}] {s.title} - {s.section}\n{s.text}" for s in sources)
+    # sources are trimmed in the prompt (the full text stays in the run and the UI) to fit the
+    # free-tier token budget
+    numbered = "\n\n".join(f"[{s.n}] {s.ticker} {s.title.split(' - ')[-1]} - {s.section}\n{s.text[:900]}"
+                           for s in sources)
     answer, method = await ctx.llm.structured(
         "research_answer", ResearchAnswer, SYSTEM,
         f"Question: {question}\n\nSources:\n{numbered}",

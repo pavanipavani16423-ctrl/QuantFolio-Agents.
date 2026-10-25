@@ -230,6 +230,16 @@ output quality, compliance, portfolio, quantum and the human decision. See
   approximation ratio, and the human decision.
 * The judge's prompts are traced too. Without a judge key the LLM metrics are reported as
   skipped, never invented.
+* **Models (Groq free tier)**: the agents use `openai/gpt-oss-120b` (low reasoning effort). The
+  RAGAS judge is a *pool* of `qwen/qwen3.8-27b` (thinking off) and `openai/gpt-oss-120b`, used
+  in turn: Groq's rate limits are per model (8,000 tokens/min), so a pool doubles the judge's
+  budget, and a failed call is retried on the other model, then in plain-JSON mode. A full run
+  with RAGAS scoring takes about 1.5-2 minutes on the free tier; the agent steps themselves
+  take about 25 seconds.
+
+  Example scores from a live run (GreenLeaf, "climate risks of NVIDIA and NextEra"):
+  faithfulness 0.75, answer relevancy 0.90, context precision 0.92, context relevance 1.00,
+  memo quality 0.75, citation coverage 1.00, rule extraction 1.00, compliance pass 1.
 
 **Offline (`scripts/eval_rag.py`)**: a 47-question test set with known answer chunks
 (20 facts questions generated from XBRL data, 9 policy questions, and 18 hand-written risk
@@ -314,8 +324,8 @@ All settings are environment variables (or `.env`); see [.env.example](.env.exam
 |---|---|---|
 | `LLM_PROVIDER` | `mock` | `groq`, `openai`, `anthropic`, `ollama`, or `mock` (offline rules) |
 | `GROQ_API_KEY` / `OPENAI_API_KEY` / `ANTHROPIC_API_KEY` | - | provider keys |
-| `LLM_MODEL` | provider default | e.g. `llama-3.3-70b-versatile` on Groq |
-| `JUDGE_PROVIDER`, `JUDGE_MODEL` | same as LLM | RAGAS judge |
+| `LLM_MODEL` | provider default | Groq default: `openai/gpt-oss-120b` |
+| `JUDGE_PROVIDER`, `JUDGE_MODEL` | Groq: `qwen/qwen3.8-27b,openai/gpt-oss-120b` | RAGAS judge; a comma-separated list is used in turn |
 | `LANGFUSE_PUBLIC_KEY`, `LANGFUSE_SECRET_KEY`, `LANGFUSE_BASE_URL` | - | tracing and scores |
 | `RAG_MODE` | `hybrid_rerank` | `bm25`, `dense`, `hybrid`, `hybrid_rerank` |
 | `QAOA_MIXER` / `QAOA_REPS` / `QAOA_MAXITER` / `QAOA_SHOTS` | `xy` / 2 / 60 / 2048 | quantum settings |
@@ -344,7 +354,7 @@ Interactive docs: http://localhost:8000/docs
 ## Tests
 
 ```bash
-uv run pytest            # 42 tests: unit + end-to-end through the HTTP API
+uv run pytest            # 43 tests: unit + end-to-end through the HTTP API
 ```
 
 They cover the Dicke state and the fast simulator against Qiskit Aer, the QUBO against the
