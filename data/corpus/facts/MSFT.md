@@ -1,0 +1,37 @@
+# Microsoft Corporation (MSFT) - key financial facts
+
+Sector: Information Technology. Source: SEC EDGAR XBRL company facts (Form 10-K annual values), CIK 789019.
+
+- Microsoft Corporation (MSFT) reported total revenue of $331.8 billion for the fiscal year ended 2026-06-30 (fiscal year 2026; 10-K filed 2026-07-29, accession 0001193125-26-323660, concept us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax).
+- Microsoft Corporation (MSFT) reported total revenue of $281.7 billion for the fiscal year ended 2025-06-30 (fiscal year 2025; 10-K filed 2026-07-29, accession 0001193125-26-323660, concept us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax).
+- Microsoft Corporation (MSFT) reported total revenue of $245.1 billion for the fiscal year ended 2024-06-30 (fiscal year 2024; 10-K filed 2026-07-29, accession 0001193125-26-323660, concept us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax).
+- Microsoft Corporation (MSFT) reported operating income of $155.2 billion for the fiscal year ended 2026-06-30 (fiscal year 2026; 10-K filed 2026-07-29, accession 0001193125-26-323660, concept us-gaap:OperatingIncomeLoss).
+- Microsoft Corporation (MSFT) reported operating income of $128.5 billion for the fiscal year ended 2025-06-30 (fiscal year 2025; 10-K filed 2026-07-29, accession 0001193125-26-323660, concept us-gaap:OperatingIncomeLoss).
+- Microsoft Corporation (MSFT) reported operating income of $109.4 billion for the fiscal year ended 2024-06-30 (fiscal year 2024; 10-K filed 2026-07-29, accession 0001193125-26-323660, concept us-gaap:OperatingIncomeLoss).
+- Microsoft Corporation (MSFT) reported net income of $133.7 billion for the fiscal year ended 2026-06-30 (fiscal year 2026; 10-K filed 2026-07-29, accession 0001193125-26-323660, concept us-gaap:NetIncomeLoss).
+- Microsoft Corporation (MSFT) reported net income of $101.8 billion for the fiscal year ended 2025-06-30 (fiscal year 2025; 10-K filed 2026-07-29, accession 0001193125-26-323660, concept us-gaap:NetIncomeLoss).
+- Microsoft Corporation (MSFT) reported net income of $88.1 billion for the fiscal year ended 2024-06-30 (fiscal year 2024; 10-K filed 2026-07-29, accession 0001193125-26-323660, concept us-gaap:NetIncomeLoss).
+- Microsoft Corporation (MSFT) reported diluted earnings per share of $17.95 for the fiscal year ended 2026-06-30 (fiscal year 2026; 10-K filed 2026-07-29, accession 0001193125-26-323660, concept us-gaap:EarningsPerShareDiluted).
+- Microsoft Corporation (MSFT) reported diluted earnings per share of $13.64 for the fiscal year ended 2025-06-30 (fiscal year 2025; 10-K filed 2026-07-29, accession 0001193125-26-323660, concept us-gaap:EarningsPerShareDiluted).
+- Microsoft Corporation (MSFT) reported diluted earnings per share of $11.80 for the fiscal year ended 2024-06-30 (fiscal year 2024; 10-K filed 2026-07-29, accession 0001193125-26-323660, concept us-gaap:EarningsPerShareDiluted).
+- Microsoft Corporation (MSFT) reported research and development expense of $35.6 billion for the fiscal year ended 2026-06-30 (fiscal year 2026; 10-K filed 2026-07-29, accession 0001193125-26-323660, concept us-gaap:ResearchAndDevelopmentExpense).
+- Microsoft Corporation (MSFT) reported research and development expense of $32.5 billion for the fiscal year ended 2025-06-30 (fiscal year 2025; 10-K filed 2026-07-29, accession 0001193125-26-323660, concept us-gaap:ResearchAndDevelopmentExpense).
+- Microsoft Corporation (MSFT) reported research and development expense of $29.5 billion for the fiscal year ended 2024-06-30 (fiscal year 2024; 10-K filed 2026-07-29, accession 0001193125-26-323660, concept us-gaap:ResearchAndDevelopmentExpense).
+- Microsoft Corporation (MSFT) reported net cash from operating activities of $182.9 billion for the fiscal year ended 2026-06-30 (fiscal year 2026; 10-K filed 2026-07-29, accession 0001193125-26-323660, concept us-gaap:NetCashProvidedByUsedInOperatingActivities).
+- Microsoft Corporation (MSFT) reported net cash from operating activities of $136.2 billion for the fiscal year ended 2025-06-30 (fiscal year 2025; 10-K filed 2026-07-29, accession 0001193125-26-323660, concept us-gaap:NetCashProvidedByUsedInOperatingActivities).
+- Microsoft Corporation (MSFT) reported net cash from operating activities of $118.5 billion for the fiscal year ended 2024-06-30 (fiscal year 2024; 10-K filed 2026-07-29, accession 0001193125-26-323660, concept us-gaap:NetCashProvidedByUsedInOperatingActivities).
+- Microsoft Corporation (MSFT) reported total assets of $758.4 billion as of 2026-06-30 (fiscal year 2026; 10-K filed 2026-07-29, accession 0001193125-26-323660, concept us-gaap:Assets).
+- Microsoft Corporation (MSFT) reported total assets of $619.0 billion as of 2025-06-30 (fiscal year 2025; 10-K filed 2026-07-29, accession 0001193125-26-323660, concept us-gaap:Assets).
+- Microsoft Corporation (MSFT) reported total assets of $512.2 billion as of 2024-06-30 (fiscal year 2024; 10-K filed 2025-07-30, accession 0000950170-25-100235, concept us-gaap:Assets).
+- Microsoft Corporation (MSFT) reported total liabilities of $316.0 billion as of 2026-06-30 (fiscal year 2026; 10-K filed 2026-07-29, accession 0001193125-26-323660, concept us-gaap:Liabilities).
+- Microsoft Corporation (MSFT) reported total liabilities of $275.5 billion as of 2025-06-30 (fiscal year 2025; 10-K filed 2026-07-29, accession 0001193125-26-323660, concept us-gaap:Liabilities).
+- Microsoft Corporation (MSFT) reported total liabilities of $243.7 billion as of 2024-06-30 (fiscal year 2024; 10-K filed 2025-07-30, accession 0000950170-25-100235, concept us-gaap:Liabilities).
+- Microsoft Corporation (MSFT) reported cash and cash equivalents of $20.9 billion as of 2026-06-30 (fiscal year 2026; 10-K filed 2026-07-29, accession 0001193125-26-323660, concept us-gaap:CashAndCashEquivalentsAtCarryingValue).
+- Microsoft Corporation (MSFT) reported cash and cash equivalents of $30.2 billion as of 2025-06-30 (fiscal year 2025; 10-K filed 2026-07-29, accession 0001193125-26-323660, concept us-gaap:CashAndCashEquivalentsAtCarryingValue).
+- Microsoft Corporation (MSFT) reported cash and cash equivalents of $18.3 billion as of 2024-06-30 (fiscal year 2024; 10-K filed 2025-07-30, accession 0000950170-25-100235, concept us-gaap:CashAndCashEquivalentsAtCarryingValue).
+- Microsoft Corporation (MSFT) reported long-term debt of $31.1 billion as of 2026-06-30 (fiscal year 2026; 10-K filed 2026-07-29, accession 0001193125-26-323660, concept us-gaap:LongTermDebtNoncurrent).
+- Microsoft Corporation (MSFT) reported long-term debt of $40.2 billion as of 2025-06-30 (fiscal year 2025; 10-K filed 2026-07-29, accession 0001193125-26-323660, concept us-gaap:LongTermDebtNoncurrent).
+- Microsoft Corporation (MSFT) reported long-term debt of $42.7 billion as of 2024-06-30 (fiscal year 2024; 10-K filed 2025-07-30, accession 0000950170-25-100235, concept us-gaap:LongTermDebtNoncurrent).
+- Microsoft Corporation (MSFT) reported stockholders' equity of $442.4 billion as of 2026-06-30 (fiscal year 2026; 10-K filed 2026-07-29, accession 0001193125-26-323660, concept us-gaap:StockholdersEquity).
+- Microsoft Corporation (MSFT) reported stockholders' equity of $343.5 billion as of 2025-06-30 (fiscal year 2025; 10-K filed 2026-07-29, accession 0001193125-26-323660, concept us-gaap:StockholdersEquity).
+- Microsoft Corporation (MSFT) reported stockholders' equity of $268.5 billion as of 2024-06-30 (fiscal year 2024; 10-K filed 2026-07-29, accession 0001193125-26-323660, concept us-gaap:StockholdersEquity).

@@ -1,0 +1,37 @@
+# Meta Platforms, Inc. (META) - key financial facts
+
+Sector: Communication Services. Source: SEC EDGAR XBRL company facts (Form 10-K annual values), CIK 1326801.
+
+- Meta Platforms, Inc. (META) reported total revenue of $201.0 billion for the fiscal year ended 2025-12-31 (fiscal year 2025; 10-K filed 2026-01-29, accession 0001628280-26-003942, concept us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax).
+- Meta Platforms, Inc. (META) reported total revenue of $164.5 billion for the fiscal year ended 2024-12-31 (fiscal year 2024; 10-K filed 2026-01-29, accession 0001628280-26-003942, concept us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax).
+- Meta Platforms, Inc. (META) reported total revenue of $134.9 billion for the fiscal year ended 2023-12-31 (fiscal year 2023; 10-K filed 2026-01-29, accession 0001628280-26-003942, concept us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax).
+- Meta Platforms, Inc. (META) reported operating income of $83.3 billion for the fiscal year ended 2025-12-31 (fiscal year 2025; 10-K filed 2026-01-29, accession 0001628280-26-003942, concept us-gaap:OperatingIncomeLoss).
+- Meta Platforms, Inc. (META) reported operating income of $69.4 billion for the fiscal year ended 2024-12-31 (fiscal year 2024; 10-K filed 2026-01-29, accession 0001628280-26-003942, concept us-gaap:OperatingIncomeLoss).
+- Meta Platforms, Inc. (META) reported operating income of $46.8 billion for the fiscal year ended 2023-12-31 (fiscal year 2023; 10-K filed 2026-01-29, accession 0001628280-26-003942, concept us-gaap:OperatingIncomeLoss).
+- Meta Platforms, Inc. (META) reported net income of $60.5 billion for the fiscal year ended 2025-12-31 (fiscal year 2025; 10-K filed 2026-01-29, accession 0001628280-26-003942, concept us-gaap:NetIncomeLoss).
+- Meta Platforms, Inc. (META) reported net income of $62.4 billion for the fiscal year ended 2024-12-31 (fiscal year 2024; 10-K filed 2026-01-29, accession 0001628280-26-003942, concept us-gaap:NetIncomeLoss).
+- Meta Platforms, Inc. (META) reported net income of $39.1 billion for the fiscal year ended 2023-12-31 (fiscal year 2023; 10-K filed 2026-01-29, accession 0001628280-26-003942, concept us-gaap:NetIncomeLoss).
+- Meta Platforms, Inc. (META) reported diluted earnings per share of $23.49 for the fiscal year ended 2025-12-31 (fiscal year 2025; 10-K filed 2026-01-29, accession 0001628280-26-003942, concept us-gaap:EarningsPerShareDiluted).
+- Meta Platforms, Inc. (META) reported diluted earnings per share of $23.86 for the fiscal year ended 2024-12-31 (fiscal year 2024; 10-K filed 2026-01-29, accession 0001628280-26-003942, concept us-gaap:EarningsPerShareDiluted).
+- Meta Platforms, Inc. (META) reported diluted earnings per share of $14.87 for the fiscal year ended 2023-12-31 (fiscal year 2023; 10-K filed 2026-01-29, accession 0001628280-26-003942, concept us-gaap:EarningsPerShareDiluted).
+- Meta Platforms, Inc. (META) reported research and development expense of $57.4 billion for the fiscal year ended 2025-12-31 (fiscal year 2025; 10-K filed 2026-01-29, accession 0001628280-26-003942, concept us-gaap:ResearchAndDevelopmentExpense).
+- Meta Platforms, Inc. (META) reported research and development expense of $43.9 billion for the fiscal year ended 2024-12-31 (fiscal year 2024; 10-K filed 2026-01-29, accession 0001628280-26-003942, concept us-gaap:ResearchAndDevelopmentExpense).
+- Meta Platforms, Inc. (META) reported research and development expense of $38.5 billion for the fiscal year ended 2023-12-31 (fiscal year 2023; 10-K filed 2026-01-29, accession 0001628280-26-003942, concept us-gaap:ResearchAndDevelopmentExpense).
+- Meta Platforms, Inc. (META) reported net cash from operating activities of $115.8 billion for the fiscal year ended 2025-12-31 (fiscal year 2025; 10-K filed 2026-01-29, accession 0001628280-26-003942, concept us-gaap:NetCashProvidedByUsedInOperatingActivities).
+- Meta Platforms, Inc. (META) reported net cash from operating activities of $91.3 billion for the fiscal year ended 2024-12-31 (fiscal year 2024; 10-K filed 2026-01-29, accession 0001628280-26-003942, concept us-gaap:NetCashProvidedByUsedInOperatingActivities).
+- Meta Platforms, Inc. (META) reported net cash from operating activities of $71.1 billion for the fiscal year ended 2023-12-31 (fiscal year 2023; 10-K filed 2026-01-29, accession 0001628280-26-003942, concept us-gaap:NetCashProvidedByUsedInOperatingActivities).
+- Meta Platforms, Inc. (META) reported total assets of $366.0 billion as of 2025-12-31 (fiscal year 2025; 10-K filed 2026-01-29, accession 0001628280-26-003942, concept us-gaap:Assets).
+- Meta Platforms, Inc. (META) reported total assets of $276.1 billion as of 2024-12-31 (fiscal year 2024; 10-K filed 2026-01-29, accession 0001628280-26-003942, concept us-gaap:Assets).
+- Meta Platforms, Inc. (META) reported total assets of $229.6 billion as of 2023-12-31 (fiscal year 2023; 10-K filed 2025-01-30, accession 0001326801-25-000017, concept us-gaap:Assets).
+- Meta Platforms, Inc. (META) reported total liabilities of $148.8 billion as of 2025-12-31 (fiscal year 2025; 10-K filed 2026-01-29, accession 0001628280-26-003942, concept us-gaap:Liabilities).
+- Meta Platforms, Inc. (META) reported total liabilities of $93.4 billion as of 2024-12-31 (fiscal year 2024; 10-K filed 2026-01-29, accession 0001628280-26-003942, concept us-gaap:Liabilities).
+- Meta Platforms, Inc. (META) reported total liabilities of $76.5 billion as of 2023-12-31 (fiscal year 2023; 10-K filed 2025-01-30, accession 0001326801-25-000017, concept us-gaap:Liabilities).
+- Meta Platforms, Inc. (META) reported cash and cash equivalents of $35.9 billion as of 2025-12-31 (fiscal year 2025; 10-K filed 2026-01-29, accession 0001628280-26-003942, concept us-gaap:CashAndCashEquivalentsAtCarryingValue).
+- Meta Platforms, Inc. (META) reported cash and cash equivalents of $43.9 billion as of 2024-12-31 (fiscal year 2024; 10-K filed 2026-01-29, accession 0001628280-26-003942, concept us-gaap:CashAndCashEquivalentsAtCarryingValue).
+- Meta Platforms, Inc. (META) reported cash and cash equivalents of $41.9 billion as of 2023-12-31 (fiscal year 2023; 10-K filed 2026-01-29, accession 0001628280-26-003942, concept us-gaap:CashAndCashEquivalentsAtCarryingValue).
+- Meta Platforms, Inc. (META) reported long-term debt of $58.7 billion as of 2025-12-31 (fiscal year 2025; 10-K filed 2026-01-29, accession 0001628280-26-003942, concept us-gaap:LongTermDebtNoncurrent).
+- Meta Platforms, Inc. (META) reported long-term debt of $28.8 billion as of 2024-12-31 (fiscal year 2024; 10-K filed 2026-01-29, accession 0001628280-26-003942, concept us-gaap:LongTermDebtNoncurrent).
+- Meta Platforms, Inc. (META) reported long-term debt of $18.4 billion as of 2023-12-31 (fiscal year 2023; 10-K filed 2025-01-30, accession 0001326801-25-000017, concept us-gaap:LongTermDebtNoncurrent).
+- Meta Platforms, Inc. (META) reported stockholders' equity of $217.2 billion as of 2025-12-31 (fiscal year 2025; 10-K filed 2026-01-29, accession 0001628280-26-003942, concept us-gaap:StockholdersEquity).
+- Meta Platforms, Inc. (META) reported stockholders' equity of $182.6 billion as of 2024-12-31 (fiscal year 2024; 10-K filed 2026-01-29, accession 0001628280-26-003942, concept us-gaap:StockholdersEquity).
+- Meta Platforms, Inc. (META) reported stockholders' equity of $153.2 billion as of 2023-12-31 (fiscal year 2023; 10-K filed 2026-01-29, accession 0001628280-26-003942, concept us-gaap:StockholdersEquity).

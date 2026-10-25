@@ -1,0 +1,36 @@
+# API + the two A2A agents as separate services + the web UI.
+#   docker compose up --build      -> http://localhost:3000
+services:
+  api:
+    build: .
+    env_file: [.env]
+    environment:
+      PUBLIC_BASE_URL: http://api:8000
+      A2A_RISK_URL: http://risk-agent:8101/a2a/risk
+      A2A_COMPLIANCE_URL: http://compliance-agent:8102/a2a/compliance
+      CORS_ORIGINS: '["http://localhost:3000"]'
+    ports: ["8000:8000"]
+    depends_on: [risk-agent, compliance-agent]
+
+  risk-agent:
+    build: .
+    env_file: [.env]
+    command: ["uv", "run", "--no-dev", "python", "scripts/serve_agent.py", "risk", "--host", "0.0.0.0",
+              "--port", "8101", "--public-url", "http://risk-agent:8101"]
+    ports: ["8101:8101"]
+
+  compliance-agent:
+    build: .
+    env_file: [.env]
+    command: ["uv", "run", "--no-dev", "python", "scripts/serve_agent.py", "compliance", "--host", "0.0.0.0",
+              "--port", "8102", "--public-url", "http://compliance-agent:8102"]
+    ports: ["8102:8102"]
+
+  web:
+    build:
+      context: ./web
+      args:
+        NEXT_PUBLIC_API_URL: http://localhost:8000
+    ports: ["3000:3000"]
+    depends_on: [api]
+

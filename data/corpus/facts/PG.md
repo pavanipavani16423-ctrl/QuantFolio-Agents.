@@ -1,0 +1,34 @@
+# The Procter & Gamble Company (PG) - key financial facts
+
+Sector: Consumer Staples. Source: SEC EDGAR XBRL company facts (Form 10-K annual values), CIK 80424.
+
+- The Procter & Gamble Company (PG) reported total revenue of $87.0 billion for the fiscal year ended 2026-06-30 (fiscal year 2026; 10-K filed 2026-08-04, accession 0000080424-26-000103, concept us-gaap:Revenues).
+- The Procter & Gamble Company (PG) reported total revenue of $84.3 billion for the fiscal year ended 2025-06-30 (fiscal year 2025; 10-K filed 2026-08-04, accession 0000080424-26-000103, concept us-gaap:Revenues).
+- The Procter & Gamble Company (PG) reported total revenue of $84.0 billion for the fiscal year ended 2024-06-30 (fiscal year 2024; 10-K filed 2026-08-04, accession 0000080424-26-000103, concept us-gaap:Revenues).
+- The Procter & Gamble Company (PG) reported operating income of $19.7 billion for the fiscal year ended 2026-06-30 (fiscal year 2026; 10-K filed 2026-08-04, accession 0000080424-26-000103, concept us-gaap:OperatingIncomeLoss).
+- The Procter & Gamble Company (PG) reported operating income of $20.5 billion for the fiscal year ended 2025-06-30 (fiscal year 2025; 10-K filed 2026-08-04, accession 0000080424-26-000103, concept us-gaap:OperatingIncomeLoss).
+- The Procter & Gamble Company (PG) reported operating income of $18.5 billion for the fiscal year ended 2024-06-30 (fiscal year 2024; 10-K filed 2026-08-04, accession 0000080424-26-000103, concept us-gaap:OperatingIncomeLoss).
+- The Procter & Gamble Company (PG) reported net income of $16.0 billion for the fiscal year ended 2026-06-30 (fiscal year 2026; 10-K filed 2026-08-04, accession 0000080424-26-000103, concept us-gaap:NetIncomeLoss).
+- The Procter & Gamble Company (PG) reported net income of $16.0 billion for the fiscal year ended 2025-06-30 (fiscal year 2025; 10-K filed 2026-08-04, accession 0000080424-26-000103, concept us-gaap:NetIncomeLoss).
+- The Procter & Gamble Company (PG) reported net income of $14.9 billion for the fiscal year ended 2024-06-30 (fiscal year 2024; 10-K filed 2026-08-04, accession 0000080424-26-000103, concept us-gaap:NetIncomeLoss).
+- The Procter & Gamble Company (PG) reported diluted earnings per share of $6.62 for the fiscal year ended 2026-06-30 (fiscal year 2026; 10-K filed 2026-08-04, accession 0000080424-26-000103, concept us-gaap:EarningsPerShareDiluted).
+- The Procter & Gamble Company (PG) reported diluted earnings per share of $6.51 for the fiscal year ended 2025-06-30 (fiscal year 2025; 10-K filed 2026-08-04, accession 0000080424-26-000103, concept us-gaap:EarningsPerShareDiluted).
+- The Procter & Gamble Company (PG) reported diluted earnings per share of $6.02 for the fiscal year ended 2024-06-30 (fiscal year 2024; 10-K filed 2026-08-04, accession 0000080424-26-000103, concept us-gaap:EarningsPerShareDiluted).
+- The Procter & Gamble Company (PG) reported research and development expense of $2.1 billion for the fiscal year ended 2026-06-30 (fiscal year 2026; 10-K filed 2026-08-04, accession 0000080424-26-000103, concept us-gaap:ResearchAndDevelopmentExpense).
+- The Procter & Gamble Company (PG) reported research and development expense of $2.1 billion for the fiscal year ended 2025-06-30 (fiscal year 2025; 10-K filed 2026-08-04, accession 0000080424-26-000103, concept us-gaap:ResearchAndDevelopmentExpense).
+- The Procter & Gamble Company (PG) reported research and development expense of $2.0 billion for the fiscal year ended 2024-06-30 (fiscal year 2024; 10-K filed 2026-08-04, accession 0000080424-26-000103, concept us-gaap:ResearchAndDevelopmentExpense).
+- The Procter & Gamble Company (PG) reported net cash from operating activities of $19.6 billion for the fiscal year ended 2026-06-30 (fiscal year 2026; 10-K filed 2026-08-04, accession 0000080424-26-000103, concept us-gaap:NetCashProvidedByUsedInOperatingActivities).
+- The Procter & Gamble Company (PG) reported net cash from operating activities of $17.8 billion for the fiscal year ended 2025-06-30 (fiscal year 2025; 10-K filed 2026-08-04, accession 0000080424-26-000103, concept us-gaap:NetCashProvidedByUsedInOperatingActivities).
+- The Procter & Gamble Company (PG) reported net cash from operating activities of $19.8 billion for the fiscal year ended 2024-06-30 (fiscal year 2024; 10-K filed 2026-08-04, accession 0000080424-26-000103, concept us-gaap:NetCashProvidedByUsedInOperatingActivities).
+- The Procter & Gamble Company (PG) reported total assets of $126.5 billion as of 2026-06-30 (fiscal year 2026; 10-K filed 2026-08-04, accession 0000080424-26-000103, concept us-gaap:Assets).
+- The Procter & Gamble Company (PG) reported total assets of $125.2 billion as of 2025-06-30 (fiscal year 2025; 10-K filed 2026-08-04, accession 0000080424-26-000103, concept us-gaap:Assets).
+- The Procter & Gamble Company (PG) reported total assets of $122.4 billion as of 2024-06-30 (fiscal year 2024; 10-K filed 2025-08-04, accession 0000080424-25-000076, concept us-gaap:Assets).
+- The Procter & Gamble Company (PG) reported total liabilities of $72.2 billion as of 2026-06-30 (fiscal year 2026; 10-K filed 2026-08-04, accession 0000080424-26-000103, concept us-gaap:Liabilities).
+- The Procter & Gamble Company (PG) reported total liabilities of $72.9 billion as of 2025-06-30 (fiscal year 2025; 10-K filed 2026-08-04, accession 0000080424-26-000103, concept us-gaap:Liabilities).
+- The Procter & Gamble Company (PG) reported total liabilities of $71.8 billion as of 2024-06-30 (fiscal year 2024; 10-K filed 2025-08-04, accession 0000080424-25-000076, concept us-gaap:Liabilities).
+- The Procter & Gamble Company (PG) reported cash and cash equivalents of $4.2 billion as of 2019-06-30 (fiscal year 2019; 10-K filed 2019-08-06, accession 0000080424-19-000050, concept us-gaap:CashAndCashEquivalentsAtCarryingValue).
+- The Procter & Gamble Company (PG) reported cash and cash equivalents of $2.6 billion as of 2018-06-30 (fiscal year 2018; 10-K filed 2019-08-06, accession 0000080424-19-000050, concept us-gaap:CashAndCashEquivalentsAtCarryingValue).
+- The Procter & Gamble Company (PG) reported cash and cash equivalents of $5.6 billion as of 2017-06-30 (fiscal year 2017; 10-K filed 2019-08-06, accession 0000080424-19-000050, concept us-gaap:CashAndCashEquivalentsAtCarryingValue).
+- The Procter & Gamble Company (PG) reported long-term debt of $22.8 billion as of 2026-06-30 (fiscal year 2026; 10-K filed 2026-08-04, accession 0000080424-26-000103, concept us-gaap:LongTermDebtNoncurrent).
+- The Procter & Gamble Company (PG) reported long-term debt of $25.0 billion as of 2025-06-30 (fiscal year 2025; 10-K filed 2026-08-04, accession 0000080424-26-000103, concept us-gaap:LongTermDebtNoncurrent).
+- The Procter & Gamble Company (PG) reported long-term debt of $25.3 billion as of 2024-06-30 (fiscal year 2024; 10-K filed 2025-08-04, accession 0000080424-25-000076, concept us-gaap:LongTermDebtNoncurrent).

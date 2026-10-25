@@ -1,0 +1,13 @@
+.venv
+.env
+.env.*
+!.env.example
+**/__pycache__
+.pytest_cache
+.ruff_cache
+data/models
+data/*.db
+data/*.db-*
+web/node_modules
+web/.next
+.git

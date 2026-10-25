@@ -1,0 +1,31 @@
+# secrets
+.env
+.env.*
+!.env.example
+
+# python
+__pycache__/
+*.py[cod]
+.venv/
+.pytest_cache/
+.ruff_cache/
+
+# local runtime data
+data/*.db
+data/*.db-*
+data/models/
+experiments/*.log
+
+# node / next
+node_modules/
+web/.next/
+web/out/
+web/next-env.d.ts
+web/tsconfig.tsbuildinfo
+
+# editors / os
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+.playwright-mcp/

@@ -1,0 +1,30 @@
+{
+  "source": "Yahoo Finance via yfinance (adjusted close: splits and dividends)",
+  "symbols": [
+    "AAPL",
+    "MSFT",
+    "NVDA",
+    "GOOGL",
+    "META",
+    "AMZN",
+    "HD",
+    "JPM",
+    "V",
+    "JNJ",
+    "UNH",
+    "PFE",
+    "XOM",
+    "CVX",
+    "PG",
+    "KO",
+    "WMT",
+    "CAT",
+    "NEE",
+    "LIN",
+    "SPY"
+  ],
+  "start": "2024-01-02",
+  "end": "2026-10-23",
+  "rows": 706,
+  "downloaded": "2026-10-25"
+}

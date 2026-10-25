@@ -1,0 +1,102 @@
+{
+  "created": "2026-10-25T07:09:03.205398+00:00",
+  "dataset": {
+    "name": "quantfolio-rag-golden",
+    "items": 47,
+    "by_kind": {
+      "facts": 20,
+      "mandate": 9,
+      "risk": 18
+    },
+    "source": "data/eval/golden_rag.json (generated from the corpus + 18 hand-written risk questions)"
+  },
+  "k": 6,
+  "modes": {
+    "bm25": {
+      "hit_rate@6": 0.8298,
+      "recall@6": 0.8085,
+      "mrr@6": 0.7394,
+      "ragas_id_context_precision": 0.1454,
+      "ragas_id_context_recall": 0.8085,
+      "latency_ms": 6.6
+    },
+    "dense": {
+      "hit_rate@6": 0.9362,
+      "recall@6": 0.9255,
+      "mrr@6": 0.795,
+      "ragas_id_context_precision": 0.1738,
+      "ragas_id_context_recall": 0.9255,
+      "latency_ms": 14.2
+    },
+    "hybrid": {
+      "hit_rate@6": 0.9149,
+      "recall@6": 0.883,
+      "mrr@6": 0.7926,
+      "ragas_id_context_precision": 0.1596,
+      "ragas_id_context_recall": 0.883,
+      "latency_ms": 21.9
+    },
+    "hybrid_rerank": {
+      "hit_rate@6": 0.9149,
+      "recall@6": 0.9043,
+      "mrr@6": 0.8901,
+      "ragas_id_context_precision": 0.1667,
+      "ragas_id_context_recall": 0.9043,
+      "latency_ms": 1813.6
+    }
+  },
+  "by_kind": {
+    "bm25": {
+      "facts": 1.0,
+      "mandate": 1.0,
+      "risk": 0.5556
+    },
+    "dense": {
+      "facts": 0.95,
+      "mandate": 1.0,
+      "risk": 0.8889
+    },
+    "hybrid": {
+      "facts": 1.0,
+      "mandate": 1.0,
+      "risk": 0.7778
+    },
+    "hybrid_rerank": {
+      "facts": 1.0,
+      "mandate": 1.0,
+      "risk": 0.7778
+    }
+  },
+  "llm": {
+    "judge": null,
+    "metrics": null
+  },
+  "langfuse": {
+    "dataset": "quantfolio-rag-golden",
+    "runs": [
+      {
+        "mode": "bm25",
+        "url": "https://us.cloud.langfuse.com/project/cmvneyq0r0042ad0d9q86ewar/experiments/results?baseline=eac2c762c1292a61"
+      },
+      {
+        "mode": "dense",
+        "url": "https://us.cloud.langfuse.com/project/cmvneyq0r0042ad0d9q86ewar/experiments/results?baseline=181e0a2e59011744"
+      },
+      {
+        "mode": "hybrid",
+        "url": "https://us.cloud.langfuse.com/project/cmvneyq0r0042ad0d9q86ewar/experiments/results?baseline=e41e2e82e67485f0"
+      },
+      {
+        "mode": "hybrid_rerank",
+        "url": "https://us.cloud.langfuse.com/project/cmvneyq0r0042ad0d9q86ewar/experiments/results?baseline=6e152d8f19183f5b"
+      }
+    ]
+  },
+  "notes": [
+    "Retrieval over the whole corpus (2119 chunks), no metadata filters, top 6.",
+    "Best hit rate: dense (94%).",
+    "Hit rate by question type: bm25: facts 100%, mandate 100%, risk 56%; dense: facts 95%, mandate 100%, risk 89%; hybrid: facts 100%, mandate 100%, risk 78%; hybrid_rerank: facts 100%, mandate 100%, risk 78%.",
+    "Latency is the median per query on this laptop CPU (the reranker dominates).",
+    "LLM-judged RAGAS metrics skipped: no LLM key configured"
+  ]
+}

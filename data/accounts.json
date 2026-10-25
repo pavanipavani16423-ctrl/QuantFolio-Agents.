@@ -1,0 +1,66 @@
+{
+  "accounts": {
+    "C-101": {
+      "client_id": "C-101",
+      "name": "Meera Iyer",
+      "profile": "Conservative Income",
+      "mandate_doc": "mandate_C-101",
+      "cash": 25000,
+      "positions": {
+        "AAPL": 172,
+        "MSFT": 104,
+        "JNJ": 265,
+        "KO": 701,
+        "PG": 372,
+        "XOM": 272,
+        "JPM": 135,
+        "WMT": 333,
+        "NVDA": 142
+      },
+      "as_of": "2026-10-23",
+      "note": "Synthetic starting account for the demo. Positions are share counts."
+    },
+    "C-102": {
+      "client_id": "C-102",
+      "name": "GreenLeaf Foundation",
+      "profile": "ESG Growth",
+      "mandate_doc": "mandate_C-102",
+      "cash": 40000,
+      "positions": {
+        "NVDA": 853,
+        "MSFT": 285,
+        "XOM": 654,
+        "NEE": 1339,
+        "GOOGL": 405,
+        "AMZN": 403,
+        "LIN": 176,
+        "CVX": 343
+      },
+      "as_of": "2026-10-23",
+      "note": "Synthetic starting account for the demo. Positions are share counts."
+    },
+    "C-103": {
+      "client_id": "C-103",
+      "name": "Kumar Family Office",
+      "profile": "Balanced Growth",
+      "mandate_doc": "mandate_C-103",
+      "cash": 60000,
+      "positions": {
+        "AAPL": 517,
+        "MSFT": 324,
+        "NVDA": 758,
+        "AMZN": 604,
+        "JPM": 452,
+        "V": 343,
+        "PFE": 3996,
+        "UNH": 263,
+        "CAT": 189,
+        "HD": 375,
+        "KO": 1078,
+        "XOM": 491
+      },
+      "as_of": "2026-10-23",
+      "note": "Synthetic starting account for the demo. Positions are share counts."
+    }
+  }
+}

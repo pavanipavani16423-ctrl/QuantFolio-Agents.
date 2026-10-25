@@ -1,0 +1,402 @@
+{
+  "AAPL": {
+    "ticker": "AAPL",
+    "name": "Apple Inc.",
+    "cik": 320193,
+    "form": "10-K",
+    "filed": "2025-10-31",
+    "period": "2025-09-27",
+    "accession": "0000320193-25-000079",
+    "url": "https://www.sec.gov/Archives/edgar/data/320193/000032019325000079/aapl-20250927.htm",
+    "sections": {
+      "risk_factors": {
+        "chars": 38936,
+        "truncated": true
+      },
+      "mdna": {
+        "chars": 17938,
+        "truncated": false
+      }
+    }
+  },
+  "MSFT": {
+    "ticker": "MSFT",
+    "name": "Microsoft Corporation",
+    "cik": 789019,
+    "form": "10-K",
+    "filed": "2026-07-29",
+    "period": "2026-06-30",
+    "accession": "0001193125-26-323660",
+    "url": "https://www.sec.gov/Archives/edgar/data/789019/000119312526323660/msft-20260630.htm",
+    "sections": {
+      "risk_factors": {
+        "chars": 39562,
+        "truncated": true
+      },
+      "mdna": {
+        "chars": 39938,
+        "truncated": true
+      }
+    }
+  },
+  "NVDA": {
+    "ticker": "NVDA",
+    "name": "NVIDIA Corporation",
+    "cik": 1045810,
+    "form": "10-K",
+    "filed": "2026-02-25",
+    "period": "2026-01-25",
+    "accession": "0001045810-26-000021",
+    "url": "https://www.sec.gov/Archives/edgar/data/1045810/000104581026000021/nvda-20260125.htm",
+    "sections": {
+      "risk_factors": {
+        "chars": 39442,
+        "truncated": true
+      },
+      "mdna": {
+        "chars": 34163,
+        "truncated": false
+      }
+    }
+  },
+  "GOOGL": {
+    "ticker": "GOOGL",
+    "name": "Alphabet Inc.",
+    "cik": 1652044,
+    "form": "10-K",
+    "filed": "2026-02-05",
+    "period": "2025-12-31",
+    "accession": "0001652044-26-000018",
+    "url": "https://www.sec.gov/Archives/edgar/data/1652044/000165204426000018/goog-20251231.htm",
+    "sections": {
+      "risk_factors": {
+        "chars": 39663,
+        "truncated": true
+      },
+      "mdna": {
+        "chars": 39775,
+        "truncated": true
+      }
+    }
+  },
+  "META": {
+    "ticker": "META",
+    "name": "Meta Platforms, Inc.",
+    "cik": 1326801,
+    "form": "10-K",
+    "filed": "2026-01-29",
+    "period": "2025-12-31",
+    "accession": "0001628280-26-003942",
+    "url": "https://www.sec.gov/Archives/edgar/data/1326801/000162828026003942/meta-20251231.htm",
+    "sections": {
+      "risk_factors": {
+        "chars": 39066,
+        "truncated": true
+      },
+      "mdna": {
+        "chars": 39967,
+        "truncated": true
+      }
+    }
+  },
+  "AMZN": {
+    "ticker": "AMZN",
+    "name": "Amazon.com, Inc.",
+    "cik": 1018724,
+    "form": "10-K",
+    "filed": "2026-02-06",
+    "period": "2025-12-31",
+    "accession": "0001018724-26-000004",
+    "url": "https://www.sec.gov/Archives/edgar/data/1018724/000101872426000004/amzn-20251231.htm",
+    "sections": {
+      "risk_factors": {
+        "chars": 39954,
+        "truncated": true
+      },
+      "mdna": {
+        "chars": 39551,
+        "truncated": true
+      }
+    }
+  },
+  "HD": {
+    "ticker": "HD",
+    "name": "The Home Depot, Inc.",
+    "cik": 354950,
+    "form": "10-K",
+    "filed": "2026-03-18",
+    "period": "2026-02-01",
+    "accession": "0001628280-26-019436",
+    "url": "https://www.sec.gov/Archives/edgar/data/354950/000162828026019436/hd-20260201.htm",
+    "sections": {
+      "risk_factors": {
+        "chars": 39169,
+        "truncated": true
+      },
+      "mdna": {
+        "chars": 31290,
+        "truncated": false
+      }
+    }
+  },
+  "JPM": {
+    "ticker": "JPM",
+    "name": "JPMorgan Chase & Co.",
+    "cik": 19617,
+    "form": "10-K",
+    "filed": "2026-02-13",
+    "period": "2025-12-31",
+    "accession": "0001628280-26-008131",
+    "url": "https://www.sec.gov/Archives/edgar/data/19617/000162828026008131/jpm-20251231.htm",
+    "sections": {
+      "risk_factors": {
+        "chars": 39635,
+        "truncated": true
+      },
+      "mdna": {
+        "chars": 300,
+        "truncated": false
+      }
+    }
+  },
+  "V": {
+    "ticker": "V",
+    "name": "Visa Inc.",
+    "cik": 1403161,
+    "form": "10-K",
+    "filed": "2025-11-06",
+    "period": "2025-09-30",
+    "accession": "0001403161-25-000089",
+    "url": "https://www.sec.gov/Archives/edgar/data/1403161/000140316125000089/v-20250930.htm",
+    "sections": {
+      "risk_factors": {
+        "chars": 39371,
+        "truncated": true
+      },
+      "mdna": {
+        "chars": 39956,
+        "truncated": true
+      }
+    }
+  },
+  "JNJ": {
+    "ticker": "JNJ",
+    "name": "Johnson & Johnson",
+    "cik": 200406,
+    "form": "10-K",
+    "filed": "2026-02-11",
+    "period": "2025-12-28",
+    "accession": "0000200406-26-000016",
+    "url": "https://www.sec.gov/Archives/edgar/data/200406/000020040626000016/jnj-20251228.htm",
+    "sections": {
+      "risk_factors": {
+        "chars": 39266,
+        "truncated": true
+      },
+      "mdna": {
+        "chars": 39749,
+        "truncated": true
+      }
+    }
+  },
+  "UNH": {
+    "ticker": "UNH",
+    "name": "UnitedHealth Group Incorporated",
+    "cik": 731766,
+    "form": "10-K",
+    "filed": "2026-03-02",
+    "period": "2025-12-31",
+    "accession": "0000731766-26-000062",
+    "url": "https://www.sec.gov/Archives/edgar/data/731766/000073176626000062/unh-20251231.htm",
+    "sections": {
+      "risk_factors": {
+        "chars": 39627,
+        "truncated": true
+      },
+      "mdna": {
+        "chars": 39798,
+        "truncated": true
+      }
+    }
+  },
+  "PFE": {
+    "ticker": "PFE",
+    "name": "Pfizer Inc.",
+    "cik": 78003,
+    "form": "10-K",
+    "filed": "2026-02-26",
+    "period": "2025-12-31",
+    "accession": "0000078003-26-000026",
+    "url": "https://www.sec.gov/Archives/edgar/data/78003/000007800326000026/pfe-20251231.htm",
+    "sections": {
+      "risk_factors": {
+        "chars": 37279,
+        "truncated": true
+      },
+      "mdna": {
+        "chars": 39860,
+        "truncated": true
+      }
+    }
+  },
+  "XOM": {
+    "ticker": "XOM",
+    "name": "Exxon Mobil Corporation",
+    "cik": 34088,
+    "form": "10-K",
+    "filed": "2026-02-18",
+    "period": "2025-12-31",
+    "accession": "0000034088-26-000045",
+    "url": "https://www.sec.gov/Archives/edgar/data/34088/000003408826000045/xom-20251231.htm",
+    "sections": {
+      "risk_factors": {
+        "chars": 35733,
+        "truncated": false
+      },
+      "mdna": {
+        "chars": 39509,
+        "truncated": true
+      }
+    }
+  },
+  "CVX": {
+    "ticker": "CVX",
+    "name": "Chevron Corporation",
+    "cik": 93410,
+    "form": "10-K",
+    "filed": "2026-02-24",
+    "period": "2025-12-31",
+    "accession": "0000093410-26-000078",
+    "url": "https://www.sec.gov/Archives/edgar/data/93410/000009341026000078/cvx-20251231.htm",
+    "sections": {
+      "risk_factors": {
+        "chars": 34516,
+        "truncated": false
+      },
+      "mdna": {
+        "chars": 39981,
+        "truncated": true
+      }
+    }
+  },
+  "PG": {
+    "ticker": "PG",
+    "name": "The Procter & Gamble Company",
+    "cik": 80424,
+    "form": "10-K",
+    "filed": "2026-08-04",
+    "period": "2026-06-30",
+    "accession": "0000080424-26-000103",
+    "url": "https://www.sec.gov/Archives/edgar/data/80424/000008042426000103/pg-20260630.htm",
+    "sections": {
+      "risk_factors": {
+        "chars": 37928,
+        "truncated": false
+      },
+      "mdna": {
+        "chars": 39493,
+        "truncated": true
+      }
+    }
+  },
+  "KO": {
+    "ticker": "KO",
+    "name": "The Coca-Cola Company",
+    "cik": 21344,
+    "form": "10-K",
+    "filed": "2026-02-20",
+    "period": "2025-12-31",
+    "accession": "0001628280-26-010047",
+    "url": "https://www.sec.gov/Archives/edgar/data/21344/000162828026010047/ko-20251231.htm",
+    "sections": {
+      "risk_factors": {
+        "chars": 39146,
+        "truncated": true
+      },
+      "mdna": {
+        "chars": 39759,
+        "truncated": true
+      }
+    }
+  },
+  "WMT": {
+    "ticker": "WMT",
+    "name": "Walmart Inc.",
+    "cik": 104169,
+    "form": "10-K",
+    "filed": "2026-03-13",
+    "period": "2026-01-31",
+    "accession": "0000104169-26-000055",
+    "url": "https://www.sec.gov/Archives/edgar/data/104169/000010416926000055/wmt-20260131.htm",
+    "sections": {
+      "risk_factors": {
+        "chars": 39227,
+        "truncated": true
+      },
+      "mdna": {
+        "chars": 39874,
+        "truncated": true
+      }
+    }
+  },
+  "CAT": {
+    "ticker": "CAT",
+    "name": "Caterpillar Inc.",
+    "cik": 18230,
+    "form": "10-K",
+    "filed": "2026-02-13",
+    "period": "2025-12-31",
+    "accession": "0000018230-26-000008",
+    "url": "https://www.sec.gov/Archives/edgar/data/18230/000001823026000008/cat-20251231.htm",
+    "sections": {
+      "risk_factors": {
+        "chars": 39642,
+        "truncated": true
+      },
+      "mdna": {
+        "chars": 39668,
+        "truncated": true
+      }
+    }
+  },
+  "NEE": {
+    "ticker": "NEE",
+    "name": "NextEra Energy, Inc.",
+    "cik": 753308,
+    "form": "10-K",
+    "filed": "2026-02-13",
+    "period": "2025-12-31",
+    "accession": "0000753308-26-000015",
+    "url": "https://www.sec.gov/Archives/edgar/data/753308/000075330826000015/nee-20251231.htm",
+    "sections": {
+      "risk_factors": {
+        "chars": 39723,
+        "truncated": true
+      },
+      "mdna": {
+        "chars": 39685,
+        "truncated": true
+      }
+    }
+  },
+  "LIN": {
+    "ticker": "LIN",
+    "name": "Linde plc",
+    "cik": 1707925,
+    "form": "10-K",
+    "filed": "2026-02-25",
+    "period": "2025-12-31",
+    "accession": "0001628280-26-011430",
+    "url": "https://www.sec.gov/Archives/edgar/data/1707925/000162828026011430/lin-20251231.htm",
+    "sections": {
+      "risk_factors": {
+        "chars": 26612,
+        "truncated": false
+      },
+      "mdna": {
+        "chars": 39941,
+        "truncated": true
+      }
+    }
+  }
+}

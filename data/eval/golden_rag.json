@@ -1,0 +1,431 @@
+[
+ {
+  "id": "facts-AAPL",
+  "kind": "facts",
+  "question": "What total revenue did Apple Inc. report for fiscal year 2025?",
+  "reference": "Apple Inc. reported total revenue of $416.2 billion for the fiscal year ended 2025-09-27.",
+  "reference_ids": [
+   "AAPL_facts#000"
+  ]
+ },
+ {
+  "id": "facts-AMZN",
+  "kind": "facts",
+  "question": "What total revenue did Amazon.com, Inc. report for fiscal year 2025?",
+  "reference": "Amazon.com, Inc. reported total revenue of $716.9 billion for the fiscal year ended 2025-12-31.",
+  "reference_ids": [
+   "AMZN_facts#000"
+  ]
+ },
+ {
+  "id": "facts-CAT",
+  "kind": "facts",
+  "question": "What total revenue did Caterpillar Inc. report for fiscal year 2025?",
+  "reference": "Caterpillar Inc. reported total revenue of $67.6 billion for the fiscal year ended 2025-12-31.",
+  "reference_ids": [
+   "CAT_facts#000"
+  ]
+ },
+ {
+  "id": "facts-CVX",
+  "kind": "facts",
+  "question": "What total revenue did Chevron Corporation report for fiscal year 2025?",
+  "reference": "Chevron Corporation reported total revenue of $189.0 billion for the fiscal year ended 2025-12-31.",
+  "reference_ids": [
+   "CVX_facts#000"
+  ]
+ },
+ {
+  "id": "facts-GOOGL",
+  "kind": "facts",
+  "question": "What total revenue did Alphabet Inc. report for fiscal year 2025?",
+  "reference": "Alphabet Inc. reported total revenue of $402.8 billion for the fiscal year ended 2025-12-31.",
+  "reference_ids": [
+   "GOOGL_facts#000"
+  ]
+ },
+ {
+  "id": "facts-HD",
+  "kind": "facts",
+  "question": "What total revenue did The Home Depot, Inc. report for fiscal year 2026?",
+  "reference": "The Home Depot, Inc. reported total revenue of $164.7 billion for the fiscal year ended 2026-02-01.",
+  "reference_ids": [
+   "HD_facts#000"
+  ]
+ },
+ {
+  "id": "facts-JNJ",
+  "kind": "facts",
+  "question": "What total revenue did Johnson & Johnson report for fiscal year 2025?",
+  "reference": "Johnson & Johnson reported total revenue of $94.2 billion for the fiscal year ended 2025-12-28.",
+  "reference_ids": [
+   "JNJ_facts#000"
+  ]
+ },
+ {
+  "id": "facts-JPM",
+  "kind": "facts",
+  "question": "What total revenue did JPMorgan Chase & Co. report for fiscal year 2025?",
+  "reference": "JPMorgan Chase & Co. reported total revenue of $182.4 billion for the fiscal year ended 2025-12-31.",
+  "reference_ids": [
+   "JPM_facts#000"
+  ]
+ },
+ {
+  "id": "facts-KO",
+  "kind": "facts",
+  "question": "What total revenue did The Coca-Cola Company report for fiscal year 2025?",
+  "reference": "The Coca-Cola Company reported total revenue of $47.9 billion for the fiscal year ended 2025-12-31.",
+  "reference_ids": [
+   "KO_facts#000"
+  ]
+ },
+ {
+  "id": "facts-LIN",
+  "kind": "facts",
+  "question": "What total revenue did Linde plc report for fiscal year 2025?",
+  "reference": "Linde plc reported total revenue of $34.0 billion for the fiscal year ended 2025-12-31.",
+  "reference_ids": [
+   "LIN_facts#000"
+  ]
+ },
+ {
+  "id": "facts-META",
+  "kind": "facts",
+  "question": "What total revenue did Meta Platforms, Inc. report for fiscal year 2025?",
+  "reference": "Meta Platforms, Inc. reported total revenue of $201.0 billion for the fiscal year ended 2025-12-31.",
+  "reference_ids": [
+   "META_facts#000"
+  ]
+ },
+ {
+  "id": "facts-MSFT",
+  "kind": "facts",
+  "question": "What total revenue did Microsoft Corporation report for fiscal year 2026?",
+  "reference": "Microsoft Corporation reported total revenue of $331.8 billion for the fiscal year ended 2026-06-30.",
+  "reference_ids": [
+   "MSFT_facts#000"
+  ]
+ },
+ {
+  "id": "facts-NEE",
+  "kind": "facts",
+  "question": "What total revenue did NextEra Energy, Inc. report for fiscal year 2012?",
+  "reference": "NextEra Energy, Inc. reported total revenue of $14.3 billion for the fiscal year ended 2012-12-31.",
+  "reference_ids": [
+   "NEE_facts#000"
+  ]
+ },
+ {
+  "id": "facts-NVDA",
+  "kind": "facts",
+  "question": "What total revenue did NVIDIA Corporation report for fiscal year 2026?",
+  "reference": "NVIDIA Corporation reported total revenue of $215.9 billion for the fiscal year ended 2026-01-25.",
+  "reference_ids": [
+   "NVDA_facts#000"
+  ]
+ },
+ {
+  "id": "facts-PFE",
+  "kind": "facts",
+  "question": "What total revenue did Pfizer Inc. report for fiscal year 2025?",
+  "reference": "Pfizer Inc. reported total revenue of $62.6 billion for the fiscal year ended 2025-12-31.",
+  "reference_ids": [
+   "PFE_facts#000"
+  ]
+ },
+ {
+  "id": "facts-PG",
+  "kind": "facts",
+  "question": "What total revenue did The Procter & Gamble Company report for fiscal year 2026?",
+  "reference": "The Procter & Gamble Company reported total revenue of $87.0 billion for the fiscal year ended 2026-06-30.",
+  "reference_ids": [
+   "PG_facts#000"
+  ]
+ },
+ {
+  "id": "facts-UNH",
+  "kind": "facts",
+  "question": "What total revenue did UnitedHealth Group Incorporated report for fiscal year 2025?",
+  "reference": "UnitedHealth Group Incorporated reported total revenue of $447.6 billion for the fiscal year ended 2025-12-31.",
+  "reference_ids": [
+   "UNH_facts#000"
+  ]
+ },
+ {
+  "id": "facts-V",
+  "kind": "facts",
+  "question": "What total revenue did Visa Inc. report for fiscal year 2025?",
+  "reference": "Visa Inc. reported total revenue of $40.0 billion for the fiscal year ended 2025-09-30.",
+  "reference_ids": [
+   "V_facts#000"
+  ]
+ },
+ {
+  "id": "facts-WMT",
+  "kind": "facts",
+  "question": "What total revenue did Walmart Inc. report for fiscal year 2026?",
+  "reference": "Walmart Inc. reported total revenue of $713.2 billion for the fiscal year ended 2026-01-31.",
+  "reference_ids": [
+   "WMT_facts#000"
+  ]
+ },
+ {
+  "id": "facts-XOM",
+  "kind": "facts",
+  "question": "What total revenue did Exxon Mobil Corporation report for fiscal year 2025?",
+  "reference": "Exxon Mobil Corporation reported total revenue of $332.2 billion for the fiscal year ended 2025-12-31.",
+  "reference_ids": [
+   "XOM_facts#000"
+  ]
+ },
+ {
+  "id": "mandate-C-101-0",
+  "kind": "mandate",
+  "question": "How many stocks must Meera Iyer's portfolio hold?",
+  "reference": "3.1 Number of holdings: the portfolio shall hold exactly 10 stocks.",
+  "reference_ids": [
+   "mandate_C-101#002"
+  ]
+ },
+ {
+  "id": "mandate-C-101-1",
+  "kind": "mandate",
+  "question": "What is the largest share of Meera Iyer's portfolio one stock may have?",
+  "reference": "3.2 Position limits: no single holding may exceed 15% of the portfolio, and every holding must be at least 4% of the portfolio.",
+  "reference_ids": [
+   "mandate_C-101#002"
+  ]
+ },
+ {
+  "id": "mandate-C-101-2",
+  "kind": "mandate",
+  "question": "Which industries or companies does Meera Iyer exclude from its portfolio?",
+  "reference": "4.1 Excluded sectors: none.",
+  "reference_ids": [
+   "mandate_C-101#003"
+  ]
+ },
+ {
+  "id": "mandate-C-102-0",
+  "kind": "mandate",
+  "question": "How many stocks must GreenLeaf Foundation's portfolio hold?",
+  "reference": "3.1 Number of holdings: the portfolio shall hold exactly 8 stocks.",
+  "reference_ids": [
+   "mandate_C-102#002"
+  ]
+ },
+ {
+  "id": "mandate-C-102-1",
+  "kind": "mandate",
+  "question": "What is the largest share of GreenLeaf Foundation's portfolio one stock may have?",
+  "reference": "3.2 Position limits: no single holding may exceed 20% of the portfolio, and every holding must be at least 5% of the portfolio.",
+  "reference_ids": [
+   "mandate_C-102#002"
+  ]
+ },
+ {
+  "id": "mandate-C-102-2",
+  "kind": "mandate",
+  "question": "Which industries or companies does GreenLeaf Foundation exclude from its portfolio?",
+  "reference": "4.1 Excluded sectors: Energy. The Foundation does not invest in companies whose primary business is the exploration, production or refining of oil and gas.",
+  "reference_ids": [
+   "mandate_C-102#003"
+  ]
+ },
+ {
+  "id": "mandate-C-103-0",
+  "kind": "mandate",
+  "question": "How many stocks must Kumar Family Office's portfolio hold?",
+  "reference": "3.1 Number of holdings: the portfolio shall hold exactly 12 stocks.",
+  "reference_ids": [
+   "mandate_C-103#002"
+  ]
+ },
+ {
+  "id": "mandate-C-103-1",
+  "kind": "mandate",
+  "question": "What is the largest share of Kumar Family Office's portfolio one stock may have?",
+  "reference": "3.2 Position limits: no single holding may exceed 12% of the portfolio, and every holding must be at least 4% of the portfolio.",
+  "reference_ids": [
+   "mandate_C-103#002"
+  ]
+ },
+ {
+  "id": "mandate-C-103-2",
+  "kind": "mandate",
+  "question": "Which industries or companies does Kumar Family Office exclude from its portfolio?",
+  "reference": "4.1 Excluded sectors: none.",
+  "reference_ids": [
+   "mandate_C-103#003"
+  ]
+ },
+ {
+  "id": "risk-00",
+  "kind": "risk",
+  "question": "How could US import tariffs and geopolitical tension affect Apple's supply chain?",
+  "reference": "Global supply chains can be highly concentrated, and an escalation of geopolitical tensions or conflict could result in significant disruptions. Beginning in the second quarter of 2025, new tariffs were announced on imports to the U.S. (\u201cU.S. Tariffs\u201d), including additional tariffs on imports from China, India, Japan, South Korea, Taiwan, Vietnam and the European Union (\u201cEU\u201d), among others. In response, several countries have imposed, or threatened to impose, reciprocal tariffs on imports from the U.S. and other retaliatory measures. Various modifications to the U.S. Tariffs have been announced and further changes could be made in the future, which may include additional sector-based tariffs or other measures. For example, the U.S. Department of Commerce has initiated an investigation under Section 232 of the Trade Expansion Act of 1962, as amended, into, among other things, imports of semiconductors, semiconductor manufacturing equipment, and their derivative products, including downstream products that contain semiconductors.",
+  "reference_ids": [
+   "AAPL_risk_factors#007"
+  ]
+ },
+ {
+  "id": "risk-01",
+  "kind": "risk",
+  "question": "Why does the state of the world economy matter so much to Apple's results?",
+  "reference": "The Company\u2019s operations and performance depend significantly on global and regional economic conditions and adverse economic conditions can materially adversely affect the Company\u2019s business, results of operations, financial condition and stock price.\n\nThe Company has international operations with sales outside the U.S. representing a majority of the Company\u2019s total net sales. In addition, the Company\u2019s global supply chain is large and complex and a majority of the Company\u2019s supplier facilities, including manufacturing and assembly sites, are located outside the U.S. As a result, the Company\u2019s operations and performance depend significantly on global and regional economic conditions.",
+  "reference_ids": [
+   "AAPL_risk_factors#001"
+  ]
+ },
+ {
+  "id": "risk-02",
+  "kind": "risk",
+  "question": "What harm could hacking or security flaws cause Microsoft?",
+  "reference": "Cyberattacks and security vulnerabilities could lead to reduced revenue, increased costs, liability claims, or harm to our reputation or competitive position. Threats to security can take a variety of forms. Threat actors, including individual and groups of hackers and sophisticated organizations, including nation-states, state-sponsored organizations, or cybercriminal groups, continuously undertake attacks that pose threats to our customers and our internal infrastructure, and we have experienced cybersecurity incidents in which such actors have gained unauthorized access to our systems and data, as well as customer, partner, and supplier systems and data. These actors use a wide variety of methods, which include developing and deploying malicious software; exploiting known, latent, or potential vulnerabilities or intentionally designed processes in our or third-party hardware, software, or other infrastructure to attack our products and services or gain access to our networks and datacenters; using social engineering and AI-assisted techniques to induce our employees, users, partners, suppliers, or customers to disclose sensitive information, such as passwords, or take other acti",
+  "reference_ids": [
+   "MSFT_risk_factors#024",
+   "MSFT_risk_factors#025"
+  ]
+ },
+ {
+  "id": "risk-03",
+  "kind": "risk",
+  "question": "Why might NVIDIA end up with too much or too little product compared to what customers want?",
+  "reference": "Long manufacturing lead times and uncertain supply and capacity availability, combined with a failure to estimate customer demand accurately, has led and could lead to mismatches between supply and demand.\n\nWe have long manufacturing lead times and build finished products and maintain inventory in advance of anticipated demand. In periods of shortages impacting the semiconductor industry and/or limited supply or capacity in our supply chain, the lead times for certain supply may be extended. We have previously experienced and may continue to experience extended lead times of more than 12 months. To secure future supply and capacity, we have paid premiums, provided deposits, and entered into long-term supply agreements and capacity commitments, which have increased our product costs and this may continue. We may still be unable to secure sufficient commitments for capacity to address our business needs.",
+  "reference_ids": [
+   "NVDA_risk_factors#014"
+  ]
+ },
+ {
+  "id": "risk-04",
+  "kind": "risk",
+  "question": "How do currency movements affect Amazon's international results?",
+  "reference": "The results of operations of, and certain of our intercompany balances associated with, our international stores and product and service offerings are exposed to foreign exchange rate fluctuations. Due to these fluctuations, operating results may differ materially from expectations, and we may record significant gains or losses on the remeasurement of intercompany balances. As we have expanded our international operations, our exposure to exchange rate fluctuations has increased. We also hold cash equivalents and/or marketable securities in foreign currencies such as British Pounds, Canadian Dollars, Euros, and Japanese Yen. When the U.S. Dollar strengthens compared to these currencies, cash equivalents, and marketable securities balances, when translated, may be materially less than expected and vice versa.",
+  "reference_ids": [
+   "AMZN_risk_factors#021"
+  ]
+ },
+ {
+  "id": "risk-05",
+  "kind": "risk",
+  "question": "How does government supervision shape the way JPMorgan runs its business?",
+  "reference": "JPMorganChase\u2019s businesses are highly regulated and are significantly affected by applicable law and supervisory expectations.\n\nJPMorganChase must comply with applicable law in all of the jurisdictions around the world where it does business. Like other financial services firms, JPMorganChase is subject to extensive supervision and regulation that significantly affects the way that it conducts its business and structures its operations. The supervisory and regulatory framework also imposes requirements for JPMorganChase to implement and maintain compliance programs, and the complexity of these programs can increase its risks of non-compliance. In addition, entering into or acquiring a new business or expanding current business could increase the scope of applicable law or supervision and regulation to which JPMorganChase is subject.\n\nJPMorganChase has in the past and could in the future be required to modify its business and operations in response to changes in applicable law, regulatory decisions or supervisory expectations, such as:",
+  "reference_ids": [
+   "JPM_risk_factors#009"
+  ]
+ },
+ {
+  "id": "risk-06",
+  "kind": "risk",
+  "question": "Could lawsuits or government probes hurt Visa?",
+  "reference": "We may be adversely affected by the outcome of litigation or investigations. We are subject to numerous litigation matters, investigations, claims, examinations, information gathering requests, subpoenas, government and regulatory proceedings asserted by civil litigants, governments and enforcement bodies investigating or alleging, among other things, violations of competition and antitrust law, consumer protection law, privacy law and intellectual property law (these are referred to as \u201cactions\u201d in this section). Details of the most significant actions we face are described more fully in Note 20\u2014Legal Matters to our consolidated financial statements included in Item 8 of this report. These actions are inherently uncertain, expensive and disruptive to our operations. In the event we are found liable or reach a settlement in any action, particularly in a large class action lawsuit, such as one involving an antitrust claim entitling the plaintiff to treble damages in the U.S., or we incur liability arising from a government investigation, we may be required to pay significant awards or judgments, settlements, costs or fines.",
+  "reference_ids": [
+   "V_risk_factors#038",
+   "V_risk_factors#039"
+  ]
+ },
+ {
+  "id": "risk-07",
+  "kind": "risk",
+  "question": "What happens to UnitedHealth if it misjudges how much patient care will cost?",
+  "reference": "If we fail to estimate, price for and manage our medical costs or design benefits in an effective manner, the profitability of our risk-based products and services could decline and could materially and adversely affect our results of operations, financial position and cash flows.",
+  "reference_ids": [
+   "UNH_risk_factors#004"
+  ]
+ },
+ {
+  "id": "risk-08",
+  "kind": "risk",
+  "question": "How dependent is Pfizer on a small number of its best-selling drugs?",
+  "reference": "We recorded revenues of more than $1 billion for each of 12 products that collectively accounted for 65% of Total revenues in 2025. For example, Eliquis accounted for 13% of Total revenues in 2025. See Notes 1 and 17. If these products or any of our other major products were to, or continue to (if applicable), experience loss of patent protection (if applicable), changes in prescription or vaccination purchasing or growth rates, reduced product demand, material product liability litigation, unexpected side effects or safety concerns, regulatory proceedings or investigations, lower governmental and/or regulatory confidence, negative publicity affecting doctor or patient confidence, pressure from competitive products, changes in recommendations and coverage, changes in labeling, pricing and access pressures, including those related to the IRA and MFN, or supply shortages or if a new, more effective product should be introduced, the adverse impact on our revenues could be significant and our revenue forecasts and expectations could prove to be inaccurate and we may fail to meet these expectations.",
+  "reference_ids": [
+   "PFE_risk_factors#011",
+   "PFE_risk_factors#012"
+  ]
+ },
+ {
+  "id": "risk-09",
+  "kind": "risk",
+  "question": "Why are fake medicines a risk for Pfizer?",
+  "reference": "Our reputation, in-line and pipeline portfolios render our medicines and vaccines prime targets for counterfeiters. Counterfeits pose a significant risk to patient health and safety because of the conditions under which they are manufactured\u2014often in unregulated, unlicensed, uninspected, and unsanitary sites\u2014as well as the lack of regulation of their contents. Failure to mitigate this threat could adversely impact consumers who use our products, potentially causing them harm. This situation, in turn, may result in the loss of patient confidence in the Pfizer name and in the integrity of our medicines and vaccines, and potentially impact our business through lost sales, product recalls, and possible litigation. The prevalence of counterfeit medicines is an industry-wide issue due to a variety of factors, including the adoption of e-commerce and the proliferation of heavily marketed compounded medicines.",
+  "reference_ids": [
+   "PFE_risk_factors#030"
+  ]
+ },
+ {
+  "id": "risk-10",
+  "kind": "risk",
+  "question": "How could countries' net-zero climate policies affect ExxonMobil?",
+  "reference": "Net-zero scenarios. Driven by concern over the risks of climate change, a number of countries have adopted, or are considering the adoption of, broad-reaching regulatory frameworks seeking to report on or reduce greenhouse gas emissions, including emissions from the production and use of oil and gas and their products, as well as increase the use of, or support for, different emission-reduction technologies. These actions are being taken both independently by national and regional governments and within the framework of United Nations Conference of the Parties summits under which many countries of the world have endorsed objectives to reduce the atmospheric concentration of carbon dioxide (CO2) over the coming decades, with an ambition ultimately to achieve \u201cnet zero.\u201d Net zero means that emissions of greenhouse gases from human activities would be balanced by actions that remove such gases from the atmosphere.",
+  "reference_ids": [
+   "XOM_risk_factors#018"
+  ]
+ },
+ {
+  "id": "risk-11",
+  "kind": "risk",
+  "question": "Could worries about sugar and weight gain reduce demand for Coca-Cola drinks?",
+  "reference": "Obesity and other health-related concerns may reduce demand for some of our products. There is ongoing concern among consumers, public health professionals and government agencies about the health problems associated with obesity and other chronic diseases. Recent activities and proposals by U.S. federal and state government agencies and initiatives have focused on potential drivers behind the rise in childhood chronic diseases. Continued governmental focus on such initiatives, as well as ongoing public concern about obesity; other health-related public concerns surrounding consumption of sweetened beverages; the effects or perceived effects of the usage of weight-loss drugs on consumption patterns; potential new or increased taxes on sweetened beverages by government entities to reduce consumption or to raise revenue; potential new or increased governmental regulations on particular ingredients or additives in our beverages and packaging, or on manufacturing processes; additional governmental regulations concerning the advertising, marketing, labeling, packaging or sale of our sweetened beverages; changes in funding for or restrictions on the inclusion of our products in benefit p",
+  "reference_ids": [
+   "KO_risk_factors#024",
+   "KO_risk_factors#025"
+  ]
+ },
+ {
+  "id": "risk-12",
+  "kind": "risk",
+  "question": "Why are relationships with bottlers important to Coca-Cola?",
+  "reference": "We rely on our bottling partners for a significant portion of our business. If we are unable to maintain good relationships with our bottling partners, our business could suffer.",
+  "reference_ids": [
+   "KO_risk_factors#044"
+  ]
+ },
+ {
+  "id": "risk-13",
+  "kind": "risk",
+  "question": "How could a disease outbreak affect Walmart?",
+  "reference": "Global or regional health pandemics or epidemics could negatively impact our business, financial position and results of operations. The emergence, severity, magnitude and duration of global or regional pandemics, epidemics or other health crises are uncertain and difficult to predict. A pandemic, epidemic or contagious disease outbreak that affects humans or the food supply, such as the avian flu impact on poultry and egg production could impact our business operations, demand for our products and services, in-stock positions, costs of doing business, access to inventory, supply chain operations, ability to predict future performance, exposure to litigation and financial performance, among other things. In the event of any global or regional health crisis, customer demand for certain products may fluctuate, customer behaviors may change and consumer disposable income could be negatively impacted, which may challenge our ability to anticipate and/or adjust inventory levels to meet that demand. These risks and their impacts are difficult to predict and could otherwise disrupt and adversely affect our operations and our financial performance.",
+  "reference_ids": [
+   "WMT_risk_factors#018",
+   "WMT_risk_factors#019"
+  ]
+ },
+ {
+  "id": "risk-14",
+  "kind": "risk",
+  "question": "What would new limits on carbon emissions mean for NextEra Energy?",
+  "reference": "NEE's and FPL's business could be negatively affected by federal or state laws or regulations mandating new or additional limits on the production of greenhouse gas emissions.\n\nFederal or state laws or regulations may be adopted that would impose new or additional limits on greenhouse gas emissions, including, but not limited to, carbon dioxide and methane, from electric generation units using fuels, such as natural gas. The potential effects of greenhouse gas emission limits on NEE's and FPL's electric generation units are subject to significant uncertainties based on, among other things, the timing of the implementation of any new requirements, the required levels of emission reductions, the nature of any market-based or tax-based mechanisms adopted to facilitate reductions, the relative availability of greenhouse gas emission reduction offsets, the development of cost-effective, commercial-scale carbon capture and storage technology and supporting regulations and liability mitigation measures, and the range of available compliance alternatives.",
+  "reference_ids": [
+   "NEE_risk_factors#019"
+  ]
+ },
+ {
+  "id": "risk-15",
+  "kind": "risk",
+  "question": "What is the biggest cost in making Linde's industrial gases, and how does Linde manage it?",
+  "reference": "Energy is the single largest cost item in the production and distribution of industrial gases. Most of Linde\u2019s energy requirements are in the form of electricity, natural gas and diesel fuel for distribution. Linde attempts to minimize the financial impact of variability in these costs through the management of customer contracts and reducing demand through operational productivity and energy efficiency. Large customer contracts typically have escalation and pass-through clauses to recover energy and feedstock costs. Such attempts may not successfully mitigate cost variability, which could negatively impact Linde\u2019s financial condition or results of operations. The supply of energy has not been a significant issue in the geographic areas where Linde conducts business. However, regional energy conditions are unpredictable and may pose future risk.",
+  "reference_ids": [
+   "LIN_risk_factors#003"
+  ]
+ },
+ {
+  "id": "risk-16",
+  "kind": "risk",
+  "question": "Why is Caterpillar sensitive to the economic cycle?",
+  "reference": "Our business and the industries we serve are highly sensitive to global and regional economic conditions. Our results of operations are materially affected by economic conditions globally and regionally and in the particular industries we serve. The demand for our products and services tends to be cyclical and can be significantly reduced in periods of economic weakness characterized by lower levels of government and business investment, lower levels of business confidence, lower corporate earnings, high real interest rates, lower credit activity or tighter credit conditions, perceived or actual industry overcapacity, higher unemployment and lower consumer spending. A prolonged period of economic weakness may also result in increased expenses due to higher allowances for doubtful accounts and potential goodwill and asset impairment charges. Economic conditions vary across regions and countries, and demand for our products and services generally increases in those regions and countries experiencing economic growth and investment. Slower economic growth or a change in the global mix of regions and countries experiencing economic growth and investment could have an adverse effect on o",
+  "reference_ids": [
+   "CAT_risk_factors#004",
+   "CAT_risk_factors#005"
+  ]
+ },
+ {
+  "id": "risk-17",
+  "kind": "risk",
+  "question": "Why does Home Depot care so much about its brand and reputation?",
+  "reference": "A positive brand and reputation are critical to our business success, and, if our brand and reputation are damaged, it could negatively impact our relationships with our customers, associates and jobseekers, suppliers, service providers, vendors, shareholders, regulators, and the communities we serve, and, consequently, our business, results of operations and the price of our stock.\n\nOur brand and reputation are critical to attracting customers, associates and jobseekers, suppliers, service providers, and vendors to do business with us. We must continue to manage and protect our brand and reputation.",
+  "reference_ids": [
+   "HD_risk_factors#002"
+  ]
+ }
+]

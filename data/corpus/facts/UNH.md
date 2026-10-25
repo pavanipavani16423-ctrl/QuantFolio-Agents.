@@ -1,0 +1,34 @@
+# UnitedHealth Group Incorporated (UNH) - key financial facts
+
+Sector: Health Care. Source: SEC EDGAR XBRL company facts (Form 10-K annual values), CIK 731766.
+
+- UnitedHealth Group Incorporated (UNH) reported total revenue of $447.6 billion for the fiscal year ended 2025-12-31 (fiscal year 2025; 10-K filed 2026-03-02, accession 0000731766-26-000062, concept us-gaap:Revenues).
+- UnitedHealth Group Incorporated (UNH) reported total revenue of $400.3 billion for the fiscal year ended 2024-12-31 (fiscal year 2024; 10-K filed 2026-03-02, accession 0000731766-26-000062, concept us-gaap:Revenues).
+- UnitedHealth Group Incorporated (UNH) reported total revenue of $371.6 billion for the fiscal year ended 2023-12-31 (fiscal year 2023; 10-K filed 2026-03-02, accession 0000731766-26-000062, concept us-gaap:Revenues).
+- UnitedHealth Group Incorporated (UNH) reported operating income of $19.0 billion for the fiscal year ended 2025-12-31 (fiscal year 2025; 10-K filed 2026-03-02, accession 0000731766-26-000062, concept us-gaap:OperatingIncomeLoss).
+- UnitedHealth Group Incorporated (UNH) reported operating income of $32.3 billion for the fiscal year ended 2024-12-31 (fiscal year 2024; 10-K filed 2026-03-02, accession 0000731766-26-000062, concept us-gaap:OperatingIncomeLoss).
+- UnitedHealth Group Incorporated (UNH) reported operating income of $32.4 billion for the fiscal year ended 2023-12-31 (fiscal year 2023; 10-K filed 2026-03-02, accession 0000731766-26-000062, concept us-gaap:OperatingIncomeLoss).
+- UnitedHealth Group Incorporated (UNH) reported net income of $12.1 billion for the fiscal year ended 2025-12-31 (fiscal year 2025; 10-K filed 2026-03-02, accession 0000731766-26-000062, concept us-gaap:NetIncomeLoss).
+- UnitedHealth Group Incorporated (UNH) reported net income of $14.4 billion for the fiscal year ended 2024-12-31 (fiscal year 2024; 10-K filed 2026-03-02, accession 0000731766-26-000062, concept us-gaap:NetIncomeLoss).
+- UnitedHealth Group Incorporated (UNH) reported net income of $22.4 billion for the fiscal year ended 2023-12-31 (fiscal year 2023; 10-K filed 2026-03-02, accession 0000731766-26-000062, concept us-gaap:NetIncomeLoss).
+- UnitedHealth Group Incorporated (UNH) reported diluted earnings per share of $13.23 for the fiscal year ended 2025-12-31 (fiscal year 2025; 10-K filed 2026-03-02, accession 0000731766-26-000062, concept us-gaap:EarningsPerShareDiluted).
+- UnitedHealth Group Incorporated (UNH) reported diluted earnings per share of $15.51 for the fiscal year ended 2024-12-31 (fiscal year 2024; 10-K filed 2026-03-02, accession 0000731766-26-000062, concept us-gaap:EarningsPerShareDiluted).
+- UnitedHealth Group Incorporated (UNH) reported diluted earnings per share of $23.86 for the fiscal year ended 2023-12-31 (fiscal year 2023; 10-K filed 2026-03-02, accession 0000731766-26-000062, concept us-gaap:EarningsPerShareDiluted).
+- UnitedHealth Group Incorporated (UNH) reported net cash from operating activities of $19.7 billion for the fiscal year ended 2025-12-31 (fiscal year 2025; 10-K filed 2026-03-02, accession 0000731766-26-000062, concept us-gaap:NetCashProvidedByUsedInOperatingActivities).
+- UnitedHealth Group Incorporated (UNH) reported net cash from operating activities of $24.2 billion for the fiscal year ended 2024-12-31 (fiscal year 2024; 10-K filed 2026-03-02, accession 0000731766-26-000062, concept us-gaap:NetCashProvidedByUsedInOperatingActivities).
+- UnitedHealth Group Incorporated (UNH) reported net cash from operating activities of $29.1 billion for the fiscal year ended 2023-12-31 (fiscal year 2023; 10-K filed 2026-03-02, accession 0000731766-26-000062, concept us-gaap:NetCashProvidedByUsedInOperatingActivities).
+- UnitedHealth Group Incorporated (UNH) reported total assets of $309.6 billion as of 2025-12-31 (fiscal year 2025; 10-K filed 2026-03-02, accession 0000731766-26-000062, concept us-gaap:Assets).
+- UnitedHealth Group Incorporated (UNH) reported total assets of $298.3 billion as of 2024-12-31 (fiscal year 2024; 10-K filed 2026-03-02, accession 0000731766-26-000062, concept us-gaap:Assets).
+- UnitedHealth Group Incorporated (UNH) reported total assets of $273.7 billion as of 2023-12-31 (fiscal year 2023; 10-K filed 2026-03-02, accession 0000731766-26-000062, concept us-gaap:Assets).
+- UnitedHealth Group Incorporated (UNH) reported total liabilities of $207.9 billion as of 2025-12-31 (fiscal year 2025; 10-K filed 2026-03-02, accession 0000731766-26-000062, concept us-gaap:Liabilities).
+- UnitedHealth Group Incorporated (UNH) reported total liabilities of $195.7 billion as of 2024-12-31 (fiscal year 2024; 10-K filed 2026-03-02, accession 0000731766-26-000062, concept us-gaap:Liabilities).
+- UnitedHealth Group Incorporated (UNH) reported total liabilities of $174.8 billion as of 2023-12-31 (fiscal year 2023; 10-K filed 2025-02-27, accession 0000731766-25-000063, concept us-gaap:Liabilities).
+- UnitedHealth Group Incorporated (UNH) reported cash and cash equivalents of $24.4 billion as of 2025-12-31 (fiscal year 2025; 10-K filed 2026-03-02, accession 0000731766-26-000062, concept us-gaap:CashAndCashEquivalentsAtCarryingValue).
+- UnitedHealth Group Incorporated (UNH) reported cash and cash equivalents of $25.3 billion as of 2024-12-31 (fiscal year 2024; 10-K filed 2026-03-02, accession 0000731766-26-000062, concept us-gaap:CashAndCashEquivalentsAtCarryingValue).
+- UnitedHealth Group Incorporated (UNH) reported cash and cash equivalents of $25.4 billion as of 2023-12-31 (fiscal year 2023; 10-K filed 2025-02-27, accession 0000731766-25-000063, concept us-gaap:CashAndCashEquivalentsAtCarryingValue).
+- UnitedHealth Group Incorporated (UNH) reported long-term debt of $72.3 billion as of 2025-12-31 (fiscal year 2025; 10-K filed 2026-03-02, accession 0000731766-26-000062, concept us-gaap:LongTermDebtNoncurrent).
+- UnitedHealth Group Incorporated (UNH) reported long-term debt of $72.4 billion as of 2024-12-31 (fiscal year 2024; 10-K filed 2026-03-02, accession 0000731766-26-000062, concept us-gaap:LongTermDebtNoncurrent).
+- UnitedHealth Group Incorporated (UNH) reported long-term debt of $58.3 billion as of 2023-12-31 (fiscal year 2023; 10-K filed 2025-02-27, accession 0000731766-25-000063, concept us-gaap:LongTermDebtNoncurrent).
+- UnitedHealth Group Incorporated (UNH) reported stockholders' equity of $32.5 billion as of 2014-12-31 (fiscal year 2014; 10-K filed 2015-02-10, accession 0000731766-15-000007, concept us-gaap:StockholdersEquity).
+- UnitedHealth Group Incorporated (UNH) reported stockholders' equity of $32.1 billion as of 2013-12-31 (fiscal year 2013; 10-K filed 2015-02-10, accession 0000731766-15-000007, concept us-gaap:StockholdersEquity).
+- UnitedHealth Group Incorporated (UNH) reported stockholders' equity of $31.2 billion as of 2012-12-31 (fiscal year 2012; 10-K filed 2015-02-10, accession 0000731766-15-000007, concept us-gaap:StockholdersEquity).
