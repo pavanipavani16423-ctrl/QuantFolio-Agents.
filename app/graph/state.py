@@ -7,8 +7,16 @@ from typing import Annotated, Any, TypedDict
 class RunState(TypedDict, total=False):
     run_id: str
     client_id: str
+    market: str
     request: str
     methods: list[str]
+
+    # human-in-the-loop learning
+    preferences: list[dict[str, Any]]  # remembered from earlier reviews of this client
+    feedback: Annotated[list[dict[str, Any]], add]  # "Change" requests in this run
+    applied: dict[str, Any]  # what the preferences/feedback changed
+    effective_rules: dict[str, Any]  # mandate rules tightened by the above
+    revision: int
 
     intake: dict[str, Any]
     research: dict[str, Any]

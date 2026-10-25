@@ -20,6 +20,7 @@ from mcp.server.mcpserver import MCPServer
 from mcp.server.mcpserver.exceptions import ToolError
 
 from app.data import store
+from app.data.universe import MARKETS
 
 _LOCK = threading.Lock()
 
@@ -58,12 +59,15 @@ def _save(conn: sqlite3.Connection, client_id: str, cash: float, positions: dict
 
 
 def _snapshot(client_id: str, cash: float, positions: dict[str, int]) -> dict[str, Any]:
-    frame = store.prices()
+    market = store.market_of_client(client_id)
+    frame = store.prices(market)
     prices = {t: float(frame[t].iloc[-1]) for t in positions}
     values = {t: positions[t] * prices[t] for t in positions}
     total = cash + sum(values.values())
     return {
         "client_id": client_id,
+        "market": market,
+        "currency": MARKETS[market].currency,
         "price_date": str(frame.index[-1].date()),
         "cash": round(cash, 2),
         "positions": positions,
@@ -89,7 +93,7 @@ async def preview_rebalance(client_id: str, target_weights: dict[str, float],
     with _LOCK, _connect() as conn:
         cash, positions = _load(conn, client_id)
     snap = _snapshot(client_id, cash, positions)
-    frame = store.prices()
+    frame = store.prices(snap["market"])
     total = snap["market_value"]
     trades = []
     for ticker in sorted(set(positions) | set(target_weights)):
@@ -123,7 +127,7 @@ async def execute_orders(client_id: str, trades: list[dict[str, Any]], approval_
             return {"client_id": client_id, "approval_id": approval_id, "fills": json.loads(done[0]),
                     "replayed": True, "account": _snapshot(client_id, *_load(conn, client_id))}
         cash, positions = _load(conn, client_id)
-        frame = store.prices()
+        frame = store.prices(store.market_of_client(client_id))
         fills = []
         # sells first, so their cash funds the buys
         for trade in sorted(trades, key=lambda t: t["side"] != "sell"):

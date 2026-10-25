@@ -43,7 +43,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
               <span className="font-semibold text-foreground">QuantFolio Agents</span> · research
               project · paper trading only, not investment advice
             </p>
-            <p>Real SEC filings and Yahoo Finance prices · quantum results come from a simulator</p>
+            <p>Real SEC and NSE filings, Yahoo Finance prices · quantum results come from a simulator</p>
           </div>
         </footer>
       </body>

@@ -193,9 +193,18 @@ export interface RunResult {
     within_limit: boolean;
   };
   memo?: Memo;
-  evaluation?: { scores: Record<string, Score>; judge: string | null; notes: string[] };
+  evaluation?: {
+    scores: Record<string, Score>;
+    judge: string | null;
+    notes: string[];
+    ragas_status?: "running" | "done" | "failed" | "off";
+  };
+  preferences?: Preference[];
+  applied?: { removed: string[]; max_weight: number | null; lower_risk: number; notes: string[]; sources: string[] };
+  effective_rules?: Rules;
+  revision?: number;
   trades?: { trades: Trade[]; turnover: number; cash_after: number; account_value: number; price_date: string };
-  approval?: { approved: boolean; reviewer: string; note: string | null };
+  approval?: { approved: boolean; action?: string; reviewer: string; note: string | null };
   execution?: {
     fills: { ticker: string; side: string; shares: number; price: number; value: number }[];
     account: { market_value: number; cash: number; positions: Record<string, number> };
@@ -214,11 +223,35 @@ export interface ToolCall {
   started_at?: string;
 }
 
+export interface Preference {
+  id: number;
+  client_id: string;
+  kind: "exclude_ticker" | "max_weight" | "lower_risk" | "note";
+  value: string;
+  reason: string | null;
+  reviewer: string | null;
+  run_id: string | null;
+  created_at: string | null;
+}
+
+export interface ChangeRequest {
+  remove_tickers: string[];
+  max_weight: number | null;
+  lower_risk: boolean;
+}
+
 export interface Run {
   id: string;
   client_id: string;
   client_name: string;
   profile: string;
+  market: "US" | "IN";
+  market_name: string;
+  currency: string;
+  currency_symbol: string;
+  benchmark_name: string;
+  research_sources: string;
+  feedback: { action: string; reviewer: string; note: string | null; changes: ChangeRequest | null }[];
   request: string;
   methods: string[];
   status: RunStatus;
@@ -247,6 +280,8 @@ export interface RunSummary {
   created_at: string;
   trace_url: string | null;
   llm: string;
+  market?: string;
+  currency_symbol?: string;
   recommended: string | null;
   quantum_gap: number | null;
 }
@@ -259,4 +294,10 @@ export interface Client {
   market_value: number;
   holdings: number;
   price_date: string;
+  market: "US" | "IN";
+  market_name: string;
+  currency: string;
+  currency_symbol: string;
+  benchmark_name: string;
+  research_sources: string;
 }

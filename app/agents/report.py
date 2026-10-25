@@ -12,13 +12,15 @@ SYSTEM = (
     "JSON. Plain language, short sentences, no hype. Mention numbers as given (percentages "
     "with one decimal). When a risk comes from a research source, keep its [n] citation. "
     "Say clearly that the quantum optimizer ran on a simulator and whether it matched the "
-    "classical optimum. Never promise returns; past performance does not guarantee results."
+    "classical optimum; write any gap as a percentage. Only if the JSON has advisor_preferences, say in one sentence that the "
+    "proposal follows them. Use the client's currency. Never promise returns; past performance "
+    "does not guarantee results."
 )
 
 
 def current_weights(client_id: str) -> dict[str, float]:
     account = store.account(client_id)
-    frame = store.prices()
+    frame = store.prices(account["market"])
     values = {t: n * float(frame[t].iloc[-1]) for t, n in account["positions"].items()}
     total = sum(values.values()) + account["cash"]
     return {t: v / total for t, v in values.items()}
@@ -65,7 +67,8 @@ def template_memo(facts: dict[str, Any]) -> Memo:
         f"Based on {facts['window']}, the expected annual return is {rec['expected_return']:.1%} with "
         f"expected volatility of {rec['volatility']:.1%}. "
         f"In the {bt.get('days', 0)} trading days after that window (not used to build the portfolio) "
-        f"it returned {oos.get('total_return', 0):.1%}, versus {bt.get('spy_return', 0):.1%} for SPY. "
+        f"it returned {oos.get('total_return', 0):.1%}, versus {bt.get('benchmark_return', 0):.1%} for the "
+        f"{bt.get('benchmark_name', 'market')}. "
         f"{passed} of {n_rules} mandate rules pass. Past performance does not guarantee future results."
     )
     headline = (f"Rebalance {facts['client']['name']} into {rec['k']} stocks: "
@@ -75,6 +78,11 @@ def template_memo(facts: dict[str, Any]) -> Memo:
 
 
 async def run_report(ctx: RunContext, facts: dict[str, Any]) -> tuple[Memo, str]:
-    return await ctx.llm.structured("report_writer", Memo, SYSTEM,
-                                    json.dumps(facts, default=str, indent=1)[:12000],
-                                    fallback=lambda: template_memo(facts))
+    from app.agents.research import normalize_citations
+
+    memo, method = await ctx.llm.structured("report_writer", Memo, SYSTEM,
+                                            json.dumps(facts, default=str, indent=1)[:12000],
+                                            fallback=lambda: template_memo(facts))
+    memo.risks = [normalize_citations(r) for r in memo.risks]
+    memo.summary = normalize_citations(memo.summary)
+    return memo, method

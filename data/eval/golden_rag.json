@@ -180,6 +180,168 @@
   ]
  },
  {
+  "id": "facts-ASIANPAINT",
+  "kind": "facts",
+  "question": "What total revenue did Asian Paints Limited report for fiscal year 2026?",
+  "reference": "Asian Paints Limited reported total revenue of \u20b935,541 crore for the fiscal year ended 2026-03-31.",
+  "reference_ids": [
+   "ASIANPAINT_facts#000"
+  ]
+ },
+ {
+  "id": "facts-BHARTIARTL",
+  "kind": "facts",
+  "question": "What total revenue did Bharti Airtel Limited report for fiscal year 2026?",
+  "reference": "Bharti Airtel Limited reported total revenue of \u20b92,10,973 crore for the fiscal year ended 2026-03-31.",
+  "reference_ids": [
+   "BHARTIARTL_facts#000"
+  ]
+ },
+ {
+  "id": "facts-HDFCBANK",
+  "kind": "facts",
+  "question": "What total revenue did HDFC Bank Limited report for fiscal year 2026?",
+  "reference": "HDFC Bank Limited reported total revenue of \u20b92,49,562 crore for the fiscal year ended 2026-03-31.",
+  "reference_ids": [
+   "HDFCBANK_facts#000"
+  ]
+ },
+ {
+  "id": "facts-HINDUNILVR",
+  "kind": "facts",
+  "question": "What total revenue did Hindustan Unilever Limited report for fiscal year 2026?",
+  "reference": "Hindustan Unilever Limited reported total revenue of \u20b963,763 crore for the fiscal year ended 2026-03-31.",
+  "reference_ids": [
+   "HINDUNILVR_facts#000"
+  ]
+ },
+ {
+  "id": "facts-ICICIBANK",
+  "kind": "facts",
+  "question": "What total revenue did ICICI Bank Limited report for fiscal year 2026?",
+  "reference": "ICICI Bank Limited reported total revenue of \u20b92,23,407 crore for the fiscal year ended 2026-03-31.",
+  "reference_ids": [
+   "ICICIBANK_facts#000"
+  ]
+ },
+ {
+  "id": "facts-INFY",
+  "kind": "facts",
+  "question": "What total revenue did Infosys Limited report for fiscal year 2026?",
+  "reference": "Infosys Limited reported total revenue of \u20b92,016 crore for the fiscal year ended 2026-03-31.",
+  "reference_ids": [
+   "INFY_facts#000"
+  ]
+ },
+ {
+  "id": "facts-ITC",
+  "kind": "facts",
+  "question": "What total revenue did ITC Limited report for fiscal year 2026?",
+  "reference": "ITC Limited reported total revenue of \u20b978,213 crore for the fiscal year ended 2026-03-31.",
+  "reference_ids": [
+   "ITC_facts#000"
+  ]
+ },
+ {
+  "id": "facts-LT",
+  "kind": "facts",
+  "question": "What total revenue did Larsen & Toubro Limited report for fiscal year 2026?",
+  "reference": "Larsen & Toubro Limited reported total revenue of \u20b92,84,225 crore for the fiscal year ended 2026-03-31.",
+  "reference_ids": [
+   "LT_facts#000"
+  ]
+ },
+ {
+  "id": "facts-MARUTI",
+  "kind": "facts",
+  "question": "What total revenue did Maruti Suzuki India Limited report for fiscal year 2026?",
+  "reference": "Maruti Suzuki India Limited reported total revenue of \u20b91,77,094 crore for the fiscal year ended 2026-03-31.",
+  "reference_ids": [
+   "MARUTI_facts#000"
+  ]
+ },
+ {
+  "id": "facts-NTPC",
+  "kind": "facts",
+  "question": "What total revenue did NTPC Limited report for fiscal year 2026?",
+  "reference": "NTPC Limited reported total revenue of \u20b91,84,015 crore for the fiscal year ended 2026-03-31.",
+  "reference_ids": [
+   "NTPC_facts#000"
+  ]
+ },
+ {
+  "id": "facts-ONGC",
+  "kind": "facts",
+  "question": "What total revenue did Oil and Natural Gas Corporation Limited report for fiscal year 2026?",
+  "reference": "Oil and Natural Gas Corporation Limited reported total revenue of \u20b96,05,276 crore for the fiscal year ended 2026-03-31.",
+  "reference_ids": [
+   "ONGC_facts#000"
+  ]
+ },
+ {
+  "id": "facts-RELIANCE",
+  "kind": "facts",
+  "question": "What total revenue did Reliance Industries Limited report for fiscal year 2026?",
+  "reference": "Reliance Industries Limited reported total revenue of \u20b910,57,219 crore for the fiscal year ended 2026-03-31.",
+  "reference_ids": [
+   "RELIANCE_facts#000"
+  ]
+ },
+ {
+  "id": "facts-SBIN",
+  "kind": "facts",
+  "question": "What total revenue did State Bank of India report for fiscal year 2026?",
+  "reference": "State Bank of India reported total revenue of \u20b93,81,709 crore for the fiscal year ended 2026-03-31.",
+  "reference_ids": [
+   "SBIN_facts#000"
+  ]
+ },
+ {
+  "id": "facts-SUNPHARMA",
+  "kind": "facts",
+  "question": "What total revenue did Sun Pharmaceutical Industries Limited report for fiscal year 2026?",
+  "reference": "Sun Pharmaceutical Industries Limited reported total revenue of \u20b958,220 crore for the fiscal year ended 2026-03-31.",
+  "reference_ids": [
+   "SUNPHARMA_facts#000"
+  ]
+ },
+ {
+  "id": "facts-TATASTEEL",
+  "kind": "facts",
+  "question": "What total revenue did Tata Steel Limited report for fiscal year 2026?",
+  "reference": "Tata Steel Limited reported total revenue of \u20b92,30,293 crore for the fiscal year ended 2026-03-31.",
+  "reference_ids": [
+   "TATASTEEL_facts#000"
+  ]
+ },
+ {
+  "id": "facts-TCS",
+  "kind": "facts",
+  "question": "What total revenue did Tata Consultancy Services Limited report for fiscal year 2026?",
+  "reference": "Tata Consultancy Services Limited reported total revenue of \u20b92,67,021 crore for the fiscal year ended 2026-03-31.",
+  "reference_ids": [
+   "TCS_facts#000"
+  ]
+ },
+ {
+  "id": "facts-TITAN",
+  "kind": "facts",
+  "question": "What total revenue did Titan Company Limited report for fiscal year 2026?",
+  "reference": "Titan Company Limited reported total revenue of \u20b987,305 crore for the fiscal year ended 2026-03-31.",
+  "reference_ids": [
+   "TITAN_facts#000"
+  ]
+ },
+ {
+  "id": "facts-ULTRACEMCO",
+  "kind": "facts",
+  "question": "What total revenue did UltraTech Cement Limited report for fiscal year 2026?",
+  "reference": "UltraTech Cement Limited reported total revenue of \u20b987,384 crore for the fiscal year ended 2026-03-31.",
+  "reference_ids": [
+   "ULTRACEMCO_facts#000"
+  ]
+ },
+ {
   "id": "mandate-C-101-0",
   "kind": "mandate",
   "question": "How many stocks must Meera Iyer's portfolio hold?",
@@ -258,6 +420,123 @@
   "reference": "4.1 Excluded sectors: none.",
   "reference_ids": [
    "mandate_C-103#003"
+  ]
+ },
+ {
+  "id": "mandate-C-201-0",
+  "kind": "mandate",
+  "question": "How many stocks must Sharma Family Trust's portfolio hold?",
+  "reference": "3.1 Number of holdings: the portfolio shall hold exactly 8 stocks.",
+  "reference_ids": [
+   "mandate_C-201#002"
+  ]
+ },
+ {
+  "id": "mandate-C-201-1",
+  "kind": "mandate",
+  "question": "What is the largest share of Sharma Family Trust's portfolio one stock may have?",
+  "reference": "3.2 Position limits: no single holding may exceed 18% of the portfolio, and every holding must be at least 5% of the portfolio.",
+  "reference_ids": [
+   "mandate_C-201#002"
+  ]
+ },
+ {
+  "id": "mandate-C-201-2",
+  "kind": "mandate",
+  "question": "Which industries or companies does Sharma Family Trust exclude from its portfolio?",
+  "reference": "4.1 Excluded sectors: none.",
+  "reference_ids": [
+   "mandate_C-201#003"
+  ]
+ },
+ {
+  "id": "risk-in-00",
+  "kind": "risk_india",
+  "question": "Which international standards does TCS follow to manage enterprise risk?",
+  "reference": "semi\u2011autonomous operations. In addition, risk, compliance,\n\ncybersecurity, and regulatory\u2011driven transformation\n\nframework to address evolving AI\u2011related regulatory requirements across jurisdictions. This includes initiatives covering AI literacy, risk classification and management, contractual controls across the value chain, strengthened security and data protection\n\nframeworks, and the integration of Responsible AI principles across internal initiatives, products and platforms, and customer engagements. TCS\u2019s sustained focus on customer centricity,\n\nThe TCS Enterprise Risk Management (ERM) framework is a robust and continuously evolving system aligned with globally recognised practices under the COSO 2017 and ISO 31000:2018 frameworks, enabling the Company to effectively navigate an increasingly complex risk environment. Guided by the Risk Management Policy approved by the Board, the ERM framework encompasses risk identification, assessment, response planning, monitoring and governance to",
+  "reference_ids": [
+   "TCS_ar_risk#003"
+  ]
+ },
+ {
+  "id": "risk-in-01",
+  "kind": "risk_india",
+  "question": "What types of risk does HDFC Bank say it has to manage?",
+  "reference": "performance. The Bank operates in a dynamic and regulated\n\nenvironment and manages a wide range of risks including credit, market, liquidity, operational, model, cybersecurity, technology, compliance and reputational risks. The approach ensures\n\nthat risk-taking remains aligned with defined boundaries and strategic priorities.",
+  "reference_ids": [
+   "HDFCBANK_ar_risk#012"
+  ]
+ },
+ {
+  "id": "risk-in-02",
+  "kind": "risk_india",
+  "question": "What dangers come with Bharti Airtel running businesses in Asia and Africa?",
+  "reference": "Integrated Report and Annual Financial Statements 2025-26Bharti Airtel Limited Overview and Performance Management Discussion & Analysis Statutory Reports Financial Statements Risk and Mitigation Framework\n\nOperating across diverse and dynamic markets in Asia and Africa, Airtel is exposed to a broad spectrum of risks including political and economic volatility and regulatory uncertainty. Rapid technological advancements, intense competition, climate-related disruptions and increasing data privacy obligations further add to the complexity of the operating environment. This necessitates a proactive risk management approach to identify, assess and mitigate risks to ensure long-term sustainability.",
+  "reference_ids": [
+   "BHARTIARTL_ar_risk#002"
+  ]
+ },
+ {
+  "id": "risk-in-03",
+  "kind": "risk_india",
+  "question": "How does Hindustan Unilever decide whether a sustainability issue really matters?",
+  "reference": "In today's uncertain and ever-changing world, having a formal process to identify material sustainability issues is crucial. This process helps us focus on what matters most to our business and stakeholders. A sustainability issue is considered material if it meets two conditions: first, it poses a principal risk or is part of a principal risk that could impact our business or performance; second, it holds importance for our key stakeholders, including our employees, consumers, customers (retailers), suppliers, business partners, planet, and society (citizens, NGOs, governments).HUL updates its material topics every two years to stay aligned with changes in Global and Indian context. This year, HUL has refreshed its assessment to identify additions and revisions to the material topics, aligning with ESRS and parent entity (Unilever PLC). Below is the re-prioritised list of top sustainability issues across our operations and value chain.\n\nS.\n\nNo.",
+  "reference_ids": [
+   "HINDUNILVR_brsr#001"
+  ]
+ },
+ {
+  "id": "risk-in-04",
+  "kind": "risk_india",
+  "question": "According to TCS, how did conflict and trade disruption change energy prices and costs?",
+  "reference": "as a significant source of uncertainty for the global economy, particularly through disruptions to energy markets and global trade flows. The conflict has led to volatility in oil and gas prices due to supply risks and logistical constraints in critical transit routes, which has translated into higher input costs across\n\nindustries and contributed to renewed inflationary pressures in several economies. Elevated energy prices have weighed\n\non consumer purchasing power and corporate margins, while\n\nheightened geopolitical risk has increased financial market\n\nvolatility, tightened financial conditions, and dampened\n\ninvestment sentiment globally. The broader global economy has experienced slower growth momentum and increased downside\n\nrisks to the medium\u2011term outlook, prompting IMF to lower its 2026 global growth projection by 0.2% to 3.1%1.",
+  "reference_ids": [
+   "TCS_ar_mdna#002"
+  ]
+ },
+ {
+  "id": "risk-in-05",
+  "kind": "risk_india",
+  "question": "What hit Maruti Suzuki's business environment late in the year, and what happened to the rupee?",
+  "reference": "domestic consumption, fast-track investment and support\n\nemployment, including GST reform, personal income tax relief, front- loaded capital expenditure, and enhanced credit support to MSMEs.\n\nAt the same time, benign inflation provided the RBI with room to reduce interest rates and support economic growth. Besides, RBI\u2019s astute liquidity management for quicker transmission of policy rate cuts and efforts to contain volatility in forex market were noteworthy.\n\nHowever, towards the end of the year, the West Asia conflict created supply and cost shocks that weighed on economic momentum and led to a sharp depreciation of the rupee against the US dollar. Going forward, the effect of geopolitical tensions on economy may likely prevail. In addition, the risk of an El Ni\u00f1o-induced weak monsoon is emerging.",
+  "reference_ids": [
+   "MARUTI_ar_mdna#002"
+  ]
+ },
+ {
+  "id": "risk-in-06",
+  "kind": "risk_india",
+  "question": "What does Reliance expect for global oil demand next year, and why?",
+  "reference": "Reliance Retail expects to continue focusing on expansion, operational efficiency, and customer-centric innovation, while strengthening its integrated ecosystem across stores and digital platforms with prudent investments and disciplined risk management.\n\nReliance Industries Limited Integrated Annual Report 2025-26 Management Discussion and Analysis - Business Overview Management Discussion and Analysis - Business Overview Strategic\n\n\u2022 Increasing global uncertainties is putting pressure\n\non energy, freight and raw material costs. Broader\n\n\u2022 Content piracy continues to present a persistent risk.\n\n\u2022 Emerging formats such as micro-dramas are unlocking\n\nGlobal oil demand growth is expected to be sluggish due to higher oil prices and economic slowdown in FY 2026-27 amid Middle East conflict. Refinery and oil infrastructure damages which caused product supply losses are likely to take a longer period to recover, resulting in continual volatility in the market. The FY 2026-27 outlook remains extremely vulnerable to geopolitical, macro-economic and policy risks.",
+  "reference_ids": [
+   "RELIANCE_ar_risk#001"
+  ]
+ },
+ {
+  "id": "risk-in-07",
+  "kind": "risk_india",
+  "question": "How many steps are in Asian Paints' process for handling risks?",
+  "reference": "The Company operates under a risk governance framework that features dedicated risk management roles:\n\nrisks affecting our operations, including\n\nWe have implemented a five-stage risk management process to ensure structured identification, evaluation and mitigation of risks. The process captures both threats and opportunities, enabling timely responses and continuous improvement.\n\nKey organisational risks are identified through inputs from top management and prioritised based on impact, likelihood, and the Company\u2019s risk appetite. The RMC strengthens preparedness for these risks through scenario-based mitigation plans and dynamic scenario planning.\n\nIdentified risks are mapped to business functions/those responsible for developing and implementing of mitigation plans as necessary. Progress is monitored periodically at the Risk Management Committee meetings.\n\nOur risk governance is benchmarked against ISO 31000 standards, ensuring consistency with international best practices and reinforcing our commitment to robust, transparent and effective risk management.",
+  "reference_ids": [
+   "ASIANPAINT_ar_risk#002"
+  ]
+ },
+ {
+  "id": "risk-in-08",
+  "kind": "risk_india",
+  "question": "How did L&T narrow down which sustainability topics matter most?",
+  "reference": "An initial longlist of 34 topics was identified for evaluation. Following detailed assessment and prioritization, 15 topics were determined to be most material based on their impact and/or financial significance. The identified material topics span environmental, social and governance dimensions and include topics assessed as double material as well as those driven primarily by financial materiality. These topics represent priority areas of focus for L&T\u2019s strategy, risk management and sustainability initiatives.\n\nThe materiality matrix and its associated targets and KPIs are published on the website.",
+  "reference_ids": [
+   "LT_ar_mdna#083"
+  ]
+ },
+ {
+  "id": "risk-in-09",
+  "kind": "risk_india",
+  "question": "Which committee oversees business risks at Titan, and which risks does it cover?",
+  "reference": "Source: NSE annual report filing, https://nsearchives.nseindia.com/annual_reports/AR_29549_TITAN_2025_2026_A_11906853_03072026125809.pdf\n\nconcern status and Company\u2019s operations in future.\n\n7. Proceedings under Insolvency and Bankruptcy\n\nThe Company has constituted a Risk Management Committee. The Company has in place a risk management framework to identify, evaluate business risks and challenges across the Company both at corporate level as also separately for each business division. These risks include market risk, credit risk and liquidity risk.\n\nThe Company minimises the effects of these risks by using derivative financial instruments to hedge risk exposures. The use of derivative financial instruments and investment of excess liquidity is governed by the Company\u2019s policies approved by the Board of Directors, which provide written principles on the use of such instruments consistent with the Company\u2019s risk management strategy.\n\nThe Company does not enter into or trade financial instruments including derivative financial instruments, for speculative purposes.",
+  "reference_ids": [
+   "TITAN_ar_risk#000"
   ]
  },
  {

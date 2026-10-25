@@ -14,7 +14,7 @@ from app.schemas import MandateRules, Source
 TRUTH = json.loads((Path(__file__).resolve().parents[2] / "data" / "eval" / "mandate_truth.json").read_text())
 
 
-@pytest.mark.parametrize("client", ["C-101", "C-102", "C-103"])
+@pytest.mark.parametrize("client", ["C-101", "C-102", "C-103", "C-201"])
 def test_rule_patterns_extract_every_mandate_exactly(client: str) -> None:
     chunks = [c.to_dict() for c in chunk_document(store.document(f"mandate_{client}"))]
     rules = rules_from_text(client, chunks)
@@ -97,3 +97,45 @@ def test_extractive_answer_cites_its_sources() -> None:
     answer = extractive_answer("What supply risks exist?", [src])
     assert "[1]" in answer.answer
     assert answer.risk_flags[0].source == 1
+
+
+def test_advisor_feedback_only_tightens_the_rules() -> None:
+    from app.agents.preferences import effective_rules, feedback_to_preferences
+
+    rules = MandateRules(client_id="C-102", **TRUTH["C-102"])
+    prefs = [{"kind": "exclude_ticker", "value": "NVDA"}, {"kind": "max_weight", "value": "0.15"},
+             {"kind": "note", "value": "keep turnover low"}]
+    feedback = [{"changes": {"remove_tickers": ["GOOGL"], "max_weight": 0.30, "lower_risk": True},
+                 "note": "less tech"}]
+    out, applied = effective_rules(rules, prefs, feedback)
+    assert set(out.excluded_tickers) >= {"NVDA", "GOOGL"}
+    assert out.max_weight == 0.15  # a looser cap (0.30) is ignored
+    assert out.risk_aversion == pytest.approx(TRUTH["C-102"]["risk_aversion"] * 1.5)
+    assert applied["notes"] == ["keep turnover low", "less tech"]
+    assert rules.max_weight == 0.20  # the mandate itself is unchanged
+
+    # an impossible cap (5% with 8 holdings) is raised to the smallest feasible one
+    tight, _ = effective_rules(rules, [{"kind": "max_weight", "value": "0.05"}], [])
+    assert tight.max_weight >= 1 / 8
+
+    rows = feedback_to_preferences("C-102", {"changes": {"remove_tickers": ["NVDA"], "lower_risk": True},
+                                             "note": "why", "reviewer": "r"}, "run_1")
+    assert {r["kind"] for r in rows} == {"exclude_ticker", "lower_risk", "note"}
+
+
+def test_india_research_uses_sebi_documents_and_inr() -> None:
+    from app.data.universe import MARKETS, market_of_tickers, tickers
+
+    assert MARKETS["IN"].research_doc_types == ("ar_risk", "ar_mdna", "brsr")
+    assert market_of_tickers(["TCS", "INFY", "NIFTY50"]) == "IN"
+    with pytest.raises(ValueError):
+        market_of_tickers(["TCS", "AAPL"])
+    assert "ITC" in tickers("IN") and "AAPL" not in tickers("IN")
+    assert mentioned_tickers("Our reliance on titanium suppliers", "IN") == []
+    assert mentioned_tickers("Compare Reliance and Tata Steel", "IN") == ["RELIANCE", "TATASTEEL"]
+
+
+def test_citations_are_normalized_to_one_style() -> None:
+    from app.agents.research import normalize_citations
+
+    assert normalize_citations("A【1】 B【2†L3-L5】 C [3, 4] D [5][6]") == "A[1] B[2] C [3][4] D [5][6]"

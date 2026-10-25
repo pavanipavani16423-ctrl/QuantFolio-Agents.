@@ -1,10 +1,15 @@
 # QuantFolio Agents
 
-**An AI investment team that rebalances client portfolios: multi-agent (LangGraph), agent-to-agent
-(A2A), MCP tools, hybrid RAG over real SEC filings, a quantum optimizer (QAOA), Langfuse tracing
-and RAGAS evaluation, with a human approval step before any trade.**
+**An AI investment team that rebalances client portfolios in the US and India: multi-agent
+(LangGraph), agent-to-agent (A2A), MCP tools, hybrid RAG over each market's mandatory company
+disclosures (SEC filings; SEBI annual reports and BRSR), a quantum optimizer (QAOA), Langfuse
+tracing, RAGAS evaluation, and a human-in-the-loop that learns from the advisor's changes.**
 
-![Home](docs/screenshots/home.png)
+New here? Read the plain-English guide: [docs/GUIDE.md](docs/GUIDE.md), or open the visual guide
+[docs/quantfolio-guide.html](docs/quantfolio-guide.html) in a browser (one self-contained file you
+can share).
+
+![Home](docs/screenshots/guide-1-start.png)
 
 ---
 
@@ -48,10 +53,26 @@ Agents automates that routine end to end and shows its work:
 6. The portfolio is **backtested on months the agents never saw**, checked rule by rule, and
    written up as a plain-language memo.
 7. Every answer is **scored** (RAGAS and deterministic checks) and sent to **Langfuse**.
-8. The run **pauses for a human**. Only after approval does the trader agent place the orders,
-   in a paper (practice) account.
+8. The run **pauses for a human**: **Approve**, **Change** or **Reject**. *Change* (remove a
+   stock, a smaller maximum per stock, less risk) makes the agents re-plan at once; with
+   "remember" ticked the preference is stored for that client and applied to every later plan
+   (a learning loop measured in Langfuse by approvals and revisions). Only after approval does
+   the trader agent place the orders, in a paper (practice) account.
 
-![Run page](docs/screenshots/run.png)
+![Run page](docs/screenshots/guide-4-plan.png)
+
+### Two markets, two sets of research criteria
+
+| | United States (20 stocks) | India (18 NSE stocks) |
+|---|---|---|
+| Regulator | SEC | SEBI |
+| Research documents | Form 10-K Item 1A (risk factors), Item 7 (MD&A), XBRL facts | Annual report: Management Discussion and Analysis (SEBI LODR Reg. 34) and its risk paragraphs; Business Responsibility and Sustainability Report (BRSR); reported financials in ₹ crore |
+| Prices, currency, benchmark | Yahoo Finance, USD, S&P 500 (SPY) | Yahoo Finance (NSE), INR, Nifty 50 |
+| Risk-free rate (Sharpe) | 4.0% | 6.5% |
+| Example client | 3 mandates (C-101..C-103) | Sharma Family Trust (C-201): 8 stocks, no tobacco |
+
+The research agent picks the document types from the client's market, the compliance agent
+reads that client's mandate, and the backtest compares against the market's own index.
 
 ## Who it is for
 
@@ -164,11 +185,17 @@ flowchart LR
     X --> A[top-k chunks with ids]
 ```
 
-* **Corpus**: 63 documents, 2,119 chunks. Item 1A (risk factors) and Item 7 (MD&A) of the
-  latest 10-K for 20 companies, SEC XBRL financial facts, and 3 client policy statements.
+* **Corpus**: 135 documents, 4,585 chunks.
+  * US: Item 1A (risk factors) and Item 7 (MD&A) of the latest 10-K for 20 companies, and SEC
+    XBRL financial facts.
+  * India: from each of 18 companies' latest annual report on NSE, the Management Discussion
+    and Analysis (SEBI LODR Reg. 34), its risk paragraphs and the BRSR sustainability report
+    (Titan publishes its BRSR separately, so it is skipped; NTPC uses FY2024-25 because the
+    newest PDF is damaged), plus reported financials in ₹ crore (`scripts/fetch_india.py`).
+  * 4 client policy statements (3 US, 1 India).
 * **Contextual chunk headers** ("NVIDIA Corporation (NVDA) 10-K Item 1A risk factors -
   Risks Related to Demand, Supply, and Manufacturing") are indexed with each chunk.
-* **Metadata filters** (ticker, document type, client) are applied before scoring.
+* **Metadata filters** (ticker, document type, client, market) are applied before scoring.
 * **Diversification**: the research agent spreads the top slots across the companies asked
   about.
 * Models run locally on CPU via `fastembed` (ONNX). No embedding API is needed.
@@ -187,7 +214,7 @@ optimizer turns the mean-variance objective into a QUBO and runs QAOA on Qiskit 
 * The exhaustive classical search gives the **proven optimum** of the same problem, so the
   quantum result is measured, not assumed. Details: [docs/quantum.md](docs/quantum.md).
 
-![Normal vs quantum](docs/screenshots/compare.png)
+![Normal vs quantum](docs/screenshots/guide-7-details.png)
 
 ## Observability: Langfuse
 
@@ -231,19 +258,23 @@ output quality, compliance, portfolio, quantum and the human decision. See
 * The judge's prompts are traced too. Without a judge key the LLM metrics are reported as
   skipped, never invented.
 * **Models (Groq free tier)**: the agents use `openai/gpt-oss-120b` (low reasoning effort). The
-  RAGAS judge is a *pool* of `qwen/qwen3.8-27b` (thinking off) and `openai/gpt-oss-120b`, used
-  in turn: Groq's rate limits are per model (8,000 tokens/min), so a pool doubles the judge's
-  budget, and a failed call is retried on the other model, then in plain-JSON mode. A full run
-  with RAGAS scoring takes about 1.5-2 minutes on the free tier; the agent steps themselves
-  take about 25 seconds.
+  RAGAS judge is `qwen/qwen3.8-27b` (thinking off), a different model on purpose: Groq's rate
+  limits are per model (8,000 tokens/min), so the judge never slows the agents down. A failed
+  tool call is retried in plain-JSON mode; `JUDGE_MODEL` also accepts a comma-separated pool
+  that is used in turn. The plan is ready for a decision in about 20 seconds; RAGAS scoring then
+  finishes in the background (about 2-3 minutes on the free tier) and appears on the run page
+  and in Langfuse. A change request cancels stale scoring and re-scores the new plan.
 
   Example scores from a live run (GreenLeaf, "climate risks of NVIDIA and NextEra"):
   faithfulness 0.75, answer relevancy 0.90, context precision 0.92, context relevance 1.00,
   memo quality 0.75, citation coverage 1.00, rule extraction 1.00, compliance pass 1.
+  India (Sharma Family Trust, "risks Reliance and TCS report"): faithfulness 1.00, answer
+  relevancy 0.80, context precision 0.70, context relevance 1.00, memo quality 0.75, rule
+  extraction 1.00, compliance pass 1.
 
-**Offline (`scripts/eval_rag.py`)**: a 47-question test set with known answer chunks
-(20 facts questions generated from XBRL data, 9 policy questions, and 18 hand-written risk
-questions worded differently from the filings). It is uploaded as the Langfuse dataset
+**Offline (`scripts/eval_rag.py`)**: a 78-question test set with known answer chunks
+(38 facts questions generated from US and Indian financials, 12 policy questions, and 28
+hand-written risk questions, 18 US and 10 India, worded differently from the reports). It is uploaded as the Langfuse dataset
 `quantfolio-rag-golden`, with one experiment per retrieval mode.
 
 **Quantum (`scripts/quantum_experiment.py`)**: QAOA vs exhaustive search for every client,
@@ -253,27 +284,29 @@ mixer and depth.
 
 Full write-up: [docs/evaluation.md](docs/evaluation.md). Raw data: `experiments/results/`.
 
-**Retrieval** (47 labelled questions, top 6 over all 2,119 chunks, no filters):
+**Retrieval** (78 labelled questions, US and India, top 6 over all 4,585 chunks, no filters):
 
-| Mode | hit rate@6 | MRR@6 | RAGAS ID context recall | paraphrased risk questions |
-|---|---|---|---|---|
-| BM25 keyword | 83.0% | 0.739 | 0.808 | 56% |
-| Dense embeddings | **93.6%** | 0.795 | **0.925** | **89%** |
-| Hybrid (RRF) | 91.5% | 0.793 | 0.883 | 78% |
-| Hybrid + reranker (default) | 91.5% | **0.890** | 0.904 | 78% |
+| Mode | hit rate@6 | MRR@6 | RAGAS ID context recall | US risk questions | India risk questions |
+|---|---|---|---|---|---|
+| BM25 keyword | 84.6% | 0.759 | 0.827 | 56% | 60% |
+| Dense embeddings | **96.2%** | 0.822 | **0.955** | **89%** | **100%** |
+| Hybrid (RRF) | 94.9% | 0.836 | 0.930 | 78% | **100%** |
+| Hybrid + reranker (default) | 94.9% | **0.924** | 0.942 | 78% | **100%** |
 
 Keyword search fails on reworded questions, embeddings handle them best, and the reranker
 puts the right passage first most often (best MRR). Exact facts and policy questions are
-found by every mode. These are measured on a test set that was not used for tuning.
+found by every mode. These are measured on a test set that was not used for tuning. On 8
+generated answers (4 US, 4 India) the RAGAS judge scores faithfulness at 0.79.
 
-**Quantum vs exact** (each client's real problem, 18-20 qubits):
+**Quantum vs exact** (each client's real problem, 17-20 qubits, US and India):
 
 | Design | optimum found | mean gap | valid answers | mean time (simulated) | exact search |
 |---|---|---|---|---|---|
-| XY mixer + Dicke start (default) | **6/9**, 3/3 at p = 2 | 0.37% | **100%** | 8 s | 0.05-0.4 s |
-| Standard X mixer + penalty | 1/9 | 7.2% | 26% | 52 s | 0.05-0.4 s |
+| XY mixer + Dicke start (default) | **6/12**, 3/4 at p = 2 | 2.8% | **100%** | 6 s | 0.03-0.4 s |
+| Standard X mixer + penalty | 1/12 | 14.8% | 22% | 41 s | 0.03-0.4 s |
 
-The constraint-preserving circuit is what makes QAOA useful here; the hybrid swap step closes
+The constraint-preserving circuit is what makes QAOA useful here. The Indian mandate is the
+hardest case (best QAOA gap 9.9%); the hybrid swap step closes
 every remaining gap. No quantum advantage is claimed: the classical search is exact and faster
 at this size.
 
@@ -281,7 +314,7 @@ at this size.
 mandates correctly (`output_rule_extraction_accuracy` = 1.0), every recommended portfolio
 passes every rule, and the excluded sectors and companies never appear.
 
-![Quality page](docs/screenshots/quality.png)
+![Quality scores on a run](docs/screenshots/guide-6-checks.png)
 
 ## Quick start
 
@@ -325,7 +358,7 @@ All settings are environment variables (or `.env`); see [.env.example](.env.exam
 | `LLM_PROVIDER` | `mock` | `groq`, `openai`, `anthropic`, `ollama`, or `mock` (offline rules) |
 | `GROQ_API_KEY` / `OPENAI_API_KEY` / `ANTHROPIC_API_KEY` | - | provider keys |
 | `LLM_MODEL` | provider default | Groq default: `openai/gpt-oss-120b` |
-| `JUDGE_PROVIDER`, `JUDGE_MODEL` | Groq: `qwen/qwen3.8-27b,openai/gpt-oss-120b` | RAGAS judge; a comma-separated list is used in turn |
+| `JUDGE_PROVIDER`, `JUDGE_MODEL` | Groq: `qwen/qwen3.8-27b` | RAGAS judge; a comma-separated list is used in turn |
 | `LANGFUSE_PUBLIC_KEY`, `LANGFUSE_SECRET_KEY`, `LANGFUSE_BASE_URL` | - | tracing and scores |
 | `RAG_MODE` | `hybrid_rerank` | `bm25`, `dense`, `hybrid`, `hybrid_rerank` |
 | `QAOA_MIXER` / `QAOA_REPS` / `QAOA_MAXITER` / `QAOA_SHOTS` | `xy` / 2 / 60 / 2048 | quantum settings |
@@ -354,7 +387,7 @@ Interactive docs: http://localhost:8000/docs
 ## Tests
 
 ```bash
-uv run pytest            # 43 tests: unit + end-to-end through the HTTP API
+uv run pytest            # 49 tests: unit + end-to-end through the HTTP API
 ```
 
 They cover the Dicke state and the fast simulator against Qiskit Aer, the QUBO against the

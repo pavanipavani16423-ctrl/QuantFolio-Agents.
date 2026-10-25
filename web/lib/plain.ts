@@ -41,7 +41,7 @@ export const METHOD: Record<string, { name: string; short: string; color: string
     color: "var(--series-greedy)",
     explain: "",
   },
-  SPY: { name: "S&P 500 index (SPY)", short: "S&P 500", color: "var(--series-spy)", explain: "The US stock market." },
+  benchmark: { name: "The market index", short: "Market", color: "var(--series-spy)", explain: "S&P 500 (US) or Nifty 50 (India)." },
 };
 
 export const STATUS: Record<RunStatus, { label: string; tone: Tone }> = {
@@ -85,7 +85,7 @@ export const SCORE_GROUPS: { title: string; plain: string; names: string[] }[] =
   {
     title: "Quantum and portfolio",
     plain: "How the quantum computer and the portfolio did",
-    names: ["quantum_optimality_gap", "quantum_feasible_probability", "quantum_approximation_ratio", "portfolio_oos_sharpe", "portfolio_oos_excess_return_vs_spy"],
+    names: ["quantum_optimality_gap", "quantum_feasible_probability", "quantum_approximation_ratio", "portfolio_oos_sharpe", "portfolio_oos_excess_return_vs_benchmark"],
   },
 ];
 
@@ -103,6 +103,30 @@ export const SCORE_LABEL: Record<string, { name: string; explain: string; kind: 
   quantum_feasible_probability: { name: "Valid quantum answers", explain: "Share of quantum results that pick exactly the right number of stocks", kind: "unit" },
   quantum_approximation_ratio: { name: "Quantum quality", explain: "1.0 would be perfect", kind: "unit" },
   portfolio_oos_sharpe: { name: "Return per unit of risk", explain: "Sharpe ratio on unseen recent months", kind: "raw" },
-  portfolio_oos_excess_return_vs_spy: { name: "vs the market", explain: "Return minus the S&P 500, unseen months", kind: "pct" },
+  portfolio_oos_excess_return_vs_benchmark: { name: "vs the market", explain: "Return minus the market index, unseen months", kind: "pct" },
   rag_top_rerank_score: { name: "Best source match", explain: "Reranker confidence", kind: "raw" },
 };
+
+export const DOC_LABEL: Record<string, string> = {
+  risk_factors: "10-K · Risk factors (SEC)",
+  mdna: "10-K · Management discussion (SEC)",
+  ar_mdna: "Annual report · Management discussion (SEBI)",
+  ar_risk: "Annual report · Risks",
+  brsr: "BRSR sustainability report (SEBI)",
+  facts: "Reported financials",
+  mandate: "Client rules",
+};
+
+export const MARKET_LABEL: Record<string, { flag: string; name: string }> = {
+  US: { flag: "US", name: "United States · NYSE/Nasdaq" },
+  IN: { flag: "IN", name: "India · NSE" },
+};
+
+/** The five stages a person sees, built from the twelve agent steps. */
+export const STAGES: { key: string; title: string; steps: string[] }[] = [
+  { key: "understand", title: "Understand", steps: ["intake"] },
+  { key: "research", title: "Research", steps: ["research", "risk", "mandate"] },
+  { key: "choose", title: "Choose stocks", steps: ["optimize", "backtest"] },
+  { key: "check", title: "Check & explain", steps: ["check", "report", "evaluate", "trades"] },
+  { key: "decide", title: "Your decision", steps: ["approval", "execute"] },
+];

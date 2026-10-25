@@ -158,12 +158,14 @@ async def optimize_portfolio_weights(problem: Problem, selected: list[str]) -> d
 
 
 async def run_backtest(portfolios: dict[str, dict[str, float]], start_after: str,
-                       risk_free: float = 0.04) -> dict[str, Any]:
+                       risk_free: float = 0.04, market: str = "US") -> dict[str, Any]:
     if not portfolios:
         raise ToolError("no portfolios")
+    if market not in store.PRICE_FILES:
+        raise ToolError(f"unknown market {market!r}")
     try:
         return await anyio.to_thread.run_sync(
-            lambda: backtest(portfolios, store.prices(), start_after, risk_free)
+            lambda: backtest(portfolios, store.prices(market), start_after, risk_free)
         )
     except (KeyError, ValueError) as exc:
         raise ToolError(str(exc)) from exc

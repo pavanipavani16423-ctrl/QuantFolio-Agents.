@@ -21,7 +21,7 @@ DEFAULT_LLM_MODELS = {
 }
 
 DEFAULT_JUDGE_MODELS = {
-    "groq": "qwen/qwen3.8-27b,openai/gpt-oss-120b",
+    "groq": "qwen/qwen3.8-27b",
     "openai": "gpt-4.1-mini",
     "anthropic": "claude-haiku-5-5",
     "ollama": "qwen2.5:7b",

@@ -21,7 +21,7 @@ sys.path.insert(0, str(ROOT))
 from app.agents.optimizer import build_problem  # noqa: E402
 from app.config import get_settings  # noqa: E402
 from app.data import store  # noqa: E402
-from app.data.universe import BENCHMARK, TICKERS  # noqa: E402
+from app.data.universe import MARKETS, tickers  # noqa: E402
 from app.quant.portfolio import local_search, select_exact, selection_problem  # noqa: E402
 from app.quant.stats import market_stats  # noqa: E402
 from app.quantum.qaoa_solver import QAOAConfig, run_qaoa  # noqa: E402
@@ -35,13 +35,19 @@ def main() -> None:
     parser.add_argument("--maxiter", type=int, default=60)
     parser.add_argument("--shots", type=int, default=2048)
     parser.add_argument("--seed", type=int, default=7)
+    parser.add_argument("--clients", nargs="+", default=["C-101", "C-102", "C-103", "C-201"])
+    parser.add_argument("--merge", help="earlier result file whose cases are kept for other clients")
     args = parser.parse_args()
     s = get_settings()
     truth = json.loads((ROOT / "data" / "eval" / "mandate_truth.json").read_text())
-    stats = market_stats(store.prices(), list(TICKERS), BENCHMARK, s.train_start, s.train_end).to_dict()
+    stats_by_market = {
+        m: market_stats(store.prices(m), tickers(m), MARKETS[m].benchmark, s.train_start, s.train_end).to_dict()
+        for m in MARKETS
+    }
 
     cases = []
-    for client in ("C-101", "C-102", "C-103"):
+    for client in args.clients:
+        stats = stats_by_market[store.market_of_client(client)]
         rules = MandateRules(client_id=client, **truth[client])
         p = build_problem(stats, rules)
         sp = selection_problem(p["tickers"], p["sectors"], p["mu"], p["cov"], p["k"],
@@ -83,6 +89,9 @@ def main() -> None:
                       f"P(opt) {res.optimal_probability:.4f} P(feas) {res.feasible_probability:.3f} "
                       f"depth {res.circuit_depth} cx {res.two_qubit_gates} {secs:.1f}s (exact {exact.seconds:.2f}s)", flush=True)
 
+    if args.merge:  # keep earlier cases for clients not re-run now
+        earlier = json.loads(Path(args.merge).read_text())["cases"]
+        cases = [c for c in earlier if c["client"] not in args.clients] + cases
     summary = {}
     for mixer in args.mixers:
         rows = [c for c in cases if c["mixer"] == mixer]

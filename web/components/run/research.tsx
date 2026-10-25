@@ -5,17 +5,11 @@ import { Check, ExternalLink, FileText, X } from "lucide-react";
 import { Badge, cn } from "@/components/ui";
 import { api } from "@/lib/api";
 import { pct } from "@/lib/format";
-import { RULE_LABEL } from "@/lib/plain";
+import { DOC_LABEL, RULE_LABEL } from "@/lib/plain";
 import type { Run, Source } from "@/lib/types";
 import { Cited } from "./recommendation";
 import { RunSection } from "./section";
 
-const DOC_LABEL: Record<string, string> = {
-  risk_factors: "10-K · Risk factors",
-  mdna: "10-K · Management discussion",
-  facts: "SEC financial facts",
-  mandate: "Client rules",
-};
 
 export function SourceDrawer({ source, onClose }: { source: Source | { chunk_id: string } | null; onClose: () => void }) {
   type Passage = { chunk_id: string; title: string; section: string; text: string; source_url: string | null };
@@ -58,7 +52,7 @@ export function SourceDrawer({ source, onClose }: { source: Source | { chunk_id:
         )}
         {full?.source_url && (
           <a href={full.source_url} target="_blank" rel="noreferrer" className="mt-4 inline-flex items-center gap-1.5 text-sm font-medium text-accent hover:underline">
-            Open the original on SEC.gov <ExternalLink className="size-3.5" />
+            Open the original document <ExternalLink className="size-3.5" />
           </a>
         )}
       </aside>
@@ -74,7 +68,7 @@ export function ResearchSection({ run, onCite }: { run: Run; onCite: (n: number)
       id="research"
       eyebrow="Research"
       title={r.question}
-      lead="Answered only from the companies' own annual reports (SEC 10-K). Click a number to read the exact passage."
+      lead={`Answered only from the companies' own documents: ${run.research_sources ?? "annual reports"}. Click a number to read the exact passage.`}
       right={<Badge tone={r.method === "llm" ? "accent" : "neutral"}>{r.method === "llm" ? "AI answer" : "Quotes picked by rules (offline mode)"}</Badge>}
     >
       <p className="text-base leading-relaxed [overflow-wrap:anywhere]">
@@ -108,6 +102,7 @@ export function RulesSection({ run, onOpenChunk }: { run: Run; onOpenChunk: (chu
   const rules = run.result.rules;
   const compliance = run.result.compliance;
   const risk = run.result.risk_check;
+  const applied = run.result.applied;
   if (!rules) return null;
   return (
     <RunSection
@@ -116,6 +111,12 @@ export function RulesSection({ run, onOpenChunk }: { run: Run; onOpenChunk: (chu
       title={compliance ? (compliance.passed ? "Every rule passes." : "A rule failed, so nothing is traded.") : "The client's rules"}
       lead="The compliance agent read these from the client's policy document and checked the final portfolio against each one."
     >
+      {applied && applied.sources.length > 0 && (
+        <p className="mb-3 rounded-2xl bg-accent-soft p-3 text-sm">
+          <span className="font-semibold">Also checked, from your feedback: </span>
+          {applied.sources.join(" · ")}
+        </p>
+      )}
       <ul className="divide-y rounded-2xl border">
         {(compliance?.checks ?? []).map((c) => (
           <li key={c.rule} className="flex items-start gap-3 p-3">

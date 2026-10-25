@@ -39,11 +39,12 @@ portfolio-run                                          chain    (user = client, 
 ├── 06 Backtest - out-of-sample performance            tool
 ├── 07 Compliance and risk check (A2A)                 guardrail   WARNING level if a rule fails
 ├── 08 Report writer - investment memo                 agent
-├── 09 Quality evaluation - RAGAS and checks           evaluator
-│   └── judge.<RAGAS prompt>  (several)                generation  the RAGAS judge's own calls
+├── 09 Quality evaluation - RAGAS and checks           evaluator   fast deterministic checks
+│   └── 09b RAGAS quality scoring (background)         evaluator   runs while the advisor reviews
+│       └── judge.<RAGAS prompt>  (several)            generation  the judge model's own calls
 └── 10 Trade proposal - paper broker (MCP)             tool
 portfolio-run  (resume, same trace id, after the human decision)
-├── 11 Human approval                                  span
+├── 11 Human approval                                  span        "change" -> back to 05 (attempt 2)
 └── 12 Paper trade execution (MCP)                     tool
 ```
 
@@ -83,9 +84,11 @@ Every score is registered as a Langfuse **score config** on startup
 | `quantum_feasible_probability` | deterministic | probability mass on valid selections |
 | `quantum_approximation_ratio` | deterministic | QAOA approximation ratio |
 | `human_approved` | boolean | the advisor's decision |
+| `human_revisions` | numeric | how many times the advisor pressed *Change* before deciding |
+| `learned_preferences_applied` | numeric | remembered advisor preferences applied to the first proposal |
 
-RAGAS metrics need an LLM judge (Groq by default: a pool of `qwen/qwen3.8-27b` and
-`openai/gpt-oss-120b`, used in turn, each judge call visible as a `judge.*` generation). Without a key they are skipped and the
+RAGAS metrics need an LLM judge (Groq by default: `qwen/qwen3.8-27b`, each judge call
+visible as a `judge.*` generation). Without a key they are skipped and the
 run says so; they are never filled with made-up values.
 
 ## 3. Dataset and experiments
@@ -111,6 +114,7 @@ In Langfuse open *Dashboards → New dashboard* ("QuantFolio quality") and add w
 | Compliance pass rate | Scores (boolean) | average `output_compliance_pass` | total |
 | Quantum gap | Scores | average `quantum_optimality_gap` | line chart |
 | Approval rate | Scores | average `human_approved` | by tag |
+| Learning loop | Scores | average `human_revisions` and `learned_preferences_applied` | line chart by week, per client tag: revisions should fall as learned preferences rise |
 | Cost and latency per run | Traces | total cost, p95 latency | filter name = `portfolio-run` |
 | LLM tokens by agent | Observations | total tokens | breakdown by observation name (`llm.*`) |
 

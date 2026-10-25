@@ -1,0 +1,332 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>QuantFolio Agents · A visual guide</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&display=swap">
+<style>
+:root{
+  --bg:#faf9f8;--fg:#121212;--card:#fff;--panel:#f3f0eb;--panel2:#f8f4ee;
+  --muted:rgba(26,22,20,.64);--subtle:rgba(26,22,20,.45);--border:rgba(26,22,20,.10);
+  --accent:#c8734a;--accent-soft:rgba(200,115,74,.12);--good:#2e7d5a;--good-soft:rgba(62,140,110,.12);
+  --bad:#c2413b;--bad-soft:rgba(194,65,59,.10);--blue:#2a78d6;--teal:#2a9d8f;
+  --glow:rgba(226,154,120,.28);
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#141210;--fg:#f4efe9;--card:#1c1916;--panel:#211d1a;--panel2:#1a1714;
+  --muted:rgba(244,239,233,.66);--subtle:rgba(244,239,233,.44);--border:rgba(244,239,233,.10);
+  --accent:#e08a5e;--accent-soft:rgba(224,138,94,.14);--good:#4fb487;--good-soft:rgba(79,180,135,.14);
+  --bad:#ec6f69;--bad-soft:rgba(236,111,105,.14);--blue:#5ea1e8;--teal:#45c1b1;--glow:rgba(224,138,94,.14);
+}}
+:root[data-theme="dark"]{
+  --bg:#141210;--fg:#f4efe9;--card:#1c1916;--panel:#211d1a;--panel2:#1a1714;
+  --muted:rgba(244,239,233,.66);--subtle:rgba(244,239,233,.44);--border:rgba(244,239,233,.10);
+  --accent:#e08a5e;--accent-soft:rgba(224,138,94,.14);--good:#4fb487;--good-soft:rgba(79,180,135,.14);
+  --bad:#ec6f69;--bad-soft:rgba(236,111,105,.14);--blue:#5ea1e8;--teal:#45c1b1;--glow:rgba(224,138,94,.14);
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.6 "Segoe UI",system-ui,-apple-system,Roboto,"Helvetica Neue",Arial,sans-serif;-webkit-font-smoothing:antialiased;overflow-wrap:break-word}
+a{color:var(--accent)}
+.wrap{max-width:1040px;margin:0 auto;padding:0 18px}
+.serif{font-family:"Instrument Serif",Georgia,"Times New Roman",serif;font-style:italic;font-weight:400;color:var(--accent)}
+h1,h2,h3{letter-spacing:-.02em;line-height:1.15;margin:0}
+h1{font-size:clamp(2.2rem,6vw,4rem);font-weight:650}
+h2{font-size:clamp(1.6rem,4vw,2.4rem);font-weight:650}
+h3{font-size:1.1rem;font-weight:650}
+p{margin:.5em 0}
+.muted{color:var(--muted)}.small{font-size:.875rem}
+.eyebrow{display:inline-flex;align-items:center;gap:8px;background:var(--accent-soft);color:var(--accent);font-size:.72rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;padding:4px 12px;border-radius:999px}
+.eyebrow:before{content:"";width:6px;height:6px;border-radius:50%;background:var(--accent)}
+header.top{position:sticky;top:0;z-index:10;background:color-mix(in oklab,var(--bg) 85%,transparent);backdrop-filter:blur(8px);border-bottom:1px solid var(--border)}
+header.top .wrap{display:flex;align-items:center;justify-content:space-between;height:58px;gap:12px}
+.logo{display:flex;align-items:center;gap:10px;font-weight:650;text-decoration:none;color:var(--fg)}
+.logo b{display:grid;place-items:center;width:32px;height:32px;border-radius:8px;background:var(--accent);color:#fff;font-family:"Instrument Serif",Georgia,serif;font-style:italic;font-size:20px}
+.toc{display:flex;gap:4px;overflow-x:auto;scrollbar-width:none}
+.toc a{white-space:nowrap;text-decoration:none;color:var(--muted);font-size:.85rem;padding:6px 10px;border-radius:999px}
+.toc a:hover{background:var(--panel);color:var(--fg)}
+.theme{border:1px solid var(--border);background:var(--card);color:var(--fg);border-radius:999px;padding:6px 12px;cursor:pointer;font-size:.8rem}
+.hero{background:radial-gradient(60% 55% at 50% 10%,var(--glow),transparent 70%);text-align:center;padding:72px 0 40px}
+.hero p.lead{max-width:640px;margin:18px auto 0;font-size:1.15rem;color:var(--muted)}
+section{padding:56px 0;border-top:1px solid var(--border)}
+section:first-of-type{border-top:0}
+.sec-head{display:flex;flex-direction:column;align-items:flex-start;gap:12px;margin-bottom:28px}
+.sec-head p{max-width:680px;color:var(--muted);font-size:1.05rem;margin:0}
+.grid{display:grid;gap:14px}
+.g2{grid-template-columns:repeat(auto-fit,minmax(260px,1fr))}
+.g3{grid-template-columns:repeat(auto-fit,minmax(220px,1fr))}
+.g4{grid-template-columns:repeat(auto-fit,minmax(200px,1fr))}
+.card{background:var(--card);border:1px solid var(--border);border-radius:22px;padding:20px}
+.panel{background:var(--panel);border-radius:26px;padding:18px}
+.tag{display:inline-block;font-size:.7rem;padding:2px 8px;border-radius:999px;background:var(--panel);color:var(--muted);margin-left:6px;vertical-align:middle}
+.num{font-family:"Instrument Serif",Georgia,serif;font-style:italic;color:var(--accent);font-size:1.8rem;line-height:1;font-variant-numeric:lining-nums}
+.stat{background:var(--panel2);border-radius:18px;padding:16px;text-align:center}
+.stat .num{font-size:2.2rem}
+/* flow */
+.flow{display:flex;flex-wrap:wrap;gap:8px}
+.flow button{flex:1 1 130px;border:1px solid var(--border);background:var(--card);color:var(--fg);border-radius:16px;padding:12px;text-align:left;cursor:pointer;font:inherit}
+.flow button .n{font-family:"Instrument Serif",Georgia,serif;font-style:italic;color:var(--accent);font-size:1.3rem;display:block}
+.flow button.on{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+.flow-detail{margin-top:12px;min-height:110px}
+/* svg diagrams */
+svg text{font-family:"Segoe UI",system-ui,sans-serif}
+.diagram{width:100%;height:auto;display:block}
+.diagram-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+@media (max-width:700px){.diagram{min-width:720px}}
+.box{fill:var(--card);stroke:var(--border)}
+.box-accent{fill:var(--accent-soft);stroke:var(--accent)}
+.line{stroke:var(--subtle);stroke-width:1.6;fill:none}
+.t{fill:var(--fg);font-size:13px}.ts{fill:var(--muted);font-size:11px}.tb{fill:var(--fg);font-size:13px;font-weight:650}
+/* qubits */
+.qubits{display:flex;flex-wrap:wrap;gap:6px;margin:14px 0}
+.qubit{width:54px;height:48px;border-radius:12px;display:grid;place-items:center;font-weight:650;font-size:.75rem;border:1px solid var(--border);background:var(--card);color:var(--subtle);cursor:pointer;transition:.15s}
+.qubit.on{background:var(--accent);border-color:var(--accent);color:#fff}
+.bar{height:10px;border-radius:99px;background:var(--panel)}.bar i{display:block;height:100%;border-radius:99px}
+/* walkthrough */
+.steps-nav{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px}
+.steps-nav button{border:1px solid var(--border);background:var(--card);color:var(--muted);border-radius:999px;padding:8px 14px;cursor:pointer;font:inherit;font-size:.9rem}
+.steps-nav button.on{background:var(--fg);color:var(--bg);font-weight:650}
+.shot{display:grid;grid-template-columns:1.5fr 1fr;gap:18px;align-items:start}
+@media (max-width:820px){.shot{grid-template-columns:1fr}}
+.shot figure{margin:0;border-radius:18px;overflow:hidden;border:1px solid var(--border);background:var(--card);box-shadow:0 20px 50px -30px rgba(0,0,0,.35)}
+.shot img{display:block;width:100%;height:auto}
+.callouts{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:10px}
+.callouts li{display:flex;gap:10px;background:var(--card);border:1px solid var(--border);border-radius:16px;padding:12px}
+.callouts li b.c{flex:none;width:26px;height:26px;border-radius:50%;display:grid;place-items:center;background:var(--accent);color:#fff;font-size:.8rem}
+.btns{display:flex;gap:8px;flex-wrap:wrap}
+.btn{border-radius:999px;padding:9px 16px;font-weight:650;font-size:.9rem;border:1px solid var(--border)}
+.btn.ok{background:var(--accent);color:#fff;border-color:var(--accent)}
+.btn.ch{background:var(--card)}
+.btn.no{background:transparent}
+table{width:100%;border-collapse:collapse;font-size:.92rem}
+th,td{text-align:left;padding:10px 12px;border-top:1px solid var(--border);vertical-align:top}
+th{color:var(--muted);font-weight:600;background:var(--panel2)}
+.tablewrap{overflow-x:auto;border:1px solid var(--border);border-radius:18px;background:var(--card)}
+.loop{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px;counter-reset:l}
+.loop div{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:14px;position:relative}
+.ok-t{color:var(--good)}.bad-t{color:var(--bad)}
+footer{padding:40px 0 60px;color:var(--muted);font-size:.85rem;border-top:1px solid var(--border)}
+</style>
+</head>
+<body>
+<header class="top"><div class="wrap">
+  <a class="logo" href="#top"><b>Q</b>QuantFolio Agents</a>
+  <nav class="toc" aria-label="Guide sections">
+    <a href="#what">What</a><a href="#flow">How it works</a><a href="#team">Agents</a><a href="#rag">Search</a>
+    <a href="#quantum">Quantum</a><a href="#loop">You decide</a><a href="#use">Using the app</a><a href="#quality">Quality</a>
+  </nav>
+  <button class="theme" id="theme" type="button">Dark mode</button>
+</div></header>
+
+<main id="top">
+<div class="hero"><div class="wrap">
+  <span class="eyebrow">A visual guide</span>
+  <h1 style="margin-top:22px">An AI investment team,<br><span class="serif">explained simply</span>.</h1>
+  <p class="lead">QuantFolio Agents reads company reports, follows a client's rules, picks a portfolio with a normal and a quantum computer, and waits for a person to approve. This page shows how it works and how to use it.</p>
+  <div class="grid g4" style="margin-top:34px">
+    <div class="stat"><div class="num">9</div><div class="small muted">AI agents with one job each</div></div>
+    <div class="stat"><div class="num">38</div><div class="small muted">real companies (US and India)</div></div>
+    <div class="stat"><div class="num">~1 min</div><div class="small muted">from question to plan</div></div>
+    <div class="stat"><div class="num">0</div><div class="small muted">trades without your approval</div></div>
+  </div>
+</div></div>
+
+<section id="what"><div class="wrap">
+  <div class="sec-head"><span class="eyebrow">What it is</span>
+    <h2>A money manager's routine, <span class="serif">done by a team of AI helpers</span>.</h2>
+    <p>A family or charity has savings in company shares and rules like "exactly 8 companies", "at most 20% in one", "no oil and gas". Every few months someone must read reports, choose what to buy and sell, check each rule and explain it. This project does that, shows every reason, and lets a person decide.</p></div>
+  <div class="grid g3">
+    <div class="card"><h3>Advisors and portfolio managers</h3><p class="muted small">Prepare a rebalancing plan for each client in a minute, with a plain-language memo they can send.</p></div>
+    <div class="card"><h3>Compliance teams</h3><p class="muted small">Every client rule is read from the client's own document and checked, with a link to where it is written.</p></div>
+    <div class="card"><h3>Students and researchers</h3><p class="muted small">See AI agents, document search (RAG) and quantum optimization working together on a real problem.</p></div>
+  </div>
+</div></section>
+
+<section id="flow"><div class="wrap">
+  <div class="sec-head"><span class="eyebrow">How it works</span>
+    <h2>One request, <span class="serif">seven steps</span>.</h2>
+    <p>Click a step to see what happens in it.</p></div>
+  <div class="flow" id="flowBtns"></div>
+  <div class="card flow-detail" id="flowDetail"></div>
+</div></section>
+
+<section id="team"><div class="wrap">
+  <div class="sec-head"><span class="eyebrow">The team</span>
+    <h2>Agents, tools, <span class="serif">and how they talk</span>.</h2>
+    <p>A supervisor decides who works next. Two agents run as separate services, as if they belonged to other teams, and receive tasks over <b>A2A</b> (agent-to-agent). Tools are shared through <b>MCP</b>, a standard toolbox where each agent may only use what its job needs.</p></div>
+  <div class="diagram-wrap"><svg class="diagram" viewBox="0 0 1000 360" role="img" aria-label="Diagram: supervisor, agents, A2A services and MCP tool servers">
+    <rect x="400" y="14" width="200" height="56" rx="14" class="box-accent"/><text x="500" y="40" text-anchor="middle" class="tb">Supervisor</text><text x="500" y="58" text-anchor="middle" class="ts">decides who works next</text>
+    <g>
+      <rect x="20" y="120" width="150" height="58" rx="12" class="box"/><text x="95" y="145" text-anchor="middle" class="tb">Intake</text><text x="95" y="162" text-anchor="middle" class="ts">reads your request</text>
+      <rect x="185" y="120" width="150" height="58" rx="12" class="box"/><text x="260" y="145" text-anchor="middle" class="tb">Research</text><text x="260" y="162" text-anchor="middle" class="ts">reads the reports</text>
+      <rect x="350" y="120" width="150" height="58" rx="12" class="box"/><text x="425" y="145" text-anchor="middle" class="tb">Optimizer</text><text x="425" y="162" text-anchor="middle" class="ts">picks the stocks</text>
+      <rect x="515" y="120" width="150" height="58" rx="12" class="box"/><text x="590" y="145" text-anchor="middle" class="tb">Report + judge</text><text x="590" y="162" text-anchor="middle" class="ts">memo and scores</text>
+      <rect x="680" y="120" width="140" height="58" rx="12" class="box"/><text x="750" y="145" text-anchor="middle" class="tb">Trader</text><text x="750" y="162" text-anchor="middle" class="ts">after approval</text>
+      <rect x="835" y="110" width="150" height="78" rx="12" class="box-accent"/><text x="910" y="138" text-anchor="middle" class="tb">Risk agent</text><text x="910" y="156" text-anchor="middle" class="tb">Compliance agent</text><text x="910" y="176" text-anchor="middle" class="ts">separate services · A2A</text>
+    </g>
+    <path class="line" d="M500 70 V96 H95 V120 M500 96 H260 V120 M500 96 H425 V120 M500 96 H590 V120 M500 96 H750 V120 M500 96 H910 V110"/>
+    <text x="870" y="96" class="ts">A2A messages</text>
+    <rect x="20" y="250" width="960" height="92" rx="18" class="box"/>
+    <text x="40" y="276" class="tb">MCP tool servers</text>
+    <rect x="40" y="288" width="215" height="40" rx="10" class="box-accent"/><text x="147" y="313" text-anchor="middle" class="t">Market data · prices, risk</text>
+    <rect x="270" y="288" width="215" height="40" rx="10" class="box-accent"/><text x="377" y="313" text-anchor="middle" class="t">Research · document search</text>
+    <rect x="500" y="288" width="215" height="40" rx="10" class="box-accent"/><text x="607" y="313" text-anchor="middle" class="t">Optimizer · normal + quantum</text>
+    <rect x="730" y="288" width="230" height="40" rx="10" class="box-accent"/><text x="845" y="313" text-anchor="middle" class="t">Paper broker · practice trades</text>
+    <path class="line" d="M260 178 V288 M425 178 V288 M750 178 V288 M910 188 V240 H147 V288" stroke-dasharray="4 4"/>
+  </svg></div>
+  <div class="tablewrap" style="margin-top:20px"><table>
+    <thead><tr><th>Agent</th><th>Its job, in plain words</th></tr></thead>
+    <tbody>
+      <tr><td><b>Supervisor</b></td><td>Decides which agent works next, runs independent work at the same time, sends work back when a rule fails.</td></tr>
+      <tr><td><b>Intake</b></td><td>Understands the request (client, question, companies) and recalls what it learned from your earlier reviews.</td></tr>
+      <tr><td><b>Research</b></td><td>Searches the companies' official reports and answers with numbered sources.</td></tr>
+      <tr><td><b>Risk</b> <span class="tag">A2A</span></td><td>Measures how much each share's price moves, and checks the risk of the final plan.</td></tr>
+      <tr><td><b>Compliance</b> <span class="tag">A2A</span></td><td>Reads the client's rules document, turns it into exact limits, checks the plan against each one.</td></tr>
+      <tr><td><b>Optimizer</b></td><td>Chooses the stocks and the money split: normal computer vs quantum computer vs both.</td></tr>
+      <tr><td><b>Report writer</b></td><td>Writes the recommendation in plain language.</td></tr>
+      <tr><td><b>Quality judge</b></td><td>Grades the answer with RAGAS (are claims backed by sources? does it answer the question?).</td></tr>
+      <tr><td><b>Trader</b></td><td>Prepares buy and sell orders; places them only after a person approves (practice account).</td></tr>
+    </tbody></table></div>
+</div></section>
+
+<section id="rag"><div class="wrap">
+  <div class="sec-head"><span class="eyebrow">Hybrid search (RAG)</span>
+    <h2>It looks things up <span class="serif">before it answers</span>.</h2>
+    <p>The research agent only answers from passages it found in real reports, and cites them. It searches two ways at once, merges the results, and a small AI "reranker" puts the best passages first.</p></div>
+  <div class="diagram-wrap"><svg class="diagram" viewBox="0 0 1000 220" role="img" aria-label="Diagram of hybrid search">
+    <rect x="10" y="80" width="150" height="60" rx="14" class="box-accent"/><text x="85" y="106" text-anchor="middle" class="tb">Your question</text><text x="85" y="124" text-anchor="middle" class="ts">"fake medicines?"</text>
+    <rect x="220" y="20" width="200" height="66" rx="14" class="box"/><text x="320" y="46" text-anchor="middle" class="tb">Keyword search</text><text x="320" y="64" text-anchor="middle" class="ts">exact words, names, numbers</text>
+    <rect x="220" y="134" width="200" height="66" rx="14" class="box"/><text x="320" y="160" text-anchor="middle" class="tb">Meaning search</text><text x="320" y="178" text-anchor="middle" class="ts">same idea, other words</text>
+    <rect x="480" y="80" width="150" height="60" rx="14" class="box"/><text x="555" y="106" text-anchor="middle" class="tb">Merge</text><text x="555" y="124" text-anchor="middle" class="ts">best of both lists</text>
+    <rect x="690" y="80" width="140" height="60" rx="14" class="box"/><text x="760" y="106" text-anchor="middle" class="tb">Reranker</text><text x="760" y="124" text-anchor="middle" class="ts">reads each passage</text>
+    <rect x="870" y="70" width="120" height="80" rx="14" class="box-accent"/><text x="930" y="102" text-anchor="middle" class="tb">Answer</text><text x="930" y="120" text-anchor="middle" class="ts">with sources</text><text x="930" y="136" text-anchor="middle" class="ts">[1] [2] [3]</text>
+    <path class="line" d="M160 110 H190 V53 H220 M190 110 V167 H220 M420 53 H450 V110 H480 M420 167 H450 V110 M630 110 H690 M830 110 H870"/>
+  </svg></div>
+  <div class="tablewrap" style="margin-top:18px"><table>
+    <thead><tr><th></th><th>United States</th><th>India</th></tr></thead>
+    <tbody>
+      <tr><td>Regulator</td><td>SEC</td><td>SEBI</td></tr>
+      <tr><td>Documents searched</td><td>Form 10-K: risk factors, management's discussion</td><td>Annual report: Management Discussion &amp; Analysis and its risks; BRSR sustainability report</td></tr>
+      <tr><td>Numbers</td><td>SEC financial facts (US dollars)</td><td>Reported financials (₹ crore)</td></tr>
+      <tr><td>Compared with</td><td>S&amp;P 500</td><td>Nifty 50</td></tr>
+    </tbody></table></div>
+  <p class="small muted" style="margin-top:12px">Measured on 78 questions with known answers (US and India): meaning search found the right passage 96% of the time; keyword search failed on reworded questions; the reranker put the right passage first most often, and found every Indian answer.</p>
+</div></section>
+
+<section id="quantum"><div class="wrap">
+  <div class="sec-head"><span class="eyebrow">Quantum, simply</span>
+    <h2>Each stock is a <span class="serif">yes or no</span>.</h2>
+    <p>Choosing 10 of 20 stocks has 184,756 combinations, and the number explodes as problems grow. A qubit is a natural yes/no unit, so each stock gets one qubit. The quantum algorithm QAOA treats all combinations together and makes the good ones more likely. Click the squares to build a portfolio of exactly 10.</p></div>
+  <div class="panel">
+    <div class="qubits" id="qubits"></div>
+    <p class="small" id="qubitInfo"></p>
+  </div>
+  <div class="grid g3" style="margin-top:16px">
+    <div class="card"><h3>How it is used</h3><p class="small muted">One qubit per stock (17-20 qubits). The circuit can only produce valid answers (exactly the right number of stocks). It runs on a quantum simulator (Qiskit) on a laptop.</p></div>
+    <div class="card"><h3>How it is checked</h3><p class="small muted">A normal computer tries every combination, so the quantum answer is graded against the proven best. A "hybrid" step then polishes it with small swaps.</p></div>
+    <div class="card"><h3>What we found</h3><p class="small muted">At the default setting quantum found the proven best portfolio for 3 of the 4 clients and came within about 10% for the Indian client; the hybrid polish step reached the best every time. At this size the normal computer is faster and exact, so no "quantum advantage" is claimed. The value is a fair, working integration, ready for bigger problems.</p></div>
+  </div>
+  <div class="card" style="margin-top:14px">
+    <p class="small"><b>Found the best portfolio</b> (each client's real problem)</p>
+    <p class="small muted" style="margin:10px 0 4px">Quantum, built to give only valid answers</p><div class="bar"><i style="width:{{Q_XY_PCT}}%;background:var(--accent)"></i></div><p class="small">{{Q_XY_TEXT}}</p>
+    <p class="small muted" style="margin:10px 0 4px">Standard quantum design</p><div class="bar"><i style="width:{{Q_X_PCT}}%;background:var(--subtle)"></i></div><p class="small">{{Q_X_TEXT}}</p>
+    <p class="small muted" style="margin:10px 0 4px">Quantum + normal polish (hybrid)</p><div class="bar"><i style="width:100%;background:var(--teal)"></i></div><p class="small">every run</p>
+  </div>
+</div></section>
+
+<section id="loop"><div class="wrap">
+  <div class="sec-head"><span class="eyebrow">Human in the loop</span>
+    <h2>You decide. <span class="serif">It learns.</span></h2>
+    <p>Nothing is traded until a person approves. If you change something, the agents re-plan at once, and (if you tick "remember") follow your preference for this client from then on.</p></div>
+  <div class="btns" style="margin-bottom:16px"><span class="btn ok">✓ Approve</span><span class="btn ch">✎ Change</span><span class="btn no">✕ Reject</span></div>
+  <div class="loop">
+    <div><span class="num">1</span><h3>Plan</h3><p class="small muted">The agents propose what to buy and sell.</p></div>
+    <div><span class="num">2</span><h3>You review</h3><p class="small muted">Remove a stock, set a smaller maximum per stock, or ask for less risk, and say why.</p></div>
+    <div><span class="num">3</span><h3>Re-plan</h3><p class="small muted">The plan is rebuilt with your change and checked again, then you decide again.</p></div>
+    <div><span class="num">4</span><h3>Remember</h3><p class="small muted">Your preference is saved for this client. Next time the first plan already follows it, and says so.</p></div>
+    <div><span class="num">5</span><h3>Measure</h3><p class="small muted">Approvals and changes are tracked in Langfuse: fewer changes over time means the loop is working.</p></div>
+  </div>
+  <p class="small muted" style="margin-top:12px">Preferences only make the rules stricter, never looser, and can be removed at any time.</p>
+</div></section>
+
+<section id="use"><div class="wrap">
+  <div class="sec-head"><span class="eyebrow">Using the app</span>
+    <h2>Step by step, <span class="serif">with real screens</span>.</h2>
+    <p>Open the app (for example http://localhost:3000) and follow these steps.</p></div>
+  <div class="steps-nav" id="walkNav"></div>
+  <div id="walk"></div>
+</div></section>
+
+<section id="quality"><div class="wrap">
+  <div class="sec-head"><span class="eyebrow">Quality you can see</span>
+    <h2>It grades <span class="serif">its own work</span>.</h2>
+    <p>Every answer is scored automatically, and every step and score is recorded in Langfuse, a dashboard for AI systems.</p></div>
+  <div class="grid g4">
+    <div class="card"><h3>Faithfulness</h3><p class="small muted">Is every claim backed by the sources? (RAGAS)</p></div>
+    <div class="card"><h3>Answer relevancy</h3><p class="small muted">Does it answer the question asked? (RAGAS)</p></div>
+    <div class="card"><h3>Context precision</h3><p class="small muted">Were the useful sources ranked first? (RAGAS)</p></div>
+    <div class="card"><h3>Memo quality</h3><p class="small muted">Is the memo accurate, clear and honest? (RAGAS rubric)</p></div>
+    <div class="card"><h3>Sources cited</h3><p class="small muted">Share of sentences with a source number.</p></div>
+    <div class="card"><h3>Numbers checked</h3><p class="small muted">Every number must appear in a source.</p></div>
+    <div class="card"><h3>Rules read correctly</h3><p class="small muted">Client rules vs a hand-checked answer key.</p></div>
+    <div class="card"><h3>Every rule passes</h3><p class="small muted">The plan obeys every client rule.</p></div>
+  </div>
+</div></section>
+
+<section><div class="wrap">
+  <div class="sec-head"><span class="eyebrow">Words used</span><h2>Glossary</h2></div>
+  <div class="tablewrap"><table><tbody>
+    <tr><td><b>Portfolio</b></td><td>The group of shares someone owns</td><td><b>Rebalance</b></td><td>Buy and sell so the portfolio fits the plan and rules again</td></tr>
+    <tr><td><b>Risk / volatility</b></td><td>How much the value goes up and down</td><td><b>Back-test</b></td><td>How the plan would have done on recent days it did not see</td></tr>
+    <tr><td><b>Agent</b></td><td>An AI helper with one job</td><td><b>LLM</b></td><td>The AI language model that reads and writes text</td></tr>
+    <tr><td><b>RAG</b></td><td>Answering from looked-up documents, with sources</td><td><b>MCP</b></td><td>A standard way for agents to use tools</td></tr>
+    <tr><td><b>A2A</b></td><td>A standard way for agents to give each other tasks</td><td><b>Qubit</b></td><td>The yes/no unit of a quantum computer</td></tr>
+    <tr><td><b>QAOA</b></td><td>A quantum algorithm for "best combination" problems</td><td><b>RAGAS / Langfuse</b></td><td>Answer grading toolkit / dashboard of steps and scores</td></tr>
+  </tbody></table></div>
+  <p class="small muted" style="margin-top:14px">Research project: practice account only, not investment advice. Clients are made-up examples; companies, reports and prices are real. The quantum computer is simulated.</p>
+</div></section>
+</main>
+
+<footer><div class="wrap">QuantFolio Agents · visual guide · generated {{DATE}}</div></footer>
+
+<script>
+const FLOW = [
+  ["You ask", "Pick a client (US or India) and type a request, e.g. “Rebalance the trust. What risks do Reliance and TCS report?”"],
+  ["Understand", "The intake agent finds the client, the question and the companies you mean, and recalls preferences you taught it before."],
+  ["Research", "At the same time: the research agent reads the companies' reports (SEC filings for US, SEBI annual reports and BRSR for India); the risk agent measures how risky each share is; the compliance agent reads the client's rules document."],
+  ["Choose stocks", "A normal computer checks every combination; a simulated quantum computer (QAOA) tries the same problem; a hybrid polishes the quantum answer. The best valid plan is kept."],
+  ["Check", "The plan is tested on recent months it never saw, every rule is checked again (and sent back once if the risk limit fails), and a plain-language memo is written."],
+  ["Score", "Quick checks run at once; an AI judge (RAGAS) grades the answer in the background. All scores go to the Langfuse dashboard."],
+  ["You decide", "Approve (practice trades are placed), Change (it re-plans and remembers), or Reject (say why)."],
+];
+const flowBtns = document.getElementById("flowBtns"), flowDetail = document.getElementById("flowDetail");
+function showFlow(i){ [...flowBtns.children].forEach((b,j)=>b.classList.toggle("on", i===j));
+  flowDetail.innerHTML = `<h3>${i+1}. ${FLOW[i][0]}</h3><p class="muted">${FLOW[i][1]}</p>`; }
+FLOW.forEach((f,i)=>{ const b=document.createElement("button"); b.type="button"; b.innerHTML=`<span class="n">${i+1}</span>${f[0]}`; b.onclick=()=>showFlow(i); flowBtns.appendChild(b); });
+showFlow(0);
+
+const TICKERS = ["AAPL","MSFT","NVDA","GOOGL","META","AMZN","HD","JPM","V","JNJ","UNH","PFE","XOM","CVX","PG","KO","WMT","CAT","NEE","LIN"];
+const BEST = new Set({{BEST_US}});
+const q = document.getElementById("qubits"), qi = document.getElementById("qubitInfo");
+function updQ(){ const on=[...q.children].filter(x=>x.classList.contains("on")).map(x=>x.dataset.t);
+  const same = on.filter(t=>BEST.has(t)).length;
+  qi.innerHTML = on.length===10 ? (same===10 ? `<span class="ok-t"><b>This is the proven best portfolio</b> for the Conservative Income client. The quantum computer found it too.</span>` : `Valid portfolio of 10 (bitstring ${[...q.children].map(x=>x.classList.contains("on")?1:0).join("")}). ${same} of 10 match the best one.`)
+    : `${on.length} selected. A valid answer has exactly 10. <span class="muted">(Each square is one qubit: lit = 1 = buy.)</span>`; }
+TICKERS.forEach(t=>{ const d=document.createElement("button"); d.type="button"; d.className="qubit"; d.textContent=t; d.dataset.t=t; d.onclick=()=>{d.classList.toggle("on"); updQ();}; q.appendChild(d); });
+updQ();
+
+const WALK = {{WALK}};
+const nav = document.getElementById("walkNav"), walk = document.getElementById("walk");
+function showWalk(i){ [...nav.children].forEach((b,j)=>b.classList.toggle("on", i===j)); const w=WALK[i];
+  walk.innerHTML = `<div class="shot"><figure><img src="${w.img}" alt="${w.alt}" loading="lazy"></figure><div><h3>${w.title}</h3><p class="muted small">${w.text}</p><ol class="callouts">${w.points.map((p,k)=>`<li><b class="c">${k+1}</b><span class="small">${p}</span></li>`).join("")}</ol></div></div>`; }
+WALK.forEach((w,i)=>{ const b=document.createElement("button"); b.type="button"; b.textContent=`${i+1}. ${w.short}`; b.onclick=()=>showWalk(i); nav.appendChild(b); });
+showWalk(0);
+
+const tb = document.getElementById("theme");
+function setTheme(t){ document.documentElement.dataset.theme=t; tb.textContent = t==="dark" ? "Light mode" : "Dark mode"; }
+const dark = matchMedia("(prefers-color-scheme: dark)").matches; setTheme(dark ? "dark" : "light");
+tb.onclick = ()=> setTheme(document.documentElement.dataset.theme==="dark" ? "light" : "dark");
+</script>
+</body>
+</html>

@@ -29,9 +29,9 @@ class StepSpec:
 
 
 STEPS: dict[str, StepSpec] = {
-    "intake": StepSpec(1, "Intake agent - understand the request", "agent",
-                       "Reading your request"),
-    "research": StepSpec(2, "Research agent - hybrid RAG over SEC filings", "agent",
+    "intake": StepSpec(1, "Intake agent - understand the request, recall learned preferences",
+                       "agent", "Reading your request"),
+    "research": StepSpec(2, "Research agent - hybrid RAG over company disclosures", "agent",
                          "Reading company annual reports"),
     "risk": StepSpec(3, "Risk agent (A2A) - market risk profile", "agent",
                      "Measuring how risky each stock is"),
@@ -77,6 +77,11 @@ class RunContext:
     hub: MCPHub | None = None
     trace_id: str | None = None
     attempt_counter: dict[str, int] = field(default_factory=dict)
+    # learned client preferences (read at the start, written after a review)
+    load_preferences: Callable[[str], Awaitable[list[dict[str, Any]]]] | None = None
+    save_preferences: Callable[[list[dict[str, Any]]], Awaitable[None]] | None = None
+    # run work after this step without blocking the graph (used for RAGAS scoring)
+    spawn: Callable[[Any], None] | None = None
 
     @asynccontextmanager
     async def step(self, key: str, input: Any = None) -> AsyncIterator[StepHandle]:

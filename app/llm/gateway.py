@@ -10,6 +10,7 @@
 """
 
 import asyncio
+import json
 import logging
 import time
 from collections.abc import Awaitable, Callable
@@ -64,15 +65,23 @@ class LLMGateway:
             return fallback(), "rules"
 
         tracer = get_tracer()
-        runnable = self._chat.with_structured_output(schema, include_raw=True)
-        messages = [SystemMessage(content=system), HumanMessage(content=user)]
+        # First a tool call (structured output). Some models occasionally name the tool wrongly
+        # (e.g. "memo" for "Memo") and the provider rejects the call; then ask for plain JSON
+        # that matches the schema instead.
+        schema_hint = ("\n\nReturn ONLY a JSON object that matches this JSON schema, with no other text:\n"
+                       + json.dumps(schema.model_json_schema()))
+        plans = ["function_calling"] + ["json_mode"] * max(1, attempts - 1)
         last_error = "unknown error"
-        for attempt in range(1, attempts + 1):
+        for attempt, method in enumerate(plans, 1):
+            runnable = self._chat.with_structured_output(schema, include_raw=True, method=method)
+            prompt_user = user + schema_hint if method == "json_mode" else user
+            messages = [SystemMessage(content=system), HumanMessage(content=prompt_user)]
             started = time.perf_counter()
             with tracer.section(
                 f"llm.{agent}", as_type="generation", model=self.model_name,
                 input=[{"role": "system", "content": system}, {"role": "user", "content": user}],
-                metadata={"provider": self.provider, "attempt": attempt, "schema": schema.__name__},
+                metadata={"provider": self.provider, "attempt": attempt, "schema": schema.__name__,
+                          "method": method},
                 model_parameters={"temperature": self.settings.llm_temperature},
             ) as gen:
                 try:
@@ -98,7 +107,7 @@ class LLMGateway:
                     await self._record(agent=agent, status="error", provider=self.provider,
                                        model=self.model_name, attempt=attempt, error=last_error,
                                        latency_ms=round((time.perf_counter() - started) * 1000, 1))
-        logger.warning("%s: LLM failed after %d attempts (%s); using rules", agent, attempts, last_error)
+        logger.warning("%s: LLM failed after %d attempts (%s); using rules", agent, len(plans), last_error)
         return fallback(), "rules_after_llm_error"
 
 

@@ -9,18 +9,21 @@ from pathlib import Path
 import pandas as pd
 
 from app.config import get_settings
-from app.data.universe import BENCHMARK, BY_TICKER, TICKERS
+from app.data.universe import BY_TICKER, MARKETS, tickers
+
+PRICE_FILES = {"US": "prices", "IN": "prices_in"}
 
 
 @dataclass(frozen=True)
 class Document:
-    doc_id: str  # e.g. "AAPL_risk_factors", "AAPL_facts", "mandate_C-102"
-    doc_type: str  # risk_factors | mdna | facts | mandate
+    doc_id: str  # e.g. "AAPL_risk_factors", "TCS_brsr", "AAPL_facts", "mandate_C-102"
+    doc_type: str  # risk_factors | mdna | ar_mdna | ar_risk | brsr | facts | mandate
     title: str
     text: str
     ticker: str | None = None
     client_id: str | None = None
     source_url: str | None = None
+    market: str | None = None
 
 
 def data_dir() -> Path:
@@ -28,20 +31,21 @@ def data_dir() -> Path:
 
 
 @lru_cache
-def prices() -> pd.DataFrame:
-    frame = pd.read_csv(data_dir() / "market" / "prices.csv", index_col="date")
+def prices(market: str = "US") -> pd.DataFrame:
+    frame = pd.read_csv(data_dir() / "market" / f"{PRICE_FILES[market]}.csv", index_col="date")
     frame.index = pd.to_datetime(frame.index)
-    return frame[[*TICKERS, BENCHMARK]].astype(float)
+    return frame[[*tickers(market), MARKETS[market].benchmark]].astype(float)
 
 
 @lru_cache
-def prices_meta() -> dict:
-    return json.loads((data_dir() / "market" / "prices.meta.json").read_text())
+def prices_meta(market: str = "US") -> dict:
+    return json.loads((data_dir() / "market" / f"{PRICE_FILES[market]}.meta.json").read_text())
 
 
 @lru_cache
 def accounts() -> dict[str, dict]:
-    return json.loads((data_dir() / "accounts.json").read_text())["accounts"]
+    raw = json.loads((data_dir() / "accounts.json").read_text())["accounts"]
+    return {cid: {"market": "US", **acc} for cid, acc in raw.items()}
 
 
 def account(client_id: str) -> dict:
@@ -51,9 +55,13 @@ def account(client_id: str) -> dict:
         raise KeyError(f"unknown client {client_id!r}") from None
 
 
+def market_of_client(client_id: str) -> str:
+    return account(client_id)["market"]
+
+
 @lru_cache
-def filings_manifest() -> dict:
-    path = data_dir() / "corpus" / "filings" / "manifest.json"
+def filings_manifest(folder: str = "filings") -> dict:
+    path = data_dir() / "corpus" / folder / "manifest.json"
     return json.loads(path.read_text()) if path.exists() else {}
 
 
@@ -65,31 +73,33 @@ def _title(text: str) -> str:
 @lru_cache
 def documents() -> tuple[Document, ...]:
     root = data_dir() / "corpus"
-    manifest = filings_manifest()
     docs: list[Document] = []
-    for path in sorted((root / "filings").glob("*.md")):
-        ticker, kind = path.stem.split("_", 1)
-        text = path.read_text("utf-8")
-        docs.append(Document(
-            doc_id=path.stem, doc_type=kind, title=_title(text), text=text, ticker=ticker,
-            source_url=manifest.get(ticker, {}).get("url"),
-        ))
-    for path in sorted((root / "facts").glob("*.md")):
-        text = path.read_text("utf-8")
-        cik = re.search(r"CIK (\d+)", text)
-        docs.append(Document(
-            doc_id=f"{path.stem}_facts", doc_type="facts", title=_title(text), text=text,
-            ticker=path.stem,
-            source_url=(
-                f"https://data.sec.gov/api/xbrl/companyfacts/CIK{int(cik.group(1)):010d}.json"
-                if cik else None
-            ),
-        ))
+    for folder in ("filings", "filings_in"):
+        manifest = filings_manifest(folder)
+        for path in sorted((root / folder).glob("*.md")):
+            ticker, kind = path.stem.split("_", 1)
+            text = path.read_text("utf-8")
+            docs.append(Document(
+                doc_id=path.stem, doc_type=kind, title=_title(text), text=text, ticker=ticker,
+                source_url=manifest.get(ticker, {}).get("url"), market=BY_TICKER[ticker].market,
+            ))
+    for folder in ("facts", "facts_in"):
+        for path in sorted((root / folder).glob("*.md")):
+            text = path.read_text("utf-8")
+            cik = re.search(r"CIK (\d+)", text)
+            if cik:
+                url = f"https://data.sec.gov/api/xbrl/companyfacts/CIK{int(cik.group(1)):010d}.json"
+            else:
+                url = f"https://finance.yahoo.com/quote/{BY_TICKER[path.stem].yahoo}/financials"
+            docs.append(Document(
+                doc_id=f"{path.stem}_facts", doc_type="facts", title=_title(text), text=text,
+                ticker=path.stem, source_url=url, market=BY_TICKER[path.stem].market,
+            ))
     for path in sorted((root / "mandates").glob("*.md")):
         text = path.read_text("utf-8")
         docs.append(Document(
             doc_id=f"mandate_{path.stem}", doc_type="mandate", title=_title(text), text=text,
-            client_id=path.stem,
+            client_id=path.stem, market=accounts().get(path.stem, {}).get("market"),
         ))
     return tuple(docs)
 

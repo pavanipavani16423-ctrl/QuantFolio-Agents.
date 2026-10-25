@@ -2,12 +2,15 @@
 
 import re
 
+from app.data.universe import MARKETS
 from app.graph.context import RunContext
 from app.rag.index import tokenize
 from app.schemas import ResearchAnswer, ResearchResult, RiskFlag, Source
 
 SYSTEM = (
-    "You are an equity research analyst. Answer ONLY from the numbered sources. Cite every "
+    "You are an equity research analyst. The sources are the companies' own regulatory "
+    "disclosures (US: SEC 10-K; India: SEBI-mandated annual report MD&A, risk management and "
+    "BRSR sustainability report) and reported financials. Answer ONLY from the numbered sources. Cite every "
     "factual sentence with its source number in square brackets, e.g. [2]. Name the company in "
     "each sentence. If the sources do not answer part of the question, say so. Then list one "
     "risk flag per company that the sources support. Be concise and factual; no advice."
@@ -16,6 +19,13 @@ SYSTEM = (
 RISK_WORDS = set("risk risks adverse adversely harm decline reduce loss losses volatility uncertain "
                  "regulation regulatory litigation climate emissions supply shortage competition "
                  "disrupt disruption failure cyber tariffs inflation".split())
+
+
+def normalize_citations(text: str) -> str:
+    """Models write citations in different styles (【1】, [1][2], [1, 2], (1)); keep one: [n]."""
+    text = re.sub(r"【\s*(\d+)\s*(?:†[^】]*)?】", r"[\1]", text)
+    text = re.sub(r"\[(\d+(?:\s*,\s*\d+)+)\]", lambda m: "".join(f"[{n.strip()}]" for n in m.group(1).split(",")), text)
+    return text
 
 
 def _sentences(text: str) -> list[str]:
@@ -88,13 +98,16 @@ def diversify(hits: list[dict], k: int) -> list[dict]:
     return sorted(out, key=lambda h: h["rank"])
 
 
-async def run_research(ctx: RunContext, question: str, tickers: list[str]) -> ResearchResult:
+async def run_research(ctx: RunContext, question: str, tickers: list[str],
+                       market: str = "US") -> ResearchResult:
+    """Research criteria depend on the market: each market's own mandatory disclosures."""
     mode = ctx.settings.rag_mode
-    pool = await search(ctx, question, k=20, mode=mode, tickers=tickers,
-                        doc_types=["risk_factors", "mdna"])
+    doc_types = list(MARKETS[market].research_doc_types)
+    pool = await search(ctx, question, k=20, mode=mode, tickers=tickers, doc_types=doc_types,
+                        market=market)
     filings = diversify(pool, ctx.settings.rag_top_k)
     facts = await search(ctx, f"{' '.join(tickers)} total revenue net income fiscal year", k=2,
-                         mode="hybrid", tickers=tickers, doc_types=["facts"])
+                         mode="hybrid", tickers=tickers, doc_types=["facts"], market=market)
     sources = _sources(filings, 1)
     sources += _sources([h for h in facts if h["chunk_id"] not in {s.chunk_id for s in sources}],
                         len(sources) + 1)
@@ -108,6 +121,7 @@ async def run_research(ctx: RunContext, question: str, tickers: list[str]) -> Re
         f"Question: {question}\n\nSources:\n{numbered}",
         fallback=lambda: extractive_answer(question, sources),
     )
+    answer.answer = normalize_citations(answer.answer)
     valid = {s.n for s in sources}
     flags = [f for f in answer.risk_flags if f.source in valid]
     return ResearchResult(question=question, answer=answer.answer, risk_flags=flags,

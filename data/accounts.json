@@ -18,7 +18,8 @@
         "NVDA": 142
       },
       "as_of": "2026-10-23",
-      "note": "Synthetic starting account for the demo. Positions are share counts."
+      "note": "Synthetic starting account for the demo. Positions are share counts.",
+      "market": "US"
     },
     "C-102": {
       "client_id": "C-102",
@@ -37,7 +38,8 @@
         "CVX": 343
       },
       "as_of": "2026-10-23",
-      "note": "Synthetic starting account for the demo. Positions are share counts."
+      "note": "Synthetic starting account for the demo. Positions are share counts.",
+      "market": "US"
     },
     "C-103": {
       "client_id": "C-103",
@@ -60,7 +62,28 @@
         "XOM": 491
       },
       "as_of": "2026-10-23",
-      "note": "Synthetic starting account for the demo. Positions are share counts."
+      "note": "Synthetic starting account for the demo. Positions are share counts.",
+      "market": "US"
+    },
+    "C-201": {
+      "client_id": "C-201",
+      "name": "Sharma Family Trust",
+      "profile": "Growth with Values",
+      "mandate_doc": "mandate_C-201",
+      "market": "IN",
+      "cash": 300000,
+      "positions": {
+        "RELIANCE": 756,
+        "TCS": 276,
+        "HDFCBANK": 1154,
+        "ITC": 2326,
+        "INFY": 433,
+        "SBIN": 469,
+        "HINDUNILVR": 220,
+        "ONGC": 1538
+      },
+      "as_of": "2026-10-23",
+      "note": "Synthetic starting account for the demo (Indian rupees). Positions are share counts."
     }
   }
 }

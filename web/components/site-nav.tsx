@@ -4,14 +4,13 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState, useSyncExternalStore } from "react";
 import { Moon, Sun } from "lucide-react";
-import { buttonClass, cn } from "@/components/ui";
+import { cn } from "@/components/ui";
 import { api, type Health } from "@/lib/api";
 
 const LINKS = [
-  { href: "/", label: "Start" },
+  { href: "/", label: "New request" },
   { href: "/history", label: "History" },
-  { href: "/evaluations", label: "Quality" },
-  { href: "/how-it-works", label: "How it works" },
+  { href: "/about", label: "About" },
 ];
 
 function subscribeTheme(onChange: () => void) {
@@ -129,9 +128,6 @@ export function SiteNav() {
         <div className="flex items-center gap-3">
           <HealthDot />
           <ThemeToggle />
-          <Link href="/#start" className={cn(buttonClass("dark"), "hidden md:inline-flex")}>
-            Run the agents
-          </Link>
         </div>
       </div>
     </header>

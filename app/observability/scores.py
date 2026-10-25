@@ -47,8 +47,9 @@ SCORES: tuple[ScoreSpec, ...] = (
     ScoreSpec("portfolio_oos_sharpe", "NUMERIC",
               "Out-of-sample Sharpe ratio of the recommended portfolio (buy-and-hold after the estimation window).",
               None, None),
-    ScoreSpec("portfolio_oos_excess_return_vs_spy", "NUMERIC",
-              "Out-of-sample total return of the recommended portfolio minus SPY over the same days.", None, None),
+    ScoreSpec("portfolio_oos_excess_return_vs_benchmark", "NUMERIC",
+              "Out-of-sample total return of the recommended portfolio minus the market index "
+              "(S&P 500 for US clients, Nifty 50 for Indian clients) over the same days.", None, None),
     ScoreSpec("quantum_optimality_gap", "NUMERIC",
               "Relative utility gap of the QAOA selection to the proven classical optimum (0 = optimal)."),
     ScoreSpec("quantum_feasible_probability", "NUMERIC",
@@ -58,6 +59,11 @@ SCORES: tuple[ScoreSpec, ...] = (
     # Human in the loop
     ScoreSpec("human_approved", "BOOLEAN",
               "1 if the advisor approved the proposed trades, 0 if rejected.", None, None),
+    ScoreSpec("human_revisions", "NUMERIC",
+              "How many times the advisor pressed Change before deciding (fewer = better first proposals).",
+              0.0, None),
+    ScoreSpec("learned_preferences_applied", "NUMERIC",
+              "Number of remembered advisor preferences applied to this run's first proposal.", 0.0, None),
 )
 
 BY_NAME = {s.name: s for s in SCORES}

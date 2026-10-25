@@ -15,7 +15,7 @@ classical one wins (same answer, proven optimal, faster).
 import asyncio
 from typing import Any
 
-from app.data.universe import UNIVERSE
+from app.data.universe import BY_TICKER
 from app.graph.context import RunContext
 from app.schemas import MandateRules, Proposal
 
@@ -28,9 +28,13 @@ LABELS = {
 PRIORITY = {"classical": 0, "hybrid": 1, "quantum": 2, "greedy": 3}
 
 
-def build_problem(stats: dict[str, Any], rules: MandateRules, risk_aversion: float | None = None) -> dict:
-    allowed = [a for a in UNIVERSE if a.sector not in rules.excluded_sectors
-               and a.ticker not in rules.excluded_tickers]
+def build_problem(stats: dict[str, Any], rules: MandateRules, risk_aversion: float | None = None,
+                  extra_excluded: list[str] | None = None) -> dict:
+    """The selection problem for one client: the market universe in `stats` minus the mandate's
+    exclusions and any stocks the advisor removed (learned preferences)."""
+    removed = set(rules.excluded_tickers) | set(extra_excluded or [])
+    allowed = [BY_TICKER[t] for t in stats["tickers"]
+               if BY_TICKER[t].sector not in rules.excluded_sectors and t not in removed]
     index = {t: i for i, t in enumerate(stats["tickers"])}
     idx = [index[a.ticker] for a in allowed]
     return {

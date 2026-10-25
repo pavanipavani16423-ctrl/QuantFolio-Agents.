@@ -1,0 +1,345 @@
+{
+  "TCS": {
+    "ticker": "TCS",
+    "name": "Tata Consultancy Services Limited",
+    "period": "2025-2026",
+    "url": "https://nsearchives.nseindia.com/annual_reports/AR_29263_TCS_2025_2026_A_17427580_15052026234830.pdf",
+    "pages": 361,
+    "parse_seconds": 84.1,
+    "sections": {
+      "ar_mdna": {
+        "chars": 30000
+      },
+      "ar_risk": {
+        "chars": 14541
+      },
+      "brsr": {
+        "chars": 30000
+      }
+    }
+  },
+  "RELIANCE": {
+    "ticker": "RELIANCE",
+    "name": "Reliance Industries Limited",
+    "period": "2025-2026",
+    "url": "https://nsearchives.nseindia.com/annual_reports/AR_29285_RELIANCE_2025_2026_A_11007429_28052026133947.pdf",
+    "pages": 187,
+    "parse_seconds": 50.4,
+    "sections": {
+      "ar_mdna": {
+        "chars": 30000
+      },
+      "ar_risk": {
+        "chars": 3041
+      },
+      "brsr": {
+        "chars": 4726
+      }
+    }
+  },
+  "ONGC": {
+    "ticker": "ONGC",
+    "name": "Oil and Natural Gas Corporation Limited",
+    "period": "2025-2026",
+    "url": "https://nsearchives.nseindia.com/annual_reports/AR_30250_ONGC_2025_2026_A_16548337_07082026200935.pdf",
+    "pages": 697,
+    "parse_seconds": 140.8,
+    "sections": {
+      "ar_mdna": {
+        "chars": 30000
+      },
+      "ar_risk": {
+        "chars": 11385
+      },
+      "brsr": {
+        "chars": 2836
+      }
+    }
+  },
+  "INFY": {
+    "ticker": "INFY",
+    "name": "Infosys Limited",
+    "period": "2025-2026",
+    "url": "https://nsearchives.nseindia.com/annual_reports/AR_29313_INFY_2025_2026_U_8985411_30052026200413.pdf",
+    "pages": 384,
+    "parse_seconds": 56.5,
+    "sections": {
+      "ar_mdna": {
+        "chars": 30000
+      },
+      "ar_risk": {
+        "chars": 7296
+      },
+      "brsr": {
+        "chars": 7519
+      }
+    }
+  },
+  "HDFCBANK": {
+    "ticker": "HDFCBANK",
+    "name": "HDFC Bank Limited",
+    "period": "2025-2026",
+    "url": "https://nsearchives.nseindia.com/annual_reports/AR_29735_HDFCBANK_2025_2026_A_12667766_11072026001055.pdf",
+    "pages": 678,
+    "parse_seconds": 89.5,
+    "sections": {
+      "ar_mdna": {
+        "chars": 9941
+      },
+      "ar_risk": {
+        "chars": 15025
+      },
+      "brsr": {
+        "chars": 10007
+      }
+    }
+  },
+  "ICICIBANK": {
+    "ticker": "ICICIBANK",
+    "name": "ICICI Bank Limited",
+    "period": "2025-2026",
+    "url": "https://nsearchives.nseindia.com/annual_reports/AR_29895_ICICIBANK_2025_2026_A_23776312_18072026185534.pdf",
+    "pages": 510,
+    "parse_seconds": 55.3,
+    "sections": {
+      "ar_mdna": {
+        "chars": 30000
+      },
+      "ar_risk": {
+        "chars": 3979
+      },
+      "brsr": {
+        "chars": 3199
+      }
+    }
+  },
+  "SBIN": {
+    "ticker": "SBIN",
+    "name": "State Bank of India",
+    "period": "2025-2026",
+    "url": "https://nsearchives.nseindia.com/annual_reports/AR_29279_SBIN_2025_2026_A_22551017_26052026223038.pdf",
+    "pages": 593,
+    "parse_seconds": 119.1,
+    "sections": {
+      "ar_mdna": {
+        "chars": 6662
+      },
+      "ar_risk": {
+        "chars": 13972
+      },
+      "brsr": {
+        "chars": 1865
+      }
+    }
+  },
+  "HINDUNILVR": {
+    "ticker": "HINDUNILVR",
+    "name": "Hindustan Unilever Limited",
+    "period": "2025-2026",
+    "url": "https://nsearchives.nseindia.com/annual_reports/AR_29330_HINDUNILVR_2025_2026_A_21643813_02062026215058.pdf",
+    "pages": 246,
+    "parse_seconds": 46.3,
+    "sections": {
+      "ar_mdna": {
+        "chars": 30000
+      },
+      "ar_risk": {
+        "chars": 7525
+      },
+      "brsr": {
+        "chars": 30000
+      }
+    }
+  },
+  "MARUTI": {
+    "ticker": "MARUTI",
+    "name": "Maruti Suzuki India Limited",
+    "period": "2025-2026",
+    "url": "https://nsearchives.nseindia.com/annual_reports/AR_30271_MARUTI_2025_2026_A_19335803_08082026213212.pdf",
+    "pages": 270,
+    "parse_seconds": 57.1,
+    "sections": {
+      "ar_mdna": {
+        "chars": 30000
+      },
+      "ar_risk": {
+        "chars": 13187
+      },
+      "brsr": {
+        "chars": 9473
+      }
+    }
+  },
+  "TITAN": {
+    "ticker": "TITAN",
+    "name": "Titan Company Limited",
+    "period": "2025-2026",
+    "url": "https://nsearchives.nseindia.com/annual_reports/AR_29549_TITAN_2025_2026_A_11906853_03072026125809.pdf",
+    "pages": 473,
+    "parse_seconds": 23.5,
+    "sections": {
+      "ar_mdna": {
+        "chars": 9204
+      },
+      "ar_risk": {
+        "chars": 5608
+      },
+      "brsr": {
+        "chars": 1329,
+        "skipped": true
+      }
+    }
+  },
+  "SUNPHARMA": {
+    "ticker": "SUNPHARMA",
+    "name": "Sun Pharmaceutical Industries Limited",
+    "period": "2025-2026",
+    "url": "https://nsearchives.nseindia.com/annual_reports/AR_29590_SUNPHARMA_2025_2026_A_19925421_06072026185825.pdf",
+    "pages": 345,
+    "parse_seconds": 22.7,
+    "sections": {
+      "ar_mdna": {
+        "chars": 30000
+      },
+      "ar_risk": {
+        "chars": 5469
+      },
+      "brsr": {
+        "chars": 4711
+      }
+    }
+  },
+  "LT": {
+    "ticker": "LT",
+    "name": "Larsen & Toubro Limited",
+    "period": "2025-2026",
+    "url": "https://nsearchives.nseindia.com/annual_reports/AR_29259_LT_2025_2026_A_29793480_14052026183032.pdf",
+    "pages": 756,
+    "parse_seconds": 38.4,
+    "sections": {
+      "ar_mdna": {
+        "chars": 30000
+      },
+      "ar_risk": {
+        "chars": 30000
+      },
+      "brsr": {
+        "chars": 30000
+      }
+    }
+  },
+  "TATASTEEL": {
+    "ticker": "TATASTEEL",
+    "name": "Tata Steel Limited",
+    "period": "2025-2026",
+    "url": "https://nsearchives.nseindia.com/annual_reports/AR_29336_TATASTEEL_2025_2026_A_19703090_03062026194432.pdf",
+    "pages": 584,
+    "parse_seconds": 33.7,
+    "sections": {
+      "ar_mdna": {
+        "chars": 8231
+      },
+      "ar_risk": {
+        "chars": 3946
+      },
+      "brsr": {
+        "chars": 8231
+      }
+    }
+  },
+  "ULTRACEMCO": {
+    "ticker": "ULTRACEMCO",
+    "name": "UltraTech Cement Limited",
+    "period": "2025-2026",
+    "url": "https://nsearchives.nseindia.com/annual_reports/AR_29978_ULTRACEMCO_2025_2026_A_20670730_24072026120407.pdf",
+    "pages": 327,
+    "parse_seconds": 75.5,
+    "sections": {
+      "ar_mdna": {
+        "chars": 30000
+      },
+      "ar_risk": {
+        "chars": 6946
+      },
+      "brsr": {
+        "chars": 30000
+      }
+    }
+  },
+  "ASIANPAINT": {
+    "ticker": "ASIANPAINT",
+    "name": "Asian Paints Limited",
+    "period": "2025-2026",
+    "url": "https://nsearchives.nseindia.com/annual_reports/AR_29385_ASIANPAINT_2025_2026_A_26278926_12062026160918.pdf",
+    "pages": 294,
+    "parse_seconds": 110.4,
+    "sections": {
+      "ar_mdna": {
+        "chars": 30000
+      },
+      "ar_risk": {
+        "chars": 7572
+      },
+      "brsr": {
+        "chars": 30000
+      }
+    }
+  },
+  "BHARTIARTL": {
+    "ticker": "BHARTIARTL",
+    "name": "Bharti Airtel Limited",
+    "period": "2025-2026",
+    "url": "https://nsearchives.nseindia.com/annual_reports/AR_29749_BHARTIARTL_2025_2026_A_22716516_11072026235841.pdf",
+    "pages": 303,
+    "parse_seconds": 69.8,
+    "sections": {
+      "ar_mdna": {
+        "chars": 30000
+      },
+      "ar_risk": {
+        "chars": 30000
+      },
+      "brsr": {
+        "chars": 10960
+      }
+    }
+  },
+  "ITC": {
+    "ticker": "ITC",
+    "name": "ITC Limited",
+    "period": "2025-2026",
+    "url": "https://nsearchives.nseindia.com/annual_reports/AR_29459_ITC_2025_2026_A_14678177_26062026165422.pdf",
+    "pages": 416,
+    "parse_seconds": 68.4,
+    "sections": {
+      "ar_mdna": {
+        "chars": 14558
+      },
+      "ar_risk": {
+        "chars": 5981
+      },
+      "brsr": {
+        "chars": 2689
+      }
+    }
+  },
+  "NTPC": {
+    "ticker": "NTPC",
+    "name": "NTPC Limited",
+    "period": "2024-2025",
+    "url": "https://nsearchives.nseindia.com/annual_reports/AR_27336_NTPC_2024_2025_A_07082025183440.pdf",
+    "pages": 374,
+    "parse_seconds": 69.6,
+    "sections": {
+      "ar_mdna": {
+        "chars": 30000
+      },
+      "ar_risk": {
+        "chars": 3687
+      },
+      "brsr": {
+        "chars": 2251
+      }
+    }
+  }
+}

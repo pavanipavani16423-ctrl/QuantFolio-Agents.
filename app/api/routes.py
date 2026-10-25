@@ -12,7 +12,8 @@ from sse_starlette.sse import EventSourceResponse
 from app.a2a import registry
 from app.config import ROOT
 from app.data import store
-from app.data.universe import BY_TICKER, UNIVERSE
+from app.data.universe import BY_TICKER, MARKETS
+from app.data.universe import universe as market_universe
 from app.mcp.hub import AGENT_TOOL_ACL, MCPHub
 from app.mcp.servers import broker
 from app.observability.scores import SCORES
@@ -61,10 +62,29 @@ async def clients() -> list[dict[str, Any]]:
     out = []
     for cid, acc in store.accounts().items():
         snap = await broker.get_account(cid)
+        market = MARKETS[acc["market"]]
         out.append({"client_id": cid, "name": acc["name"], "profile": acc["profile"],
                     "mandate_doc": acc["mandate_doc"], "market_value": snap["market_value"],
-                    "holdings": len(snap["positions"]), "price_date": snap["price_date"]})
+                    "holdings": len(snap["positions"]), "price_date": snap["price_date"],
+                    "market": market.code, "market_name": market.name, "currency": market.currency,
+                    "currency_symbol": market.symbol, "benchmark_name": market.benchmark_name,
+                    "research_sources": market.research_sources})
     return out
+
+
+@api.get("/clients/{client_id}/preferences")
+async def client_preferences(client_id: str, request: Request) -> list[dict[str, Any]]:
+    """What the agents learned about this client from past reviews."""
+    if client_id not in store.accounts():
+        raise HTTPException(status_code=404, detail=f"unknown client {client_id}")
+    return await request.app.state.db.preferences(client_id)
+
+
+@api.delete("/clients/{client_id}/preferences/{pref_id}")
+async def forget_preference(client_id: str, pref_id: int, request: Request) -> dict[str, Any]:
+    if not await request.app.state.db.forget_preference(client_id, pref_id):
+        raise HTTPException(status_code=404, detail="preference not found")
+    return {"forgotten": pref_id}
 
 
 @api.get("/clients/{client_id}/account")
@@ -87,10 +107,12 @@ async def reset_client(client_id: str) -> dict[str, Any]:
 
 
 @api.get("/universe")
-async def universe() -> dict[str, Any]:
-    meta = store.prices_meta()
-    return {"assets": [{"ticker": a.ticker, "name": a.name, "sector": a.sector} for a in UNIVERSE],
-            "prices": meta}
+async def universe(market: str = "US") -> dict[str, Any]:
+    if market not in MARKETS:
+        raise HTTPException(status_code=404, detail=f"unknown market {market}")
+    return {"market": market,
+            "assets": [{"ticker": a.ticker, "name": a.name, "sector": a.sector} for a in market_universe(market)],
+            "prices": store.prices_meta(market)}
 
 
 @api.get("/mandates/{client_id}")
@@ -128,7 +150,7 @@ async def list_runs(request: Request, limit: int = Query(30, ge=1, le=200),
                     client_id: str | None = None) -> list[dict[str, Any]]:
     docs = await request.app.state.runs.list_runs(limit, client_id)
     keep = ("id", "client_id", "client_name", "profile", "request", "status", "created_at",
-            "updated_at", "trace_url", "llm")
+            "updated_at", "trace_url", "llm", "market", "currency_symbol")
     out = []
     for d in docs:
         row = {k: d.get(k) for k in keep}

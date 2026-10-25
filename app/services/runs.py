@@ -14,6 +14,7 @@ from langgraph.types import Command
 
 from app.config import Settings
 from app.data import store
+from app.data.universe import MARKETS
 from app.db.database import Database
 from app.graph.context import STEPS, RunContext, register, unregister
 from app.graph.workflow import build_graph
@@ -27,7 +28,7 @@ logger = logging.getLogger(__name__)
 
 RESULT_KEYS = ("intake", "research", "risk_profile", "rules", "mandate_meta", "optimization",
                "backtest", "compliance", "risk_check", "memo", "memo_facts", "evaluation", "trades",
-               "approval", "execution")
+               "approval", "execution", "preferences", "applied", "effective_rules", "revision")
 LIST_KEYS = ("a2a_calls", "warnings", "decisions")
 
 
@@ -48,6 +49,7 @@ class RunService:
         self.graph = build_graph(checkpointer)
         self._docs: dict[str, dict[str, Any]] = {}
         self._tasks: set[asyncio.Task] = set()
+        self._scoring: dict[str, asyncio.Task] = {}  # background RAGAS scoring per run
         self._limit = asyncio.Semaphore(max_concurrent)
 
     # ---- lifecycle -------------------------------------------------------------------------
@@ -64,31 +66,39 @@ class RunService:
         if self._tasks:
             await asyncio.gather(*self._tasks, return_exceptions=True)
 
-    def _spawn(self, coro) -> None:  # noqa: ANN001
+    def _spawn(self, coro) -> asyncio.Task:  # noqa: ANN001
         task = asyncio.create_task(coro)
         self._tasks.add(task)
         task.add_done_callback(self._tasks.discard)
+        return task
+
+    def _spawn_scoring(self, doc: dict[str, Any], coro) -> None:  # noqa: ANN001
+        self._scoring[doc["id"]] = self._spawn(self._background_scores(doc, coro))
 
     # ---- public API ------------------------------------------------------------------------
     async def start(self, req: RunRequest) -> dict[str, Any]:
         account = store.account(req.client_id)
+        market = MARKETS[account["market"]]
         run_id = f"run_{uuid.uuid4().hex[:12]}"
         llm = LLMGateway(self.settings)
         doc = {
             "id": run_id, "client_id": req.client_id, "client_name": account["name"],
             "profile": account["profile"], "request": req.request, "methods": req.methods,
+            "market": market.code, "market_name": market.name, "currency": market.currency,
+            "currency_symbol": market.symbol, "benchmark_name": market.benchmark_name,
+            "research_sources": market.research_sources,
             "status": "queued", "created_at": _now(), "updated_at": _now(),
             "trace_id": None, "trace_url": None, "error": None,
             "llm": llm.mode, "langfuse": get_tracer().enabled,
             "steps": {k: {"key": k, "number": s.number, "title": s.plain, "status": "pending"}
                       for k, s in STEPS.items()},
             "decisions": [], "tool_calls": [], "llm_calls": [], "a2a_calls": [], "warnings": [],
-            "result": {}, "event_seq": 0,
+            "feedback": [], "result": {"revision": 0}, "event_seq": 0,
         }
         self._docs[run_id] = doc
         await self.db.save_run(doc)
-        initial = {"run_id": run_id, "client_id": req.client_id, "request": req.request,
-                   "methods": req.methods}
+        initial = {"run_id": run_id, "client_id": req.client_id, "market": market.code,
+                   "request": req.request, "methods": req.methods, "revision": 0}
         self._spawn(self._execute(run_id, initial, resume=None))
         return doc
 
@@ -107,7 +117,18 @@ class RunService:
         self._docs[run_id] = doc
         doc["status"] = "running"
         await self._save(doc)
-        self._spawn(self._execute(run_id, None, resume=decision.model_dump()))
+        resume = {**decision.model_dump(mode="json"), "action": decision.resolved_action()}
+        if resume["action"] == "change" and not (decision.changes and (
+                decision.changes.remove_tickers or decision.changes.max_weight or decision.changes.lower_risk)):
+            doc["status"] = "awaiting_approval"
+            await self._save(doc)
+            raise ConflictError("a change needs at least one of: remove a stock, a lower cap, lower risk")
+        if resume["action"] == "change":
+            # the proposal is replaced: stop scoring it (saves the judge's rate limit for the new one)
+            stale = self._scoring.pop(run_id, None)
+            if stale and not stale.done():
+                stale.cancel()
+        self._spawn(self._execute(run_id, None, resume=resume))
         return doc
 
     # ---- execution -------------------------------------------------------------------------
@@ -145,8 +166,8 @@ class RunService:
                 else:
                     doc["result"][key] = value
                 changed.append(key)
-            elif key in ("a2a_calls", "warnings"):
-                doc[key].extend(value or [])
+            elif key in ("a2a_calls", "warnings", "feedback"):
+                doc.setdefault(key, []).extend(value or [])
         return changed
 
     async def _execute(self, run_id: str, initial: dict | None, resume: dict | None) -> None:
@@ -164,7 +185,9 @@ class RunService:
             await emit("llm_call", info)
 
         llm.recorder = record_llm
-        ctx = RunContext(run_id=run_id, settings=self.settings, tracer=tracer, llm=llm, emit=emit)
+        ctx = RunContext(run_id=run_id, settings=self.settings, tracer=tracer, llm=llm, emit=emit,
+                         load_preferences=self.db.preferences, save_preferences=self.db.add_preferences,
+                         spawn=lambda coro: self._spawn_scoring(doc, coro))
         config = {"configurable": {"thread_id": run_id}, "recursion_limit": 80}
         async with self._limit:
             doc["status"] = "running"
@@ -213,6 +236,28 @@ class RunService:
                 unregister(run_id)
                 tracer.flush()
             await self._event(doc, "status", {"status": doc["status"], "error": doc.get("error")})
+
+    async def _background_scores(self, doc: dict[str, Any], coro) -> None:  # noqa: ANN001
+        """Merge the RAGAS scores into the run when the background judge finishes."""
+        try:
+            update = await coro
+        except asyncio.CancelledError:
+            coro.close() if hasattr(coro, "close") else None
+            return
+        except Exception as exc:  # noqa: BLE001
+            logger.exception("background scoring failed for %s", doc["id"])
+            update = {"scores": {}, "judge": None, "notes": [f"{type(exc).__name__}: {exc}"[:300]],
+                      "ragas_status": "failed", "revision": doc["result"].get("revision", 0)}
+        finally:
+            get_tracer().flush()
+        evaluation = doc["result"].get("evaluation")
+        # a newer proposal (after "Change") has its own scoring; drop stale results
+        if not evaluation or evaluation.get("revision", 0) != update.get("revision", 0):
+            return
+        evaluation["scores"].update(update["scores"])
+        evaluation.update({k: update[k] for k in ("judge", "notes", "ragas_status")})
+        await self._event(doc, "update", {"node": "evaluate", "keys": ["evaluation"]})
+        await self._save(doc)
 
     @staticmethod
     def _final_status(doc: dict[str, Any], interrupted: bool) -> str:

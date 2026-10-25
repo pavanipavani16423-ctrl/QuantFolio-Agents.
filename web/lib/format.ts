@@ -9,9 +9,14 @@ export function signedPct(value: number | null | undefined, digits = 1): string 
   return value > 0 ? `+${s}%` : `${s}%`;
 }
 
-export function money(value: number | null | undefined): string {
+export function money(value: number | null | undefined, currency = "USD"): string {
   if (value === null || value === undefined) return "–";
-  return value.toLocaleString("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 });
+  // Indian rupees use Indian digit grouping (₹49,95,594)
+  return value.toLocaleString(currency === "INR" ? "en-IN" : "en-US", {
+    style: "currency",
+    currency,
+    maximumFractionDigits: 0,
+  });
 }
 
 export function seconds(value: number | null | undefined): string {

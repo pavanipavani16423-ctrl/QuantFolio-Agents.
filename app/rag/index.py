@@ -70,6 +70,7 @@ class Hit:
             "title": self.chunk.title,
             "section": self.chunk.section,
             "source_url": self.chunk.source_url,
+            "market": self.chunk.market,
             "text": text,
             "score": round(float(self.score), 6),
             "rank": self.rank,
@@ -103,8 +104,10 @@ class HybridIndex:
         self._lock = threading.Lock()  # onnxruntime sessions are not re-entrant across threads
 
     # ---- filters -------------------------------------------------------------------------
-    def _mask(self, tickers, doc_types, client_id) -> np.ndarray:  # noqa: ANN001
+    def _mask(self, tickers, doc_types, client_id, market=None) -> np.ndarray:  # noqa: ANN001
         mask = np.ones(len(self.chunks), dtype=bool)
+        if market:
+            mask &= np.array([c.market in (None, market) for c in self.chunks])
         if tickers:
             wanted = {t.upper() for t in tickers}
             mask &= np.array([c.ticker in wanted for c in self.chunks])
@@ -144,10 +147,11 @@ class HybridIndex:
         client_id: str | None = None,
         candidates: int = 40,
         rerank_top: int = 20,
+        market: str | None = None,
     ) -> tuple[list[Hit], SearchTrace]:
         if mode not in MODES:
             raise ValueError(f"mode must be one of {MODES}")
-        mask = self._mask(tickers, doc_types, client_id)
+        mask = self._mask(tickers, doc_types, client_id, market)
         trace = SearchTrace(mode=mode, filtered_pool=int(mask.sum()))
         t0 = time.perf_counter()
 

@@ -1,0 +1,29 @@
+{
+  "source": "Yahoo Finance via yfinance (NSE, adjusted close; Nifty 50 = ^NSEI)",
+  "symbols": [
+    "RELIANCE",
+    "ONGC",
+    "TCS",
+    "INFY",
+    "HDFCBANK",
+    "ICICIBANK",
+    "SBIN",
+    "BHARTIARTL",
+    "HINDUNILVR",
+    "ITC",
+    "MARUTI",
+    "TITAN",
+    "SUNPHARMA",
+    "LT",
+    "NTPC",
+    "TATASTEEL",
+    "ULTRACEMCO",
+    "ASIANPAINT",
+    "NIFTY50"
+  ],
+  "start": "2024-01-02",
+  "end": "2026-10-23",
+  "rows": 693,
+  "currency": "INR",
+  "downloaded": "2026-10-25"
+}

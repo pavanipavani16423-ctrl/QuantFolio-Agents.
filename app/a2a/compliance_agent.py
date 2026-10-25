@@ -78,7 +78,7 @@ def rules_from_text(client_id: str, chunks: list[dict]) -> MandateRules:
     sec = re.search(PATTERNS["excluded_sectors"], text, flags=re.I)
     tick = re.search(PATTERNS["excluded_tickers"], text, flags=re.I)
     excluded_sectors = [s for s in SECTORS if sec and s.lower() in sec.group(1).lower()]
-    excluded_tickers = [t for t in re.findall(r"\b[A-Z]{1,5}\b", tick.group(1) if tick else "")
+    excluded_tickers = [t for t in re.findall(r"\b[A-Z][A-Z&]{0,11}\b", tick.group(1) if tick else "")
                         if t in BY_TICKER]
     citations = [c for c in (_cite(rule, pat, chunks) for rule, pat in PATTERNS.items()) if c]
     return MandateRules(

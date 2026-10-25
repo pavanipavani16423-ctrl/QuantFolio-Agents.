@@ -18,6 +18,9 @@ DOC_TYPE_LABEL = {
     "mdna": "10-K Item 7 management's discussion and analysis",
     "facts": "financial facts (SEC XBRL)",
     "mandate": "investment policy statement",
+    "ar_mdna": "annual report management discussion and analysis (SEBI)",
+    "ar_risk": "annual report risks and risk management",
+    "brsr": "business responsibility and sustainability report (BRSR, SEBI)",
 }
 
 
@@ -33,6 +36,7 @@ class Chunk:
     ticker: str | None = None
     client_id: str | None = None
     source_url: str | None = None
+    market: str | None = None
 
     @property
     def index_text(self) -> str:
@@ -136,6 +140,7 @@ def chunk_document(doc: Document) -> list[Chunk]:
             ticker=doc.ticker,
             client_id=doc.client_id,
             source_url=doc.source_url,
+            market=doc.market,
         )
         for i, (section, text) in enumerate(parts)
         if len(text) > 40

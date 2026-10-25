@@ -1,4 +1,4 @@
-import type { Client, Run, RunSummary } from "./types";
+import type { ChangeRequest, Client, Preference, Run, RunSummary } from "./types";
 
 export const API_URL = (process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000").replace(/\/$/, "");
 const API_KEY = process.env.NEXT_PUBLIC_API_KEY ?? "";
@@ -68,8 +68,13 @@ export const api = {
   run: (id: string) => request<Run>(`/api/v1/runs/${id}`),
   startRun: (body: { client_id: string; request: string; methods: string[] }) =>
     request<Run>("/api/v1/runs", { method: "POST", body: JSON.stringify(body) }),
-  decide: (id: string, body: { approved: boolean; reviewer: string; note?: string }) =>
-    request<Run>(`/api/v1/runs/${id}/approval`, { method: "POST", body: JSON.stringify(body) }),
+  decide: (
+    id: string,
+    body: { action: "approve" | "reject" | "change"; reviewer: string; note?: string; changes?: ChangeRequest; remember?: boolean },
+  ) => request<Run>(`/api/v1/runs/${id}/approval`, { method: "POST", body: JSON.stringify(body) }),
+  preferences: (clientId: string) => request<Preference[]>(`/api/v1/clients/${clientId}/preferences`),
+  forgetPreference: (clientId: string, id: number) =>
+    request(`/api/v1/clients/${clientId}/preferences/${id}`, { method: "DELETE" }),
   chunk: (id: string) => request<{ chunk_id: string; title: string; section: string; text: string; source_url: string | null }>(
     `/api/v1/chunks/${encodeURIComponent(id)}`,
   ),

@@ -1,9 +1,18 @@
-import { ExternalLink } from "lucide-react";
-import { Badge, buttonClass, cn } from "@/components/ui";
+import { ExternalLink, Loader2 } from "lucide-react";
+import { buttonClass, cn } from "@/components/ui";
 import { num, pct, signedPct } from "@/lib/format";
-import { SCORE_GROUPS, SCORE_LABEL } from "@/lib/plain";
+import { SCORE_LABEL } from "@/lib/plain";
 import type { Run, Score } from "@/lib/types";
 import { RunSection } from "./section";
+
+const KEY_SCORES = [
+  "rag_faithfulness",
+  "rag_answer_relevancy",
+  "rag_context_precision",
+  "output_memo_quality",
+  "output_rule_extraction_accuracy",
+  "output_compliance_pass",
+];
 
 function display(name: string, s: Score) {
   const kind = SCORE_LABEL[name]?.kind ?? "unit";
@@ -22,77 +31,72 @@ function tone(name: string, s: Score): "good" | "warning" | "critical" | "neutra
   return "neutral";
 }
 
+const TONE = {
+  good: "text-good",
+  warning: "text-warning",
+  critical: "text-critical",
+  neutral: "text-foreground",
+};
+
 export function QualitySection({ run }: { run: Run }) {
   const ev = run.result.evaluation;
   if (!ev) return null;
+  const running = ev.ragas_status === "running";
+  const rest = Object.keys(ev.scores).filter((n) => !KEY_SCORES.includes(n) && SCORE_LABEL[n]);
   return (
     <RunSection
       id="quality"
-      eyebrow="Quality scores"
-      title="How good was this answer?"
-      lead="Measured automatically after every run and sent to the Langfuse dashboard, so quality can be tracked over time."
+      eyebrow="Quality"
+      title="How good is this answer?"
+      lead="Checked automatically. The first four are RAGAS scores from an AI judge; all scores are also on the Langfuse dashboard."
       right={
         run.trace_url ? (
           <a href={run.trace_url} target="_blank" rel="noreferrer" className={buttonClass("outline")}>
-            Open in Langfuse <ExternalLink className="size-3.5" />
+            Langfuse <ExternalLink className="size-3.5" />
           </a>
         ) : null
       }
     >
-      <div className="grid gap-4 lg:grid-cols-2">
-        {SCORE_GROUPS.map((g) => {
-          const items = g.names.filter((n) => ev.scores[n]);
-          const isRagas = g.names[0] === "rag_faithfulness" || g.names[0] === "output_memo_quality";
+      {running && (
+        <p className="mb-4 flex items-center gap-2 rounded-2xl bg-panel-2 p-3 text-sm text-muted-foreground">
+          <Loader2 className="size-4 animate-spin text-accent" /> The AI judge is still scoring (about a minute). You can
+          already decide.
+        </p>
+      )}
+      <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+        {KEY_SCORES.map((n) => {
+          const s = ev.scores[n];
           return (
-            <div key={g.title} className="rounded-2xl bg-panel-2 p-4">
-              <div className="mb-3 flex items-baseline justify-between gap-2">
-                <h3 className="text-sm font-semibold">{g.title}</h3>
-                <span className="text-xs text-subtle-foreground">{g.plain}</span>
-              </div>
-              {items.length ? (
-                <ul className="flex flex-col gap-3">
-                  {items.map((n) => {
-                    const s = ev.scores[n];
-                    const t = tone(n, s);
-                    const kind = SCORE_LABEL[n]?.kind;
-                    return (
-                      <li key={n}>
-                        <div className="flex items-center justify-between gap-3 text-sm">
-                          <span>
-                            {SCORE_LABEL[n]?.name ?? n}
-                            <span className="block text-xs text-muted-foreground">{SCORE_LABEL[n]?.explain}</span>
-                          </span>
-                          <Badge tone={t} className="tabular shrink-0 text-sm">
-                            {display(n, s)}
-                          </Badge>
-                        </div>
-                        {kind === "unit" && (
-                          <div className="mt-1.5 h-1.5 rounded-full bg-card">
-                            <div
-                              className={cn("h-full rounded-full", t === "good" ? "bg-good" : t === "warning" ? "bg-warning" : "bg-critical")}
-                              style={{ width: `${Math.max(2, Math.min(100, s.value * 100))}%` }}
-                            />
-                          </div>
-                        )}
-                      </li>
-                    );
-                  })}
-                </ul>
-              ) : (
-                <p className="text-sm text-muted-foreground">
-                  {isRagas
-                    ? "Not scored: the RAGAS judge needs an AI model. Add a free Groq API key to the backend's .env file to turn it on."
-                    : "No scores in this group."}
-                </p>
-              )}
+            <div key={n} className="rounded-2xl bg-panel-2 p-3">
+              <p className="text-xs text-muted-foreground">{SCORE_LABEL[n]?.name}</p>
+              <p className={cn("tabular mt-1 text-2xl font-semibold", s ? TONE[tone(n, s)] : "text-subtle-foreground")}>
+                {s ? display(n, s) : running ? "…" : "–"}
+              </p>
+              <p className="mt-0.5 text-[11px] leading-snug text-subtle-foreground">{SCORE_LABEL[n]?.explain}</p>
             </div>
           );
         })}
       </div>
-      <p className="mt-4 text-xs text-subtle-foreground">
-        Judge: {ev.judge ?? "none (offline mode)"} · RAGAS 0.4 metrics: faithfulness, answer relevancy, context precision,
-        context relevance, rubric score.
-      </p>
+      {rest.length > 0 && (
+        <details className="mt-4 rounded-2xl border p-3 text-sm">
+          <summary className="cursor-pointer text-muted-foreground">More scores ({rest.length})</summary>
+          <ul className="mt-3 grid gap-2 sm:grid-cols-2">
+            {rest.map((n) => (
+              <li key={n} className="flex items-center justify-between gap-3">
+                <span>
+                  {SCORE_LABEL[n]?.name}
+                  <span className="block text-xs text-subtle-foreground">{SCORE_LABEL[n]?.explain}</span>
+                </span>
+                <span className={cn("tabular font-semibold", TONE[tone(n, ev.scores[n])])}>{display(n, ev.scores[n])}</span>
+              </li>
+            ))}
+          </ul>
+        </details>
+      )}
+      {!running && ev.notes.length > 0 && (
+        <p className="mt-3 text-xs text-subtle-foreground">{ev.notes.join(" · ")}</p>
+      )}
+      <p className="mt-3 text-xs text-subtle-foreground">Judge: {ev.judge ?? (running ? "working" : "none (offline mode)")}</p>
     </RunSection>
   );
 }

@@ -152,7 +152,24 @@ class StepInfo(BaseModel):
     seconds: float | None = None
 
 
+class ChangeRequest(BaseModel):
+    """What the advisor wants different. Applied at once (re-plan) and, if remembered, to every
+    later run for the same client."""
+
+    remove_tickers: list[str] = Field(default_factory=list, max_length=10)
+    max_weight: float | None = Field(default=None, ge=0.03, le=0.5)
+    lower_risk: bool = False
+
+
 class ApprovalRequest(BaseModel):
-    approved: bool
+    action: Literal["approve", "reject", "change"] | None = None
+    approved: bool | None = None  # older clients send only this
     reviewer: str = Field(default="advisor", max_length=80)
     note: str | None = Field(default=None, max_length=500)
+    changes: ChangeRequest | None = None
+    remember: bool = True
+
+    def resolved_action(self) -> str:
+        if self.action:
+            return self.action
+        return "approve" if self.approved else "reject"

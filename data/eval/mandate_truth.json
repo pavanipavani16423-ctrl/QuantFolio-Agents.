@@ -1,6 +1,53 @@
 {
   "_note": "Hand-written ground truth for the three synthetic mandates in data/corpus/mandates. Used to score the compliance agent's rule extraction.",
-  "C-101": {"holdings": 10, "max_weight": 0.15, "min_weight": 0.04, "max_sector_weight": 0.30, "max_volatility": 0.18, "risk_aversion": 6, "excluded_sectors": [], "excluded_tickers": [], "approval_required": true},
-  "C-102": {"holdings": 8, "max_weight": 0.20, "min_weight": 0.05, "max_sector_weight": 0.40, "max_volatility": 0.25, "risk_aversion": 3, "excluded_sectors": ["Energy"], "excluded_tickers": [], "approval_required": true},
-  "C-103": {"holdings": 12, "max_weight": 0.12, "min_weight": 0.04, "max_sector_weight": 0.30, "max_volatility": 0.22, "risk_aversion": 4, "excluded_sectors": [], "excluded_tickers": ["PFE"], "approval_required": true}
+  "C-101": {
+    "holdings": 10,
+    "max_weight": 0.15,
+    "min_weight": 0.04,
+    "max_sector_weight": 0.3,
+    "max_volatility": 0.18,
+    "risk_aversion": 6,
+    "excluded_sectors": [],
+    "excluded_tickers": [],
+    "approval_required": true
+  },
+  "C-102": {
+    "holdings": 8,
+    "max_weight": 0.2,
+    "min_weight": 0.05,
+    "max_sector_weight": 0.4,
+    "max_volatility": 0.25,
+    "risk_aversion": 3,
+    "excluded_sectors": [
+      "Energy"
+    ],
+    "excluded_tickers": [],
+    "approval_required": true
+  },
+  "C-103": {
+    "holdings": 12,
+    "max_weight": 0.12,
+    "min_weight": 0.04,
+    "max_sector_weight": 0.3,
+    "max_volatility": 0.22,
+    "risk_aversion": 4,
+    "excluded_sectors": [],
+    "excluded_tickers": [
+      "PFE"
+    ],
+    "approval_required": true
+  },
+  "C-201": {
+    "holdings": 8,
+    "max_weight": 0.18,
+    "min_weight": 0.05,
+    "max_sector_weight": 0.35,
+    "max_volatility": 0.22,
+    "risk_aversion": 4,
+    "excluded_sectors": [],
+    "excluded_tickers": [
+      "ITC"
+    ],
+    "approval_required": true
+  }
 }

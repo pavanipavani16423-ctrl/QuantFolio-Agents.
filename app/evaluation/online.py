@@ -144,20 +144,15 @@ def judge_context(source: dict[str, Any]) -> str:
     return f"{company} - {source.get('section') or source['doc_type']}\n{source['text'][:900]}"
 
 
-async def evaluate_run(settings: Settings, state: dict[str, Any]) -> dict[str, Any]:
+def deterministic_scores(settings: Settings, state: dict[str, Any]) -> dict[str, dict]:
+    """Checks that need no LLM; fast, computed inside the graph."""
     research = state["research"]
     contexts = [s["text"] for s in research["sources"]]
-    # The judge sees what the research LLM saw: the trimmed passage plus its label. Filings say
-    # "we" and "our products"; without the label the judge cannot tell whose risk it is.
-    judged_contexts = [judge_context(s) for s in research["sources"][:6]]
-    memo = state["memo"]
-    memo_text = "\n".join([memo["headline"], memo["summary"], *memo["key_changes"], *memo["risks"],
-                           memo["quantum_note"]])
     scores: dict[str, dict] = {}
 
-    def put(name: str, value: float | None, comment: str, source: str = "deterministic") -> None:
+    def put(name: str, value: float | None, comment: str) -> None:
         if value is not None and not (isinstance(value, float) and math.isnan(value)):
-            scores[name] = {"value": float(value), "comment": comment, "source": source}
+            scores[name] = {"value": float(value), "comment": comment, "source": "deterministic"}
 
     put("rag_citation_coverage", citation_coverage(research["answer"]),
         "share of answer sentences with a [n] citation")
@@ -170,14 +165,14 @@ async def evaluate_run(settings: Settings, state: dict[str, Any]) -> dict[str, A
                                  Path(settings.data_dir) / "eval" / "mandate_truth.json"),
         "extracted mandate rules vs hand-written truth")
     put("output_compliance_pass", 1.0 if state["compliance"]["passed"] else 0.0,
-        "all mandate rules pass" if state["compliance"]["passed"] else "a mandate rule failed")
+        "all rules pass" if state["compliance"]["passed"] else "a rule failed")
 
     bt = state["backtest"]["metrics"]
     rec = bt.get("recommended", {})
     put("portfolio_oos_sharpe", rec.get("sharpe_ratio"), "out-of-sample Sharpe, buy-and-hold")
-    if rec and "SPY" in bt:
-        put("portfolio_oos_excess_return_vs_spy", rec["total_return"] - bt["SPY"]["total_return"],
-            "out-of-sample total return minus SPY")
+    if rec and "benchmark" in bt:
+        put("portfolio_oos_excess_return_vs_benchmark", rec["total_return"] - bt["benchmark"]["total_return"],
+            "out-of-sample total return minus the market index")
     opt = state["optimization"]
     if "quantum" in opt:
         put("quantum_optimality_gap", opt.get("quantum_gap"), "QAOA vs exact classical selection")
@@ -185,12 +180,27 @@ async def evaluate_run(settings: Settings, state: dict[str, Any]) -> dict[str, A
             "probability mass on exactly-k selections")
         put("quantum_approximation_ratio", opt["quantum"].get("feasible_approximation_ratio"),
             "QAOA approximation ratio over feasible selections")
+    return scores
 
-    notes: list[str] = []
-    judge_name = None
-    if settings.online_evaluation:
-        llm_scores, judge_name, notes = await ragas_scores(
-            settings, research["question"], research["answer"], judged_contexts, memo_text,
-            json.dumps(state.get("memo_facts", {}), default=str))
-        scores.update(llm_scores)
-    return {"scores": scores, "judge": judge_name, "notes": notes}
+
+async def llm_scores(settings: Settings, state: dict[str, Any]) -> tuple[dict[str, dict], str | None, list[str]]:
+    """RAGAS metrics with the LLM judge (slow on a free tier: run in the background)."""
+    research = state["research"]
+    # The judge sees what the research LLM saw: the trimmed passage plus its label. Filings say
+    # "we" and "our products"; without the label the judge cannot tell whose risk it is.
+    judged_contexts = [judge_context(s) for s in research["sources"][:6]]
+    memo = state["memo"]
+    memo_text = "\n".join([memo["headline"], memo["summary"], *memo["key_changes"], *memo["risks"],
+                           memo["quantum_note"]])
+    if not settings.online_evaluation:
+        return {}, None, ["online LLM evaluation is switched off (ONLINE_EVALUATION=false)"]
+    return await ragas_scores(settings, research["question"], research["answer"], judged_contexts,
+                              memo_text, json.dumps(state.get("memo_facts", {}), default=str))
+
+
+async def evaluate_run(settings: Settings, state: dict[str, Any]) -> dict[str, Any]:
+    """Everything at once (used by scripts and tests)."""
+    scores = deterministic_scores(settings, state)
+    extra, judge, notes = await llm_scores(settings, state)
+    scores.update(extra)
+    return {"scores": scores, "judge": judge, "notes": notes}

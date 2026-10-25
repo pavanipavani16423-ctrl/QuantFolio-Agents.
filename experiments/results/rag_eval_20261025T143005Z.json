@@ -1,0 +1,112 @@
+{
+  "created": "2026-10-25T14:30:05.868954+00:00",
+  "dataset": {
+    "name": "quantfolio-rag-golden",
+    "items": 78,
+    "by_kind": {
+      "facts": 38,
+      "mandate": 12,
+      "risk_india": 10,
+      "risk": 18
+    },
+    "source": "data/eval/golden_rag.json (generated from the corpus + 18 US and 10 India hand-written risk questions)"
+  },
+  "k": 6,
+  "modes": {
+    "bm25": {
+      "hit_rate@6": 0.8462,
+      "recall@6": 0.8269,
+      "mrr@6": 0.7585,
+      "ragas_id_context_precision": 0.1432,
+      "ragas_id_context_recall": 0.8269,
+      "latency_ms": 9.0
+    },
+    "dense": {
+      "hit_rate@6": 0.9615,
+      "recall@6": 0.9551,
+      "mrr@6": 0.8224,
+      "ragas_id_context_precision": 0.1709,
+      "ragas_id_context_recall": 0.9551,
+      "latency_ms": 9.7
+    },
+    "hybrid": {
+      "hit_rate@6": 0.9487,
+      "recall@6": 0.9295,
+      "mrr@6": 0.8355,
+      "ragas_id_context_precision": 0.1624,
+      "ragas_id_context_recall": 0.9295,
+      "latency_ms": 18.8
+    },
+    "hybrid_rerank": {
+      "hit_rate@6": 0.9487,
+      "recall@6": 0.9423,
+      "mrr@6": 0.9235,
+      "ragas_id_context_precision": 0.1667,
+      "ragas_id_context_recall": 0.9423,
+      "latency_ms": 1280.3
+    }
+  },
+  "by_kind": {
+    "bm25": {
+      "facts": 1.0,
+      "mandate": 1.0,
+      "risk_india": 0.6,
+      "risk": 0.5556
+    },
+    "dense": {
+      "facts": 0.9737,
+      "mandate": 1.0,
+      "risk_india": 1.0,
+      "risk": 0.8889
+    },
+    "hybrid": {
+      "facts": 1.0,
+      "mandate": 1.0,
+      "risk_india": 1.0,
+      "risk": 0.7778
+    },
+    "hybrid_rerank": {
+      "facts": 1.0,
+      "mandate": 1.0,
+      "risk_india": 1.0,
+      "risk": 0.7778
+    }
+  },
+  "llm": {
+    "judge": "groq:qwen/qwen3.8-27b",
+    "metrics": {
+      "hybrid_rerank": {
+        "ragas_faithfulness": 0.7885416666666667,
+        "ragas_factual_correctness": 0.16285714285714284
+      }
+    }
+  },
+  "langfuse": {
+    "dataset": "quantfolio-rag-golden",
+    "runs": [
+      {
+        "mode": "bm25",
+        "url": "https://us.cloud.langfuse.com/project/cmvneyq0r0042ad0d9q86ewar/experiments/results?baseline=b5798026620d13ee"
+      },
+      {
+        "mode": "dense",
+        "url": "https://us.cloud.langfuse.com/project/cmvneyq0r0042ad0d9q86ewar/experiments/results?baseline=a694c6cbd17da60c"
+      },
+      {
+        "mode": "hybrid",
+        "url": "https://us.cloud.langfuse.com/project/cmvneyq0r0042ad0d9q86ewar/experiments/results?baseline=de8350b62cd33177"
+      },
+      {
+        "mode": "hybrid_rerank",
+        "url": "https://us.cloud.langfuse.com/project/cmvneyq0r0042ad0d9q86ewar/experiments/results?baseline=fcc6efad934f5342"
+      }
+    ]
+  },
+  "notes": [
+    "Retrieval over the whole corpus (4585 chunks), no metadata filters, top 6.",
+    "Best hit rate: dense (96%).",
+    "Hit rate by question type: bm25: facts 100%, mandate 100%, risk_india 60%, risk 56%; dense: facts 97%, mandate 100%, risk_india 100%, risk 89%; hybrid: facts 100%, mandate 100%, risk_india 100%, risk 78%; hybrid_rerank: facts 100%, mandate 100%, risk_india 100%, risk 78%.",
+    "Latency is the median per query on this laptop CPU (the reranker dominates).",
+    "risk-in-03 ragas_factual_correctness: RuntimeError"
+  ]
+}

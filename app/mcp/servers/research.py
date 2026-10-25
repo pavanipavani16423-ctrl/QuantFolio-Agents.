@@ -18,6 +18,7 @@ async def search_documents(
     tickers: list[str] | None = None,
     doc_types: list[str] | None = None,
     client_id: str | None = None,
+    market: str | None = None,
 ) -> dict[str, Any]:
     if not query.strip():
         raise ToolError("empty query")
@@ -27,7 +28,7 @@ async def search_documents(
 
     def run() -> dict[str, Any]:
         hits, trace = get_index().search(query, k=k, mode=mode, tickers=tickers,
-                                         doc_types=doc_types, client_id=client_id)
+                                         doc_types=doc_types, client_id=client_id, market=market)
         return {
             "query": query,
             "mode": mode,
@@ -61,8 +62,9 @@ def build_server() -> MCPServer:
     server = MCPServer("quantfolio-research",
                        instructions="Hybrid search (BM25 + dense + RRF + cross-encoder rerank) over "
                        "10-K risk factors and MD&A, SEC XBRL facts and client mandates.")
-    server.tool(description="Search the document corpus. Filters: tickers, doc_types "
-                "(risk_factors, mdna, facts, mandate), client_id.")(search_documents)
+    server.tool(description="Search the document corpus. Filters: tickers, market (US, IN), "
+                "doc_types (US: risk_factors, mdna; India: ar_mdna, ar_risk, brsr; both: facts; "
+                "mandate), client_id.")(search_documents)
     server.tool(description="Fetch one chunk by id.")(get_chunk)
     server.tool(description="Corpus size by document type.")(corpus_info)
     return server

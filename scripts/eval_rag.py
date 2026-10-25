@@ -64,6 +64,21 @@ RISK_QUESTIONS = [
     ("Why does Home Depot care so much about its brand and reputation?", "HD_risk_factors#002"),
 ]
 
+# India: hand-written, reworded questions about SEBI annual-report and BRSR passages. The answer
+# chunk is located by a short anchor phrase from the passage (chunk ids depend on chunking).
+RISK_QUESTIONS_IN = [
+    ("Which international standards does TCS follow to manage enterprise risk?", "COSO 2017 and ISO 31000"),
+    ("What types of risk does HDFC Bank say it has to manage?", "credit, market, liquidity, operational, model, cybersecurity"),
+    ("What dangers come with Bharti Airtel running businesses in Asia and Africa?", "Operating across diverse and dynamic markets in Asia and Africa"),
+    ("How does Hindustan Unilever decide whether a sustainability issue really matters?", "A sustainability issue is considered material if"),
+    ("According to TCS, how did conflict and trade disruption change energy prices and costs?", "volatility in oil and gas prices due to supply risks"),
+    ("What hit Maruti Suzuki's business environment late in the year, and what happened to the rupee?", "West Asia conflict created supply and cost shocks"),
+    ("What does Reliance expect for global oil demand next year, and why?", "Global oil demand growth is expected to be sluggish"),
+    ("How many steps are in Asian Paints' process for handling risks?", "five-stage risk management process"),
+    ("How did L&T narrow down which sustainability topics matter most?", "An initial longlist of 34 topics"),
+    ("Which committee oversees business risks at Titan, and which risks does it cover?", "The Company has constituted a Risk Management Committee"),
+]
+
 MANDATE_QUESTIONS = [
     ("How many stocks must {name}'s portfolio hold?", r"hold exactly \d+ stocks"),
     ("What is the largest share of {name}'s portfolio one stock may have?", r"no single holding may exceed"),
@@ -88,7 +103,7 @@ def build_golden() -> list[dict]:
     for c in chunks:
         if c.doc_type == "facts" and c.section.lower() == "total revenue":
             first = c.text.splitlines()[0]
-            m = re.search(r"of (\$[\d.,]+ \w+) for the fiscal year ended (\S+) \(fiscal year (\d+)", first)
+            m = re.search(r"of ([$₹][\d.,]+ \w+) for the fiscal year ended (\S+) \(fiscal year (\d+)", first)
             name = store.company_name(c.ticker)
             items.append({
                 "id": f"facts-{c.ticker}",
@@ -109,6 +124,21 @@ def build_golden() -> list[dict]:
                 "reference": sentence.strip(),
                 "reference_ids": [hit.chunk_id],
             })
+    def norm(text: str) -> str:
+        return re.sub(r"\s+", " ", text).lower()
+
+    for i, (question, anchor) in enumerate(RISK_QUESTIONS_IN):
+        hit = next((c for c in chunks if c.market == "IN" and norm(anchor) in norm(c.text)), None)
+        if hit is None:
+            print(f"warning: anchor not found, skipping: {anchor!r}")
+            continue
+        items.append({
+            "id": f"risk-in-{i:02d}",
+            "kind": "risk_india",
+            "question": question,
+            "reference": hit.text[:1200],
+            "reference_ids": [hit.chunk_id],
+        })
     for i, (question, primary) in enumerate(RISK_QUESTIONS):
         refs = references(primary)
         items.append({
@@ -198,7 +228,7 @@ def log_to_langfuse(items: list[dict], k: int) -> tuple[str | None, list[dict]]:
         return None, []
     lf = tracer.client
     try:
-        lf.create_dataset(name=DATASET, description="QuantFolio RAG test set: facts, mandate and paraphrased 10-K risk questions with the chunk ids that answer them.")
+        lf.create_dataset(name=DATASET, description="QuantFolio RAG test set: facts, mandate and paraphrased risk questions (US 10-K and Indian annual reports) with the chunk ids that answer them.")
     except Exception:  # noqa: BLE001 - already exists
         pass
     for it in items:
@@ -214,9 +244,10 @@ def log_to_langfuse(items: list[dict], k: int) -> tuple[str | None, list[dict]]:
             hits, latency = retrieve(item.input["question"], mode, k)
             return {"chunk_ids": [h["chunk_id"] for h in hits], "latency_ms": round(latency, 1)}
 
-        def ir_evaluator(*, input, output, expected_output, **_):  # noqa: A002, ANN001, ANN202
+        # Async: this runs inside main()'s event loop, where asyncio.run() is not allowed.
+        async def ir_evaluator(*, input, output, expected_output, **_):  # noqa: A002, ANN001, ANN202
             m = ir_metrics(output["chunk_ids"], expected_output["reference_ids"], k)
-            ragas = asyncio.run(ragas_id_metrics(output["chunk_ids"], expected_output["reference_ids"]))
+            ragas = await ragas_id_metrics(output["chunk_ids"], expected_output["reference_ids"])
             return [Evaluation(name=n, value=v) for n, v in {**m, **ragas}.items()]
 
         def run_average(*, item_results, **_):  # noqa: ANN001, ANN202
@@ -236,7 +267,7 @@ async def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--k", type=int, default=6)
     parser.add_argument("--no-langfuse", action="store_true")
-    parser.add_argument("--llm-items", type=int, default=12, help="items for LLM-judged metrics")
+    parser.add_argument("--llm-items", type=int, default=8, help="items for LLM-judged metrics (half US, half India)")
     args = parser.parse_args()
     setup_logging("WARNING")
     settings = get_settings()
@@ -267,8 +298,11 @@ async def main() -> None:
                           for kind in kinds}
         print(f"{mode:14s} " + " ".join(f"{n}={v}" for n, v in modes[mode].items()) + f"  by kind {per_kind[mode]}")
 
-    llm_metrics, judge, llm_notes = await llm_answer_metrics(
-        settings, [it for it in items if it["kind"] == "risk"][: args.llm_items], args.k)
+    # Half US, half India risk questions, so the judged sample covers both markets.
+    us_n = args.llm_items // 2
+    judged = ([it for it in items if it["kind"] == "risk"][:us_n]
+              + [it for it in items if it["kind"] == "risk_india"][: args.llm_items - us_n])
+    llm_metrics, judge, llm_notes = await llm_answer_metrics(settings, judged, args.k)
 
     dataset, runs = (None, []) if args.no_langfuse else log_to_langfuse(items, args.k)
     best = max(modes, key=lambda m: modes[m][f"hit_rate@{args.k}"])
@@ -282,7 +316,7 @@ async def main() -> None:
     out = {
         "created": datetime.now(UTC).isoformat(),
         "dataset": {"name": DATASET, "items": len(items), "by_kind": kinds,
-                    "source": "data/eval/golden_rag.json (generated from the corpus + 18 hand-written risk questions)"},
+                    "source": "data/eval/golden_rag.json (generated from the corpus + 18 US and 10 India hand-written risk questions)"},
         "k": args.k,
         "modes": modes,
         "by_kind": per_kind,
