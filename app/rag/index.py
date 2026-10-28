@@ -282,8 +282,9 @@ def _models():  # noqa: ANN202
     cache = str(Path(settings.data_dir) / "models")
     # ONNX_THREADS=1 on small hosts: by default ONNX starts a thread per machine core, which thrashes
     # on a fractional CPU (Render's free plan has 0.1 CPU on a many-core machine)
-    embed = TextEmbedding(settings.embedding_model, cache_dir=cache, threads=settings.onnx_threads)
-    rerank = TextCrossEncoder(settings.reranker_model, cache_dir=cache, threads=settings.onnx_threads)
+    onnx = {"threads": settings.onnx_threads, "enable_cpu_mem_arena": settings.onnx_memory_arena}
+    embed = TextEmbedding(settings.embedding_model, cache_dir=cache, **onnx)
+    rerank = TextCrossEncoder(settings.reranker_model, cache_dir=cache, **onnx)
     return embed, rerank
 
 

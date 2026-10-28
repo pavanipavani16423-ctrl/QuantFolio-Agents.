@@ -2,9 +2,9 @@
 
     python3 scripts/check_free_plan.py quantfolio-api:ci
 
-512 MB of memory without swap and 0.1 CPU, in the lean settings the deploy uses. Each phase is
-published as a commit status ("free-plan"), which anyone can read without signing in, so the
-result (time to ready, time for a plan, peak memory) is visible next to the commit.
+First without a memory limit (to measure the true peak), then at 512 MB without swap and 0.1 CPU,
+in the lean settings the deploy uses. Each phase is published as a commit status ("free-plan"),
+which anyone can read without signing in.
 """
 
 import json
@@ -16,9 +16,11 @@ import urllib.error
 import urllib.request
 
 API = "http://localhost:8000"
-LIMITS = ["--memory", "512m", "--memory-swap", "512m", "--cpus", "0.1"]
-LEAN = {"LLM_PROVIDER": "mock", "ONLINE_EVALUATION": "false", "RAG_RERANK_TOP": "10", "ONNX_THREADS": "1"}
-REQUEST = {"client_id": "C-102", "request": "Rebalance GreenLeaf. What climate risks do NVIDIA and NextEra disclose?"}
+FREE_PLAN = ["--memory", "512m", "--memory-swap", "512m", "--cpus", "0.1"]
+LEAN = {"LLM_PROVIDER": "mock", "ONLINE_EVALUATION": "false", "RAG_RERANK_TOP": "10", "ONNX_THREADS": "1",
+        "ONNX_MEMORY_ARENA": "false"}
+# Meera Iyer: the largest search (10 of 20 stocks, 184,756 combinations)
+REQUEST = {"client_id": "C-101", "request": "Rebalance Meera's portfolio. What risks do Johnson & Johnson and Coca-Cola report?"}
 
 
 def status(state: str, text: str) -> None:
@@ -35,7 +37,7 @@ def status(state: str, text: str) -> None:
         print(f"could not publish the status: {exc}", flush=True)
 
 
-def get(path: str, body: dict | None = None) -> dict:
+def call(path: str, body: dict | None = None) -> dict:
     req = urllib.request.Request(API + path, data=json.dumps(body).encode() if body else None,
                                  method="POST" if body else "GET", headers={"content-type": "application/json"})
     with urllib.request.urlopen(req, timeout=30) as resp:
@@ -46,65 +48,71 @@ def docker(*args: str) -> str:
     return subprocess.run(["docker", *args], capture_output=True, text=True).stdout.strip()
 
 
-def last_error() -> str:
+def running() -> bool:
+    return docker("inspect", "-f", "{{.State.Running}}", "api") == "true"
+
+
+def failure(text: str) -> None:
     logs = subprocess.run(["docker", "logs", "api"], capture_output=True, text=True)
     lines = [ln for ln in (logs.stdout + logs.stderr).splitlines() if ln.strip()]
     print("\n".join(lines[-40:]))
-    bad = [ln for ln in lines if any(w in ln for w in ("Error", "error", "Killed", "Traceback", "failed"))]
-    return (bad or lines or ["no output"])[-1][-100:]
-
-
-def fail(text: str) -> None:
+    bad = [ln for ln in lines if any(w in ln for w in ("Error", "Killed", "Traceback", "failed"))]
     oom = docker("inspect", "-f", "{{.State.OOMKilled}}", "api")
-    status("failure", f"{text}; OOM killed {oom}; {last_error()}")
+    status("failure", f"{text}; OOM killed {oom}; {(bad or lines or ['no output'])[-1][-80:]}")
     sys.exit(1)
 
 
-def main() -> None:
-    image = sys.argv[1]
+def run_plan(image: str, limits: list[str], label: str) -> tuple[float, float, int]:
+    """Start the container, wait until ready, run one plan; (ready s, plan s, peak MiB)."""
+    subprocess.run(["docker", "rm", "-f", "api"], capture_output=True)
     env = [arg for k, v in LEAN.items() for arg in ("-e", f"{k}={v}")]
-    status("pending", "starting the container at 512 MB, 0.1 CPU")
-    out = subprocess.run(["docker", "run", "-d", "--name", "api", "-p", "8000:8000", *LIMITS, *env, image],
+    out = subprocess.run(["docker", "run", "-d", "--name", "api", "-p", "8000:8000", *limits, *env, image],
                          capture_output=True, text=True)
     if out.returncode:
-        status("failure", f"docker run failed: {out.stderr.strip()[-110:]}")
+        status("failure", f"{label}: docker run failed: {out.stderr.strip()[-100:]}")
         sys.exit(1)
-
     t0 = time.time()
     while True:
         try:
-            if get("/health").get("rag_index_ready"):
+            if call("/health").get("rag_index_ready"):
                 break
         except (urllib.error.URLError, ConnectionError, TimeoutError, json.JSONDecodeError):
             pass
-        if docker("inspect", "-f", "{{.State.Running}}", "api") != "true":
-            fail(f"container stopped during start-up after {time.time() - t0:.0f}s")
+        if not running():
+            failure(f"{label}: stopped during start-up after {time.time() - t0:.0f}s")
         if time.time() - t0 > 900:
-            fail("not ready after 900s")
+            failure(f"{label}: not ready after 900s")
         time.sleep(3)
     ready = time.time() - t0
-    status("pending", f"ready in {ready:.0f}s; running a plan")
-
-    run_id = get("/api/v1/runs", REQUEST)["id"]
+    run_id = call("/api/v1/runs", REQUEST)["id"]
     t1 = time.time()
     while True:
         try:
-            doc = get(f"/api/v1/runs/{run_id}")
-        except (urllib.error.URLError, ConnectionError, TimeoutError) as exc:
-            if docker("inspect", "-f", "{{.State.Running}}", "api") != "true":
-                fail(f"container stopped during the plan after {time.time() - t1:.0f}s")
-            print(f"poll error: {exc}")
+            doc = call(f"/api/v1/runs/{run_id}")
+        except (urllib.error.URLError, ConnectionError, TimeoutError):
+            if not running():
+                failure(f"{label}: stopped during the plan after {time.time() - t1:.0f}s")
             doc = {"status": "running"}
         if doc["status"] in ("awaiting_approval", "failed", "blocked"):
             break
         if time.time() - t1 > 1200:
-            fail("plan not done after 1200s")
+            failure(f"{label}: plan not done after 1200s")
         time.sleep(3)
     plan = time.time() - t1
-    peak = int(docker("exec", "api", "cat", "/sys/fs/cgroup/memory.peak") or 0) // 2**20
     if doc["status"] != "awaiting_approval":
-        fail(f"plan {doc['status']} after {plan:.0f}s: {(doc.get('error') or '')[:60]}")
-    status("success", f"ready {ready:.0f}s, whole plan {plan:.0f}s, peak memory {peak} MiB of 512 (0.1 CPU)")
+        failure(f"{label}: plan {doc['status']} after {plan:.0f}s: {(doc.get('error') or '')[:50]}")
+    peak = int(docker("exec", "api", "cat", "/sys/fs/cgroup/memory.peak") or 0) // 2**20
+    return ready, plan, peak
+
+
+def main() -> None:
+    image = sys.argv[1]
+    status("pending", "measuring the peak memory of a whole plan (no limit)")
+    _, plan_free, peak_free = run_plan(image, ["--cpus", "1"], "no limit")
+    status("pending", f"no limit: peak {peak_free} MiB, plan {plan_free:.0f}s at 1 CPU; now at 512 MB, 0.1 CPU")
+    ready, plan, peak = run_plan(image, FREE_PLAN, "free plan")
+    status("success", f"512 MB/0.1 CPU: ready {ready:.0f}s, plan {plan:.0f}s, peak {peak} MiB "
+                      f"(unlimited peak {peak_free} MiB, plan {plan_free:.0f}s at 1 CPU)")
 
 
 if __name__ == "__main__":

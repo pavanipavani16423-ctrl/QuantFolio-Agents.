@@ -36,7 +36,7 @@ RENDER_SERVICE = "quantfolio-api"
 RENDER_REGION = "singapore"
 GITHUB_REPO = "https://github.com/pavanipavani16423-ctrl/QuantFolio-Agents."
 # Render's free plan: 512 MB, 0.1 CPU (see the module docstring)
-LEAN = {"ONLINE_EVALUATION": "false", "RAG_RERANK_TOP": "10", "ONNX_THREADS": "1"}
+LEAN = {"ONLINE_EVALUATION": "false", "RAG_RERANK_TOP": "10", "ONNX_THREADS": "1", "ONNX_MEMORY_ARENA": "false"}
 # what the backend image needs (tracked files only, see `git ls-files`)
 SPACE_PATHS = ["Dockerfile", ".dockerignore", "pyproject.toml", "uv.lock", "app", "data", "scripts",
                "experiments/results"]

@@ -82,6 +82,7 @@ class Settings(BaseSettings):
     rag_candidates: int = 40
     rag_rerank_top: int = 20
     onnx_threads: int | None = None  # threads per ONNX model (embedding, reranker); None = one per core
+    onnx_memory_arena: bool = True  # False: ONNX frees inference buffers (lower peak memory, a little slower)
     prompt_passage_chars: int = 1600  # passage text given to the research model and the judge (whole chunks)
     rag_mode: Literal["bm25", "dense", "hybrid", "hybrid_rerank"] = "hybrid_rerank"
 

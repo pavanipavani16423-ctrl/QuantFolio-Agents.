@@ -18,7 +18,10 @@ COPY data ./data
 RUN .venv/bin/python -c "from app.rag.index import get_index; i = get_index(); print(len(i.chunks), 'chunks ready')"
 
 FROM python:3.11-slim
-ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1 PATH="/app/.venv/bin:$PATH" PORT=8000 ENVIRONMENT=production
+# MALLOC_ARENA_MAX: glibc keeps a memory pool per thread by default, which inflates a Python
+# server's memory with every worker thread; two pools are plenty
+ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1 PATH="/app/.venv/bin:$PATH" PORT=8000 ENVIRONMENT=production \
+    MALLOC_ARENA_MAX=2
 WORKDIR /app
 RUN useradd --create-home --uid 1000 app  # uid 1000: what Hugging Face Spaces runs containers as
 COPY --from=build /app/.venv ./.venv

@@ -11,13 +11,15 @@ services:
     healthCheckPath: /health
     autoDeploy: true
     envVars:
-      # lean mode for the free plan (measured in CI: a whole plan within 512 MB at 0.1 CPU)
+      # lean mode for the free plan (scripts/check_free_plan.py runs a whole plan at 512 MB, 0.1 CPU in CI)
       - key: ONLINE_EVALUATION
         value: "false"         # no background RAGAS judging; the deterministic checks still run
       - key: RAG_RERANK_TOP
         value: "10"            # rerank depth 10: same hit rate as 20 in the sweep, half the CPU
       - key: ONNX_THREADS
         value: "1"
+      - key: ONNX_MEMORY_ARENA
+        value: "false"
       - key: LLM_PROVIDER
         value: groq
       - key: GROQ_API_KEY

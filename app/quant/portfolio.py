@@ -30,6 +30,7 @@ import numpy as np
 from scipy.optimize import minimize
 
 EXACT_LIMIT = 500_000  # max subsets for exhaustive search
+BLOCK = 20_000  # subsets scored at once
 
 
 @dataclass
@@ -110,28 +111,39 @@ def _result(problem: SelectionProblem, method: str, bits: np.ndarray, started: f
 
 
 def select_exact(problem: SelectionProblem) -> SelectionResult:
-    """Exhaustive search over all k-subsets: the proven optimum."""
+    """Exhaustive search over all k-subsets: the proven optimum.
+
+    Subsets are scored in blocks of BLOCK, so memory stays at a few MB however many there are
+    (C(20,10) = 184,756 at once would need about 200 MB, too much for a 512 MB server)."""
     started = time.perf_counter()
     total = math.comb(problem.n, problem.k)
     if total > EXACT_LIMIT:
         raise ValueError(f"{total} subsets is too many for exhaustive search")
-    combos = np.array(list(itertools.combinations(range(problem.n), problem.k)), dtype=np.int64)
-    X = np.zeros((len(combos), problem.n))
-    np.put_along_axis(X, combos, 1.0, axis=1)
-    W = X / problem.k
-    utilities = W @ problem.mu - problem.risk_aversion * np.einsum("ij,ij->i", W @ problem.cov, W)
     names = sorted(set(problem.sectors))
     onehot = np.array([[s == name for name in names] for s in problem.sectors], dtype=float)
-    feasible = (X @ onehot).max(axis=1) <= problem.max_sector_names
-    if not feasible.any():
+    subsets = itertools.combinations(range(problem.n), problem.k)
+    best: list[tuple[float, np.ndarray]] = []  # the two best (utility, bits), best first
+    feasible_total = 0
+    while block := list(itertools.islice(subsets, BLOCK)):
+        combos = np.array(block, dtype=np.int64)
+        X = np.zeros((len(combos), problem.n))
+        np.put_along_axis(X, combos, 1.0, axis=1)
+        W = X / problem.k
+        utilities = W @ problem.mu - problem.risk_aversion * np.einsum("ij,ij->i", W @ problem.cov, W)
+        feasible = (X @ onehot).max(axis=1) <= problem.max_sector_names
+        feasible_total += int(feasible.sum())
+        utilities = np.where(feasible, utilities, -np.inf)
+        for i in np.argsort(-utilities)[:2]:
+            if np.isfinite(utilities[i]):
+                best.append((float(utilities[i]), X[i].astype(np.int8)))
+        best = sorted(best, key=lambda b: -b[0])[:2]
+    if not best:
         raise ValueError("no selection satisfies the sector limits")
-    utilities = np.where(feasible, utilities, -np.inf)
-    order = np.argsort(-utilities)
-    return _result(problem, "optimal", X[order[0]].astype(np.int8), started, {
+    return _result(problem, "optimal", best[0][1], started, {
         "subsets_evaluated": int(total),
-        "feasible_subsets": int(feasible.sum()),
+        "feasible_subsets": feasible_total,
         "optimality": "proven (exhaustive search)",
-        "runner_up_utility": float(utilities[order[1]]) if len(order) > 1 else None,
+        "runner_up_utility": best[1][0] if len(best) > 1 else None,
     })
 
 
