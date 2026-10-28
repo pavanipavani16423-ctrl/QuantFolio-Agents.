@@ -175,7 +175,8 @@ class HybridIndex:
 
     def rerank_scores(self, query: str, texts: list[str]) -> list[float]:
         with self._lock:
-            return [float(s) for s in self.reranker.rerank(query, texts)]
+            # small batches: the same speed on a CPU, a fraction of the peak memory of one batch of 20
+            return [float(s) for s in self.reranker.rerank(query, texts, batch_size=4)]
 
     # ---- search --------------------------------------------------------------------------
     def search(

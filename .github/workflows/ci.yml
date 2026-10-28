@@ -79,15 +79,29 @@ jobs:
           tags: quantfolio-api:ci
           cache-from: type=gha
           cache-to: type=gha,mode=max
-      - name: start it and check /health (SQLite, offline rules)
+      - name: start it, run a whole plan, and report its memory (free-tier settings)
         run: |
-          docker run -d --name api -p 8000:8000 -e LLM_PROVIDER=mock quantfolio-api:ci
+          # 512 MB is the memory of the free hosting tiers: the container must run a plan within it
+          docker run -d --name api -p 8000:8000 --memory 512m -e LLM_PROVIDER=mock \
+            -e ONLINE_EVALUATION=false -e RAG_RERANK_TOP=10 quantfolio-api:ci
           for i in $(seq 1 60); do
             curl -fs http://localhost:8000/health | grep -q '"rag_index_ready":true' && break
             sleep 2
           done
           curl -fs http://localhost:8000/health
-          curl -fs http://localhost:8000/api/v1/clients | head -c 300; echo
-          docker stats --no-stream --format 'memory after start: {{.MemUsage}}' api
+          started=$(docker stats --no-stream --format '{{.MemUsage}}' api)
+          id=$(curl -fs -X POST http://localhost:8000/api/v1/runs -H 'content-type: application/json' \
+            -d '{"client_id":"C-102","request":"Rebalance GreenLeaf. What climate risks do NVIDIA and NextEra disclose?"}' \
+            | python3 -c 'import sys, json; print(json.load(sys.stdin)["id"])')
+          for i in $(seq 1 90); do
+            status=$(curl -fs http://localhost:8000/api/v1/runs/$id | python3 -c 'import sys, json; print(json.load(sys.stdin)["status"])')
+            [ "$status" = "awaiting_approval" ] && break
+            [ "$status" = "failed" ] && { docker logs api | tail -30; exit 1; }
+            sleep 2
+          done
+          test "$status" = "awaiting_approval"
+          peak=$(docker exec api cat /sys/fs/cgroup/memory.peak 2>/dev/null || echo 0)
+          echo "::notice title=memory::after start ${started}; peak during a whole plan $((peak / 1048576)) MiB (limit 512 MiB); run status ${status}"
+          test "$(docker inspect -f '{{.State.OOMKilled}}' api)" = "false"
       - name: build the web image
         run: docker build -t quantfolio-web:ci --build-arg NEXT_PUBLIC_API_URL=http://localhost:8000 web

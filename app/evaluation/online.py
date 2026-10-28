@@ -22,7 +22,6 @@ from pathlib import Path
 from typing import Any
 
 from app.config import Settings, get_settings
-from app.evaluation.ragas_adapters import FastEmbedEmbeddings, make_judge
 
 MEMO_RUBRIC = {
     "score1_description": "The memo is wrong or misleading: numbers contradict the facts, or it gives no clear recommendation.",
@@ -34,6 +33,14 @@ MEMO_RUBRIC = {
 
 CITATION = re.compile(r"\[(\d+)\]")
 NUMBER = re.compile(r"\$?\d[\d,]*(?:\.\d+)?%?")
+
+
+def judge_label(settings: Settings) -> str | None:
+    """The judge models as shown in /health, without loading RAGAS."""
+    provider = settings.resolved_judge_provider
+    if not settings.online_evaluation or provider == "mock" or not settings.provider_ready(provider):
+        return None
+    return " + ".join(f"{provider}:{m.strip()}" for m in settings.resolved_judge_model.split(",") if m.strip())
 
 
 def split_sentences(text: str) -> list[str]:
@@ -92,6 +99,10 @@ async def _metric(name: str, coro, timeout: float = 180.0) -> tuple[str, float |
 
 async def ragas_scores(settings: Settings, question: str, answer: str, contexts: list[str],
                        memo_text: str, memo_facts: str) -> tuple[dict[str, dict], str | None, list[str]]:
+    # RAGAS (and the libraries it pulls in) loads only when a run is judged: ~150 MB less memory
+    # for a server with ONLINE_EVALUATION=false (free hosting tiers)
+    from app.evaluation.ragas_adapters import FastEmbedEmbeddings, make_judge
+
     judge = make_judge(settings)
     if judge is None:
         return {}, None, ["RAGAS LLM metrics skipped: no judge model configured (set GROQ_API_KEY)"]

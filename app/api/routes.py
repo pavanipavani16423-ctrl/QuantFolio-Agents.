@@ -42,15 +42,14 @@ api = APIRouter(dependencies=[Depends(require_key)])
 @public.get("/health")
 async def health(request: Request) -> dict[str, Any]:
     s = request.app.state.settings
-    from app.evaluation.ragas_adapters import make_judge
+    from app.evaluation.online import judge_label
     from app.llm.gateway import LLMGateway
 
     tracer = get_tracer()
-    judge = make_judge(s)
     return {
         "status": "ok",
         "llm": LLMGateway(s).mode,
-        "judge": judge.model_name if judge else None,
+        "judge": judge_label(s),
         "langfuse": {"enabled": tracer.enabled, "host": s.langfuse_base_url if tracer.enabled else None},
         "rag_index_ready": request.app.state.index_ready,
         "runs": await request.app.state.db.count_runs(),
