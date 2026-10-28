@@ -1,17 +1,23 @@
-# Render Blueprint: the backend (API + hosted A2A agents) as one Docker web service.
-# Database: Neon Postgres (DATABASE_URL). Frontend: Vercel (web/). Steps: docs/DEPLOY.md.
+# Render Blueprint: the backend (API + hosted A2A agents) as one Docker web service on the free
+# plan. Database: Neon Postgres (DATABASE_URL). Frontend: Vercel (web/). Steps: docs/DEPLOY.md;
+# scripts/deploy.py creates the same service through Render's API.
 services:
   - type: web
     name: quantfolio-api
     runtime: docker
     dockerfilePath: ./Dockerfile
-    # the embedding and reranker models need about 1 GB of memory once loaded; the 512 MB plans
-    # (free, starter) run out of memory. Standard = 2 GB.
-    plan: standard
-    region: singapore          # next to Neon's aws-ap-southeast-1; pick the region of your Neon project
+    plan: free                 # 512 MB, 0.1 CPU; sleeps after 15 idle minutes
+    region: singapore          # next to the Neon project (aws-ap-southeast-1)
     healthCheckPath: /health
     autoDeploy: true
     envVars:
+      # lean mode for the free plan (measured in CI: a whole plan within 512 MB at 0.1 CPU)
+      - key: ONLINE_EVALUATION
+        value: "false"         # no background RAGAS judging; the deterministic checks still run
+      - key: RAG_RERANK_TOP
+        value: "10"            # rerank depth 10: same hit rate as 20 in the sweep, half the CPU
+      - key: ONNX_THREADS
+        value: "1"
       - key: LLM_PROVIDER
         value: groq
       - key: GROQ_API_KEY
@@ -21,7 +27,7 @@ services:
       - key: CORS_ORIGINS
         sync: false            # ["https://<your-app>.vercel.app"]
       - key: CORS_ORIGIN_REGEX
-        sync: false            # optional: https://<your-app>-.*\.vercel\.app for preview deployments
+        value: https://quantfolio-agents(-[a-z0-9-]+)?\.vercel\.app
       - key: APPROVAL_SECRET
         generateValue: true    # signs approval tokens; stable across restarts and deploys
       - key: LANGFUSE_PUBLIC_KEY
@@ -32,5 +38,3 @@ services:
         value: https://us.cloud.langfuse.com
       - key: LANGFUSE_ENVIRONMENT
         value: production
-      - key: LOG_LEVEL
-        value: INFO

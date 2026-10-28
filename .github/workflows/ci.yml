@@ -103,10 +103,16 @@ jobs:
           for i in $(seq 1 450); do
             status=$(curl -fs http://localhost:8000/api/v1/runs/$id | python3 -c 'import sys, json; print(json.load(sys.stdin)["status"])')
             [ "$status" = "awaiting_approval" ] && break
-            [ "$status" = "failed" ] && { docker logs api | tail -30; exit 1; }
+            [ "$status" = "failed" ] && break
             sleep 2
           done
           plan=$(( $(date +%s) - t1 ))
+          if [ "$status" != "awaiting_approval" ]; then
+            err=$(curl -fs http://localhost:8000/api/v1/runs/$id | python3 -c 'import sys, json; d = json.load(sys.stdin); print((d.get("error") or "")[:110].replace(chr(34), chr(39)))')
+            docker logs api 2>&1 | tail -40
+            curl -fsS -X POST -H "Authorization: Bearer $GH_TOKEN" -H "Accept: application/vnd.github+json"               "https://api.github.com/repos/${{ github.repository }}/statuses/${{ github.sha }}"               -d "{\"state\": \"failure\", \"context\": \"free-plan\", \"description\": \"${status} after ${plan}s (ready ${ready}s): ${err}\"}" > /dev/null
+            exit 1
+          fi
           peak=$(docker exec api cat /sys/fs/cgroup/memory.peak 2>/dev/null || echo 0)
           summary="ready ${ready}s, plan ${plan}s, peak $((peak / 1048576)) MiB of 512, ${status}, OOM $(docker inspect -f '{{.State.OOMKilled}}' api)"
           echo "free plan: $summary"

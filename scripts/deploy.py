@@ -1,12 +1,16 @@
-"""Deploy on free tiers: Neon (Postgres), Hugging Face Spaces (Docker backend), Vercel (UI).
+"""Deploy on free tiers: Neon (Postgres), Render (Docker backend), Vercel (UI).
 
-    uv run --with huggingface_hub python scripts/deploy.py              # everything
-    uv run --with huggingface_hub python scripts/deploy.py --only space # one part
+    uv run python scripts/deploy.py                  # everything
+    uv run python scripts/deploy.py --only render    # one part (neon, render, vercel; space)
 
-Tokens come from .env.deploy (git-ignored): HF_TOKEN, NEON_API_KEY, VERCEL_TOKEN. App secrets
-(GROQ_API_KEY, LANGFUSE_*) come from .env. Nothing secret is printed or committed; the Neon URL
-and the approval key are kept in .env.deploy. Running it again updates the same Neon project,
-Space and Vercel project instead of creating new ones.
+Tokens come from .env.deploy (git-ignored): NEON_API_KEY, RENDER_API_KEY, VERCEL_TOKEN. App
+secrets (GROQ_API_KEY, LANGFUSE_*) come from .env. Nothing secret is printed or committed; the
+Neon URL and the approval key are kept in .env.deploy. Running it again updates the same Neon
+project, Render service and Vercel project instead of creating new ones.
+
+Render's free plan (512 MB, 0.1 CPU) runs the app in a lean mode: no background RAGAS judging,
+a rerank depth of 10 (measured: same hit rate), one ONNX thread. `--only space` deploys to a
+Hugging Face Docker Space instead (needs a PRO account since 2026; `pip install huggingface_hub`).
 """
 
 import argparse
@@ -27,7 +31,12 @@ DEPLOY_ENV = ROOT / ".env.deploy"
 SPACE_NAME = "quantfolio-api"
 VERCEL_PROJECT = "quantfolio-agents"
 NEON_PROJECT = "quantfolio"
-NEON_REGION = "aws-ap-southeast-1"  # Singapore; Hugging Face's free CPUs run in the US/EU
+NEON_REGION = "aws-ap-southeast-1"  # Singapore, next to Render's Singapore region
+RENDER_SERVICE = "quantfolio-api"
+RENDER_REGION = "singapore"
+GITHUB_REPO = "https://github.com/pavanipavani16423-ctrl/QuantFolio-Agents."
+# Render's free plan: 512 MB, 0.1 CPU (see the module docstring)
+LEAN = {"ONLINE_EVALUATION": "false", "RAG_RERANK_TOP": "10", "ONNX_THREADS": "1"}
 # what the backend image needs (tracked files only, see `git ls-files`)
 SPACE_PATHS = ["Dockerfile", ".dockerignore", "pyproject.toml", "uv.lock", "app", "data", "scripts",
                "experiments/results"]
@@ -191,6 +200,81 @@ def space(cfg: dict[str, str], app_env: dict[str, str], database_url: str) -> st
     return host
 
 
+# ---- Render -------------------------------------------------------------------------------
+def app_variables(cfg: dict[str, str], app_env: dict[str, str], database_url: str) -> dict[str, str]:
+    approval = cfg.get("APPROVAL_SECRET") or secrets.token_urlsafe(32)
+    remember("APPROVAL_SECRET", approval)
+    out = {
+        "LLM_PROVIDER": app_env.get("LLM_PROVIDER", "groq"),
+        "LANGFUSE_BASE_URL": app_env.get("LANGFUSE_BASE_URL", "https://cloud.langfuse.com"),
+        "LANGFUSE_ENVIRONMENT": "production",
+        "LOG_LEVEL": "INFO",
+        "CORS_ORIGINS": json.dumps([cfg.get("WEB_URL", "https://quantfolio-agents.vercel.app")]),
+        # the production address and its preview deployments
+        "CORS_ORIGIN_REGEX": r"https://quantfolio-agents(-[a-z0-9-]+)?\.vercel\.app",
+        "DATABASE_URL": database_url,
+        "APPROVAL_SECRET": approval,
+    }
+    for key in ("GROQ_API_KEY", "LANGFUSE_PUBLIC_KEY", "LANGFUSE_SECRET_KEY", "JUDGE_MODEL", "LLM_MODEL"):
+        if app_env.get(key):
+            out[key] = app_env[key]
+    return out
+
+
+def render(cfg: dict[str, str], app_env: dict[str, str], database_url: str) -> str:
+    step("Render: Docker backend (free plan)")
+    key, api = cfg["RENDER_API_KEY"], "https://api.render.com/v1"
+    env = {**app_variables(cfg, app_env, database_url), **LEAN}
+    env_list = [{"key": k, "value": v} for k, v in env.items()]
+    found = http("GET", f"{api}/services?name={RENDER_SERVICE}&limit=20", key)
+    service = next((s["service"] for s in found if s["service"]["name"] == RENDER_SERVICE), None)
+    if service is None:
+        owner = http("GET", f"{api}/owners?limit=20", key)[0]["owner"]
+        created = http("POST", f"{api}/services", key, {
+            "type": "web_service", "name": RENDER_SERVICE, "ownerId": owner["id"], "repo": GITHUB_REPO,
+            "branch": "main", "autoDeploy": "yes", "envVars": env_list,
+            "serviceDetails": {"runtime": "docker", "plan": "free", "region": RENDER_REGION,
+                               "healthCheckPath": "/health",
+                               "envSpecificDetails": {"dockerfilePath": "./Dockerfile", "dockerContext": "."}}})
+        service = created["service"]
+        print(f"created service {service['id']} for {owner['name']}")
+    else:
+        http("PUT", f"{api}/services/{service['id']}/env-vars", key, env_list)
+        http("POST", f"{api}/services/{service['id']}/deploys", key, {"clearCache": "do_not_clear"})
+        print(f"updated service {service['id']} and started a deploy")
+    url = service["serviceDetails"]["url"]
+    print(f"set {len(env)} environment variables; building from {GITHUB_REPO} (about 10 minutes the first time)")
+
+    started = time.time()
+    while True:
+        deploy = http("GET", f"{api}/services/{service['id']}/deploys?limit=1", key)[0]["deploy"]
+        if deploy["status"] == "live":
+            break
+        if deploy["status"] in ("build_failed", "update_failed", "canceled", "pre_deploy_failed", "deactivated"):
+            raise SystemExit(f"Render deploy {deploy['status']}: https://dashboard.render.com/web/{service['id']}/deploys")
+        if time.time() - started > 3600:
+            raise SystemExit("Render deploy still not live after an hour")
+        print(f"  {deploy['status']} ({int(time.time() - started)} s)", flush=True)
+        time.sleep(30)
+    health = wait_healthy(url)
+    print(f"live at {url} (LLM {health.get('llm')}, Langfuse {health.get('langfuse', {}).get('enabled')})")
+    return url
+
+
+def wait_healthy(url: str) -> dict:
+    """/health once the search index is loaded (a free instance may be waking up)."""
+    for _ in range(60):
+        try:
+            with urllib.request.urlopen(f"{url}/health", timeout=30) as resp:
+                health = json.loads(resp.read())
+            if health.get("rag_index_ready"):
+                return health
+        except (urllib.error.URLError, TimeoutError, json.JSONDecodeError):
+            pass
+        time.sleep(10)
+    raise SystemExit(f"{url}/health did not report the index ready")
+
+
 # ---- Vercel -------------------------------------------------------------------------------
 def vercel(cfg: dict[str, str], api_url: str) -> str:
     step("Vercel: the UI")
@@ -215,10 +299,10 @@ def vercel(cfg: dict[str, str], api_url: str) -> str:
 
 def main() -> None:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--only", default="neon,space,vercel")
+    parser.add_argument("--only", default="neon,render,vercel")
     parts = set(parser.parse_args().only.split(","))
     cfg, app_env = read_env(DEPLOY_ENV), read_env(ROOT / ".env")
-    need = {"neon": "NEON_API_KEY", "space": "HF_TOKEN", "vercel": "VERCEL_TOKEN"}
+    need = {"neon": "NEON_API_KEY", "render": "RENDER_API_KEY", "space": "HF_TOKEN", "vercel": "VERCEL_TOKEN"}
     missing = [need[p] for p in parts if need.get(p) and need[p] not in cfg]
     if missing:
         sys.exit(f"missing in .env.deploy: {', '.join(missing)}")
@@ -226,11 +310,12 @@ def main() -> None:
     database_url = neon(cfg) if "neon" in parts else read_env(DEPLOY_ENV).get("DATABASE_URL", "")
     cfg = read_env(DEPLOY_ENV)
     api_url = cfg.get("API_URL", "")
-    if "space" in parts:
-        if not database_url:
-            sys.exit("no DATABASE_URL: run the neon part first")
-        api_url = space(cfg, app_env, database_url)
-        remember("API_URL", api_url)
+    for part, deploy in (("render", render), ("space", space)):
+        if part in parts:
+            if not database_url:
+                sys.exit("no DATABASE_URL: run the neon part first")
+            api_url = deploy(cfg, app_env, database_url)
+            remember("API_URL", api_url)
     if "vercel" in parts:
         if not api_url:
             sys.exit("no API_URL: run the space part first")
