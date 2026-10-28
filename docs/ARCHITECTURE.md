@@ -349,7 +349,7 @@ always looks perfect on its own examples); every number in the docs comes from a
 ## 17. Deployment and scaling path
 
 **Deployed today** ([DEPLOY.md](DEPLOY.md)): the UI on Vercel; the API with the hosted A2A
-agents as one Docker web service on Render; Postgres on Neon. One `DATABASE_URL` switches every
+agents as one Docker Space on Hugging Face (free CPU plan); Postgres on Neon. All three are free tiers. One `DATABASE_URL` switches every
 store from SQLite to Postgres:
 
 | Store | SQLite (laptop) | Postgres (cloud) |

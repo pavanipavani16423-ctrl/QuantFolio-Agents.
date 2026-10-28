@@ -130,7 +130,7 @@ From `experiments/results/REPORT.md` (regenerate with `scripts/run_evals.py`):
 * **Citation gate:** 95% of true claims accepted, 94% of same-company wrong-source claims
   rejected.
 * **Tests:** 96, each run on SQLite and Postgres. CI builds and starts the Docker image.
-* **Deployment:** Vercel (UI), Render (Docker API and A2A agents), Neon (Postgres for every
+* **Deployment:** Vercel (UI), Hugging Face Spaces (Docker API and A2A agents), Neon (Postgres for every
   store, so a plan waiting for approval survives a redeploy).
 
 ## Vocabulary to use precisely

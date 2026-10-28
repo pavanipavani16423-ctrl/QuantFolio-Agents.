@@ -20,7 +20,7 @@ RUN .venv/bin/python -c "from app.rag.index import get_index; i = get_index(); p
 FROM python:3.11-slim
 ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1 PATH="/app/.venv/bin:$PATH" PORT=8000 ENVIRONMENT=production
 WORKDIR /app
-RUN useradd --create-home --uid 10001 app
+RUN useradd --create-home --uid 1000 app  # uid 1000: what Hugging Face Spaces runs containers as
 COPY --from=build /app/.venv ./.venv
 COPY --from=build --chown=app:app /app/data ./data
 COPY app ./app
