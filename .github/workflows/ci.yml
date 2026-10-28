@@ -67,6 +67,9 @@ jobs:
 
   docker:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      statuses: write   # to publish the free-plan measurement as a commit status
     timeout-minutes: 45
     steps:
       - uses: actions/checkout@v4
@@ -80,6 +83,8 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
       - name: run a whole plan within Render's free plan (512 MB, no swap, 0.1 CPU)
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
           docker run -d --name api -p 8000:8000 --memory 512m --memory-swap 512m --cpus 0.1 \
             -e LLM_PROVIDER=mock -e ONLINE_EVALUATION=false -e RAG_RERANK_TOP=10 -e ONNX_THREADS=1 \
@@ -103,7 +108,9 @@ jobs:
           done
           plan=$(( $(date +%s) - t1 ))
           peak=$(docker exec api cat /sys/fs/cgroup/memory.peak 2>/dev/null || echo 0)
-          echo "::notice title=free plan::ready in ${ready}s; a whole plan in ${plan}s; peak memory $((peak / 1048576)) MiB of 512; status ${status}; OOM killed $(docker inspect -f '{{.State.OOMKilled}}' api)"
+          summary="ready ${ready}s, plan ${plan}s, peak $((peak / 1048576)) MiB of 512, ${status}, OOM $(docker inspect -f '{{.State.OOMKilled}}' api)"
+          echo "free plan: $summary"
+          curl -fsS -X POST -H "Authorization: Bearer $GH_TOKEN" -H "Accept: application/vnd.github+json"             "https://api.github.com/repos/${{ github.repository }}/statuses/${{ github.sha }}"             -d "{\"state\": \"success\", \"context\": \"free-plan\", \"description\": \"$summary\"}" > /dev/null
           test "$status" = "awaiting_approval"
           test "$(docker inspect -f '{{.State.OOMKilled}}' api)" = "false"
       - name: build the web image
