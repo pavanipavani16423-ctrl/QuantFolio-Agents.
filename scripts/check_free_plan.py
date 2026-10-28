@@ -63,6 +63,16 @@ def failure(text: str) -> None:
     sys.exit(1)
 
 
+def memory_stat() -> dict[str, int]:
+    """The container's anonymous memory (what the process allocates) and page cache, in MiB."""
+    raw = docker("exec", "api", "cat", "/sys/fs/cgroup/memory.stat")
+    stat = dict((ln.split()[0], int(ln.split()[1])) for ln in raw.splitlines() if len(ln.split()) == 2)
+    return {"anon": stat.get("anon", 0) // 2**20, "file": stat.get("file", 0) // 2**20}
+
+
+ANON_PEAK = {"ready": 0, "plan": 0}
+
+
 def run_plan(image: str, limits: list[str], label: str) -> tuple[float, float, int]:
     """Start the container, wait until ready, run one plan; (ready s, plan s, peak MiB)."""
     subprocess.run(["docker", "rm", "-f", "api"], capture_output=True)
@@ -85,6 +95,8 @@ def run_plan(image: str, limits: list[str], label: str) -> tuple[float, float, i
             failure(f"{label}: not ready after 900s")
         time.sleep(3)
     ready = time.time() - t0
+    ANON_PEAK["ready"] = memory_stat()["anon"]
+    ANON_PEAK["plan"] = ANON_PEAK["ready"]
     run_id = call("/api/v1/runs", REQUEST)["id"]
     t1 = time.time()
     while True:
@@ -94,6 +106,10 @@ def run_plan(image: str, limits: list[str], label: str) -> tuple[float, float, i
             if not running():
                 failure(f"{label}: stopped during the plan after {time.time() - t1:.0f}s")
             doc = {"status": "running"}
+        try:
+            ANON_PEAK["plan"] = max(ANON_PEAK["plan"], memory_stat()["anon"])
+        except (ValueError, IndexError):
+            pass
         if doc["status"] in ("awaiting_approval", "failed", "blocked"):
             break
         if time.time() - t1 > 1200:
@@ -110,7 +126,9 @@ def main() -> None:
     image = sys.argv[1]
     status("pending", "measuring the peak memory of a whole plan (no limit)")
     _, plan_free, peak_free = run_plan(image, ["--cpus", "1"], "no limit")
-    status("pending", f"no limit: peak {peak_free} MiB, plan {plan_free:.0f}s at 1 CPU; now at 512 MB, 0.1 CPU")
+    stat = memory_stat()
+    status("pending", f"no limit: anon {ANON_PEAK['ready']} MiB ready, {ANON_PEAK['plan']} MiB peak in plan; "
+                      f"page cache {stat['file']} MiB; cgroup peak {peak_free}; plan {plan_free:.0f}s")
     ready, plan, peak = run_plan(image, FREE_PLAN, "free plan")
     status("success", f"512 MB/0.1 CPU: ready {ready:.0f}s, plan {plan:.0f}s, peak {peak} MiB "
                       f"(unlimited peak {peak_free} MiB, plan {plan_free:.0f}s at 1 CPU)")

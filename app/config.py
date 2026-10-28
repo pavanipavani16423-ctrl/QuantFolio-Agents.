@@ -51,6 +51,9 @@ class Settings(BaseSettings):
     llm_provider: Literal["mock", "groq", "openai", "anthropic", "ollama"] = "mock"
     llm_model: str | None = None
     llm_temperature: float = 0.0
+    # how structured output is requested first: json_schema (provider-enforced schema, Groq and
+    # OpenAI) or function_calling (a tool call); json_mode is the fallback either way
+    llm_structured_method: Literal["json_schema", "function_calling"] = "function_calling"
     llm_timeout_seconds: float = 120.0
     llm_max_retries: int = 6  # the SDK waits for the rate-limit window (Retry-After) between tries
     llm_reasoning_effort: str = "low"  # for reasoning models (gpt-oss): fewer tokens, lower latency

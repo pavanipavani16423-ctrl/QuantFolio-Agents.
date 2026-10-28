@@ -74,13 +74,13 @@ class LLMGateway:
                                model=self.model_name, error=f"circuit open after {circuit.failures} failures")
             return fallback(), "rules_circuit_open"
         tracer = get_tracer()
-        # First a tool call (structured output). Some models occasionally name the tool wrongly
-        # (e.g. "memo" for "Memo") and the provider rejects the call; then ask for plain JSON
-        # that matches the schema instead. HTTP rate limits are retried inside the SDK client
+        # First the configured structured-output method (Groq's json_schema constrains the output to
+        # the schema; a tool call can fail when the model names the tool wrongly, e.g. "memo" for
+        # "Memo"); then plain JSON that matches the schema. HTTP rate limits are retried inside the SDK client
         # (Retry-After); between our own attempts we wait with jittered exponential backoff.
         schema_hint = ("\n\nReturn ONLY a JSON object that matches this JSON schema, with no other text:\n"
                        + json.dumps(schema.model_json_schema()))
-        plans = ["function_calling"] + ["json_mode"] * max(1, attempts - 1)
+        plans = [self.settings.llm_structured_method] + ["json_mode"] * max(1, attempts - 1)
         delays = list(backoff_delays(len(plans), base=0.5, cap=4.0))
         last_error = "unknown error"
         for attempt, method in enumerate(plans, 1):
