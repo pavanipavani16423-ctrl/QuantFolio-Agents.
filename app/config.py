@@ -51,9 +51,11 @@ class Settings(BaseSettings):
     llm_provider: Literal["mock", "groq", "openai", "anthropic", "ollama"] = "mock"
     llm_model: str | None = None
     llm_temperature: float = 0.0
-    # how structured output is requested first: json_schema (provider-enforced schema, Groq and
-    # OpenAI) or function_calling (a tool call); json_mode is the fallback either way
-    llm_structured_method: Literal["json_schema", "function_calling"] = "function_calling"
+    # how structured output is requested first: json_schema (the provider enforces the schema) or
+    # function_calling (a tool call); json_mode is the fallback either way. Unset: json_schema on Groq
+    # and OpenAI. Measured on Groq (3 runs each): 0 of 12 calls failed vs 5 of 17 with tool calls,
+    # and the median plan took 37 s instead of 75 s.
+    llm_structured_method: Literal["json_schema", "function_calling"] | None = None
     llm_timeout_seconds: float = 120.0
     llm_max_retries: int = 6  # the SDK waits for the rate-limit window (Retry-After) between tries
     llm_reasoning_effort: str = "low"  # for reasoning models (gpt-oss): fewer tokens, lower latency
@@ -143,6 +145,12 @@ class Settings(BaseSettings):
     @property
     def resolved_llm_model(self) -> str:
         return self.llm_model or DEFAULT_LLM_MODELS[self.llm_provider]
+
+    @property
+    def resolved_structured_method(self) -> str:
+        if self.llm_structured_method:
+            return self.llm_structured_method
+        return "json_schema" if self.llm_provider in ("groq", "openai") else "function_calling"
 
     @property
     def resolved_judge_provider(self) -> str:

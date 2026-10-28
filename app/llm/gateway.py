@@ -80,7 +80,7 @@ class LLMGateway:
         # (Retry-After); between our own attempts we wait with jittered exponential backoff.
         schema_hint = ("\n\nReturn ONLY a JSON object that matches this JSON schema, with no other text:\n"
                        + json.dumps(schema.model_json_schema()))
-        plans = [self.settings.llm_structured_method] + ["json_mode"] * max(1, attempts - 1)
+        plans = [self.settings.resolved_structured_method] + ["json_mode"] * max(1, attempts - 1)
         delays = list(backoff_delays(len(plans), base=0.5, cap=4.0))
         last_error = "unknown error"
         for attempt, method in enumerate(plans, 1):

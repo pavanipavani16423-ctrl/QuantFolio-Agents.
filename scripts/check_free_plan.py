@@ -71,6 +71,7 @@ def memory_stat() -> dict[str, int]:
 
 
 ANON_PEAK = {"ready": 0, "plan": 0}
+BY_STEP: dict[str, int] = {}  # highest anonymous memory seen while each step was running
 
 
 def run_plan(image: str, limits: list[str], label: str) -> tuple[float, float, int]:
@@ -107,14 +108,18 @@ def run_plan(image: str, limits: list[str], label: str) -> tuple[float, float, i
                 failure(f"{label}: stopped during the plan after {time.time() - t1:.0f}s")
             doc = {"status": "running"}
         try:
-            ANON_PEAK["plan"] = max(ANON_PEAK["plan"], memory_stat()["anon"])
+            anon = memory_stat()["anon"]
+            ANON_PEAK["plan"] = max(ANON_PEAK["plan"], anon)
+            for key, step in doc.get("steps", {}).items():
+                if step.get("status") == "running":
+                    BY_STEP[key] = max(BY_STEP.get(key, 0), anon)
         except (ValueError, IndexError):
             pass
         if doc["status"] in ("awaiting_approval", "failed", "blocked"):
             break
         if time.time() - t1 > 1200:
             failure(f"{label}: plan not done after 1200s")
-        time.sleep(3)
+        time.sleep(0.5)
     plan = time.time() - t1
     if doc["status"] != "awaiting_approval":
         failure(f"{label}: plan {doc['status']} after {plan:.0f}s: {(doc.get('error') or '')[:50]}")
@@ -127,8 +132,9 @@ def main() -> None:
     status("pending", "measuring the peak memory of a whole plan (no limit)")
     _, plan_free, peak_free = run_plan(image, ["--cpus", "1"], "no limit")
     stat = memory_stat()
-    status("pending", f"no limit: anon {ANON_PEAK['ready']} MiB ready, {ANON_PEAK['plan']} MiB peak in plan; "
-                      f"page cache {stat['file']} MiB; cgroup peak {peak_free}; plan {plan_free:.0f}s")
+    steps = " ".join(f"{k}={v}" for k, v in sorted(BY_STEP.items(), key=lambda kv: -kv[1])[:6])
+    status("pending", f"anon ready {ANON_PEAK['ready']}, peak {ANON_PEAK['plan']} MiB; by step: {steps}")
+    print(f"page cache {stat['file']} MiB; cgroup peak {peak_free}; plan {plan_free:.0f}s")
     ready, plan, peak = run_plan(image, FREE_PLAN, "free plan")
     status("success", f"512 MB/0.1 CPU: ready {ready:.0f}s, plan {plan:.0f}s, peak {peak} MiB "
                       f"(unlimited peak {peak_free} MiB, plan {plan_free:.0f}s at 1 CPU)")
