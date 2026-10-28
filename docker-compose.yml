@@ -1,30 +1,53 @@
-# API + the two A2A agents as separate services + the web UI.
+# The cloud layout on one machine: Postgres (stands in for Neon), the API, the two A2A agents as
+# separate services, and the web UI.
 #   docker compose up --build      -> http://localhost:3000
+x-backend: &backend
+  build: .
+  image: quantfolio-api
+  env_file: [.env]
+  environment: &backend-env
+    DATABASE_URL: postgresql://quantfolio:quantfolio@db:5432/quantfolio
+  depends_on:
+    db: {condition: service_healthy}
+
 services:
-  api:
-    build: .
-    env_file: [.env]
+  db:
+    image: postgres:17-alpine
     environment:
+      POSTGRES_USER: quantfolio
+      POSTGRES_PASSWORD: quantfolio
+      POSTGRES_DB: quantfolio
+    volumes: [pgdata:/var/lib/postgresql/data]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U quantfolio"]
+      interval: 3s
+      retries: 20
+
+  api:
+    <<: *backend
+    environment:
+      <<: *backend-env
       PUBLIC_BASE_URL: http://api:8000
       A2A_RISK_URL: http://risk-agent:8101/a2a/risk
       A2A_COMPLIANCE_URL: http://compliance-agent:8102/a2a/compliance
       CORS_ORIGINS: '["http://localhost:3000"]'
     ports: ["8000:8000"]
-    depends_on: [risk-agent, compliance-agent]
+    depends_on:
+      db: {condition: service_healthy}
+      risk-agent: {condition: service_started}
+      compliance-agent: {condition: service_started}
 
   risk-agent:
-    build: .
-    env_file: [.env]
-    command: ["uv", "run", "--no-dev", "python", "scripts/serve_agent.py", "risk", "--host", "0.0.0.0",
-              "--port", "8101", "--public-url", "http://risk-agent:8101"]
-    ports: ["8101:8101"]
+    <<: *backend
+    command: ["python", "scripts/serve_agent.py", "risk", "--host", "0.0.0.0", "--port", "8101",
+              "--public-url", "http://risk-agent:8101"]
+    healthcheck: {disable: true}
 
   compliance-agent:
-    build: .
-    env_file: [.env]
-    command: ["uv", "run", "--no-dev", "python", "scripts/serve_agent.py", "compliance", "--host", "0.0.0.0",
-              "--port", "8102", "--public-url", "http://compliance-agent:8102"]
-    ports: ["8102:8102"]
+    <<: *backend
+    command: ["python", "scripts/serve_agent.py", "compliance", "--host", "0.0.0.0", "--port", "8102",
+              "--public-url", "http://compliance-agent:8102"]
+    healthcheck: {disable: true}
 
   web:
     build:
@@ -34,3 +57,5 @@ services:
     ports: ["3000:3000"]
     depends_on: [api]
 
+volumes:
+  pgdata:

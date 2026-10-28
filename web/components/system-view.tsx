@@ -8,33 +8,64 @@ import { api, type SystemInfo } from "@/lib/api";
 const PLAIN = [
   {
     title: "What it is",
-    body: "A team of AI agents that does a portfolio manager's quarterly routine: read company reports, apply the client's rules, choose stocks, check the result and write a memo, then wait for a human to approve.",
+    body: "A team of AI agents that does a portfolio manager's quarterly routine: read company reports, apply the client's rules, choose stocks, check the result and write a memo, then wait for a person to approve.",
   },
   {
     title: "Who it helps",
-    body: "Wealth managers and advisors who rebalance many client portfolios, compliance teams who must prove every rule was checked, and researchers who want to test quantum optimization on a real problem.",
+    body: "Wealth managers and advisors who rebalance many client portfolios, and compliance teams who must prove that every rule was read, checked and approved, with a record of who decided what.",
   },
   {
-    title: "Where quantum fits",
-    body: "Picking k stocks out of n is a yes/no choice per stock, exactly the kind of problem QAOA is built for. Each stock is one qubit. The normal computer solves the same problem exactly, so the quantum answer can be checked.",
+    title: "Why you can trust it",
+    body: "Safety checks guard every place text comes in or goes out, every claim cites its source, trades need your signed approval, and the team remembers your feedback for next time.",
   },
 ];
 
 const FLOW: { keys: string[]; label: string }[] = [
-  { keys: ["intake"], label: "Understand" },
+  { keys: ["guard", "intake"], label: "Check and understand" },
   { keys: ["research", "risk", "mandate"], label: "Gather (in parallel)" },
-  { keys: ["optimize"], label: "Optimize" },
+  { keys: ["optimize"], label: "Choose stocks" },
   { keys: ["backtest", "check"], label: "Test and check" },
   { keys: ["report", "evaluate"], label: "Explain and score" },
   { keys: ["trades", "approval", "execute"], label: "Human approval" },
 ];
 
+const LAYERS: { title: string; items: string[] }[] = [
+  {
+    title: "Guardrails",
+    items: [
+      "Input: personal data removed; hidden instructions (patterns + meaning); scope policy",
+      "Documents: passages that read like instructions are set aside; sources marked as data",
+      "Output: citations exist and support each claim; numbers match facts; no promises",
+      "Action: broker order limits; signed, single-use approval token",
+    ],
+  },
+  {
+    title: "Memory",
+    items: [
+      "Working: the saved state of every step (survives restarts)",
+      "Episodic: what happened in past reviews of a client",
+      "Semantic: learned preferences (they only tighten the rules)",
+      "Procedural: your notes, reused as writing guidance; plus a research answer cache",
+    ],
+  },
+  {
+    title: "Reliability",
+    items: [
+      "Self-correction: a failed check gets one rewrite with the reasons, then a safe fallback",
+      "Retries with jittered backoff; a circuit breaker skips a failing AI provider",
+      "Idempotent trades; durable pause for approval; tool-call budget per run",
+      "Hash-chained audit log; rate limits; security headers",
+    ],
+  },
+];
+
 const STACK = [
   "LangGraph (supervisor + interrupt)",
   "A2A protocol 1.0 (a2a-sdk)",
-  "MCP (4 servers)",
-  "Hybrid RAG: BM25 + bge-small + RRF + cross-encoder",
-  "Qiskit + Aer (QAOA, XY mixer, Dicke state)",
+  "MCP (4 servers, per-agent permissions)",
+  "Hybrid RAG: BM25 + embeddings + RRF + cross-encoder",
+  "Guardrails: OWASP LLM Top 10 mapping",
+  "Memory: working, episodic, semantic, procedural",
   "Langfuse tracing + scores",
   "RAGAS 0.4 evaluation",
   "Groq / OpenAI / Anthropic LLMs",
@@ -101,6 +132,30 @@ export function SystemView() {
                     })}
                   </div>
                 </div>
+              ))}
+            </div>
+          </section>
+
+          <section>
+            <SectionHeading
+              eyebrow="Safe by design"
+              title={
+                <>
+                  Guardrails, memory and <Accent>reliability</Accent>.
+                </>
+              }
+              lead="Each layer is a set of plain rules or stores with its own tests, so it can be checked and explained."
+            />
+            <div className="mt-10 grid gap-4 md:grid-cols-3">
+              {LAYERS.map((l) => (
+                <Card key={l.title}>
+                  <h3 className="text-lg font-semibold">{l.title}</h3>
+                  <ul className="mt-3 flex flex-col gap-2 text-sm text-muted-foreground">
+                    {l.items.map((i) => (
+                      <li key={i}>{i}</li>
+                    ))}
+                  </ul>
+                </Card>
               ))}
             </div>
           </section>

@@ -14,6 +14,8 @@ __pycache__/
 data/*.db
 data/*.db-*
 data/models/
+data/.approval_secret
+data/index_tuning/
 experiments/*.log
 
 # node / next
@@ -29,3 +31,4 @@ web/tsconfig.tsbuildinfo
 .DS_Store
 Thumbs.db
 .playwright-mcp/
+data/clients/

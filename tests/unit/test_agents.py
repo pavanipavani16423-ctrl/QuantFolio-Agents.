@@ -4,8 +4,9 @@ from pathlib import Path
 import pytest
 
 from app.a2a.compliance_agent import _sane, check_portfolio_rules, rules_from_text
+from app.agents import research
 from app.agents.intake import heuristic_intake, mentioned_tickers
-from app.agents.research import diversify, extractive_answer
+from app.agents.research import extractive_answer
 from app.agents.supervisor import decide
 from app.data import store
 from app.rag.chunking import chunk_document
@@ -45,6 +46,8 @@ def test_portfolio_check_flags_each_broken_rule() -> None:
 
 def test_supervisor_routes_a_full_run() -> None:
     state: dict = {"run_id": "r", "client_id": "C-102"}
+    assert decide(state)[0] == ["guard"]
+    state["input_guard"] = {"blocked": False}
     assert decide(state)[0] == ["intake"]
     state["intake"] = {"wants_rebalance": True}
     assert sorted(decide(state)[0]) == ["mandate", "research", "risk"]
@@ -62,7 +65,9 @@ def test_supervisor_routes_a_full_run() -> None:
     assert decide(state)[0] == []  # still failing: no trades
     state["compliance"] = {"passed": True, "checks": []}
     assert decide(state)[0] == ["trades"]
-    state["trades"] = {}
+    state["trades"] = {"limits": [{"check": "max_order_size", "passed": False}]}
+    assert decide(state)[0] == []  # a broker limit fails: nothing to approve
+    state["trades"] = {"limits": [{"check": "max_order_size", "passed": True}]}
     assert decide(state)[0] == ["approval"]
     state["approval"] = {"approved": True}
     assert decide(state)[0] == ["execute"]
@@ -70,8 +75,12 @@ def test_supervisor_routes_a_full_run() -> None:
     assert decide(state)[0] == []
 
 
+def test_blocked_request_stops_the_run() -> None:
+    assert decide({"input_guard": {"blocked": True}}) == ([], "stop: the request was stopped by the input guardrails")
+
+
 def test_non_volatility_failure_is_not_retried() -> None:
-    state = {"intake": {}, "research": {}, "risk_profile": {}, "rules": {}, "optimization": {},
+    state = {"input_guard": {"blocked": False}, "intake": {}, "research": {}, "risk_profile": {}, "rules": {}, "optimization": {},
              "attempts": 1, "backtest": {},
              "compliance": {"passed": False, "checks": [{"rule": "excluded_sectors", "passed": False}]}}
     assert decide(state)[0] == ["report"]
@@ -85,10 +94,31 @@ def test_intake_finds_companies_by_name_and_ticker() -> None:
     assert result.focus_tickers == ["AAPL"]
 
 
-def test_diversify_spreads_slots_across_companies() -> None:
-    hits = [{"ticker": "A", "rank": i} for i in range(1, 6)] + [{"ticker": "B", "rank": 6}]
-    picked = diversify(hits, 3)
-    assert {h["ticker"] for h in picked} == {"A", "B"}
+@pytest.mark.anyio
+async def test_every_company_asked_about_gets_passages(monkeypatch: pytest.MonkeyPatch) -> None:
+    calls = []
+
+    async def search(_ctx, query, k, tickers=None, **_):  # noqa: ANN001, ANN003, ANN202
+        calls.append((tickers, k))
+        return [{"ticker": tickers[0], "rank": i} for i in range(1, k + 1)]
+
+    monkeypatch.setattr(research, "search", search)
+    hits = await research.per_company(None, "risks?", ["TCS", "HDFCBANK", "HINDUNILVR"], 6)
+    assert calls == [(["TCS"], 2), (["HDFCBANK"], 2), (["HINDUNILVR"], 2)]
+    assert [h["ticker"] for h in hits] == ["TCS", "TCS", "HDFCBANK", "HDFCBANK", "HINDUNILVR", "HINDUNILVR"]
+    calls.clear()
+    await research.per_company(None, "risks?", [f"T{i}" for i in range(8)], 6)
+    assert {k for _, k in calls} == {1}
+
+
+def test_extractive_answer_quotes_whole_sentences_only() -> None:
+    text = ("Source: NSE annual report filing, https://example.com/ar.pdf\n\nMarket risks arise from failing to "
+            "meet sustainability goals, leading to competitive disadvantages. 3 Climate in building the brand "
+            "as a top end offering.")
+    src = Source(n=1, chunk_id="X#1", doc_id="X", doc_type="brsr", ticker="X", title="t", text=text)
+    points = extractive_answer("What sustainability risks?", [src]).companies[0].key_points
+    assert points == ["Market risks arise from failing to meet sustainability goals, leading to "
+                      "competitive disadvantages [1]."]
 
 
 def test_extractive_answer_cites_its_sources() -> None:
@@ -139,3 +169,22 @@ def test_citations_are_normalized_to_one_style() -> None:
     from app.agents.research import normalize_citations
 
     assert normalize_citations("A【1】 B【2†L3-L5】 C [3, 4] D [5][6]") == "A[1] B[2] C [3][4] D [5][6]"
+    assert normalize_citations("Not in the reports [none]. Cited [2].") == "Not in the reports. Cited [2]."
+
+
+@pytest.mark.anyio
+async def test_intake_keeps_every_company_the_request_names() -> None:
+    """The model's ticker list is backed up by the name matcher (a live run once dropped HDFC Bank)."""
+    from types import SimpleNamespace
+
+    from app.agents.intake import run_intake
+    from app.schemas import IntakeResult
+
+    async def structured(*_args, **_kwargs):  # noqa: ANN002, ANN003, ANN202
+        return IntakeResult(client_id="C-201", wants_rebalance=True, research_question="How stable are they?",
+                            focus_tickers=["TCS", "HINDUNILVR", "AAPL"]), "llm"
+
+    ctx = SimpleNamespace(llm=SimpleNamespace(structured=structured))
+    request = "Rebalance. How stable are TCS, HDFC Bank and Hindustan Unilever?"
+    result, _ = await run_intake(ctx, request, "C-201")
+    assert result.focus_tickers == ["TCS", "HINDUNILVR", "HDFCBANK"]  # AAPL is not an NSE stock

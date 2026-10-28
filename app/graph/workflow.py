@@ -1,6 +1,6 @@
 """The LangGraph workflow: a supervisor hub with one spoke per agent.
 
-    START -> supervisor -> {intake | research,risk,mandate (parallel) | optimize | backtest |
+    START -> supervisor -> {guard | intake | research,risk,mandate (parallel) | optimize | backtest |
                             check | report | evaluate | trades | approval | execute} -> supervisor
                         -> END
 
@@ -14,6 +14,7 @@ from app.graph import nodes
 from app.graph.state import RunState
 
 WORKERS = {
+    "guard": nodes.guard_node,
     "intake": nodes.intake_node,
     "research": nodes.research_node,
     "risk": nodes.risk_node,

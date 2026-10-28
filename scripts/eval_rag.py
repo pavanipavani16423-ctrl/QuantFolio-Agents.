@@ -41,27 +41,40 @@ from app.rag.index import MODES, build_chunks, get_index  # noqa: E402
 
 DATASET = "quantfolio-rag-golden"
 
-# (question, primary chunk id). Chunks that are only a risk-factor heading also count the
-# paragraph that follows them (see `references`).
+# US: hand-written, reworded questions about one 10-K risk-factor passage each. The answer chunk
+# is located by a short anchor phrase from the passage, so the set survives re-chunking.
 RISK_QUESTIONS = [
-    ("How could US import tariffs and geopolitical tension affect Apple's supply chain?", "AAPL_risk_factors#007"),
-    ("Why does the state of the world economy matter so much to Apple's results?", "AAPL_risk_factors#001"),
-    ("What harm could hacking or security flaws cause Microsoft?", "MSFT_risk_factors#024"),
-    ("Why might NVIDIA end up with too much or too little product compared to what customers want?", "NVDA_risk_factors#014"),
-    ("How do currency movements affect Amazon's international results?", "AMZN_risk_factors#021"),
-    ("How does government supervision shape the way JPMorgan runs its business?", "JPM_risk_factors#009"),
-    ("Could lawsuits or government probes hurt Visa?", "V_risk_factors#038"),
-    ("What happens to UnitedHealth if it misjudges how much patient care will cost?", "UNH_risk_factors#004"),
-    ("How dependent is Pfizer on a small number of its best-selling drugs?", "PFE_risk_factors#011"),
-    ("Why are fake medicines a risk for Pfizer?", "PFE_risk_factors#030"),
-    ("How could countries' net-zero climate policies affect ExxonMobil?", "XOM_risk_factors#018"),
-    ("Could worries about sugar and weight gain reduce demand for Coca-Cola drinks?", "KO_risk_factors#024"),
-    ("Why are relationships with bottlers important to Coca-Cola?", "KO_risk_factors#044"),
-    ("How could a disease outbreak affect Walmart?", "WMT_risk_factors#018"),
-    ("What would new limits on carbon emissions mean for NextEra Energy?", "NEE_risk_factors#019"),
-    ("What is the biggest cost in making Linde's industrial gases, and how does Linde manage it?", "LIN_risk_factors#003"),
-    ("Why is Caterpillar sensitive to the economic cycle?", "CAT_risk_factors#004"),
-    ("Why does Home Depot care so much about its brand and reputation?", "HD_risk_factors#002"),
+    ("How could US import tariffs and geopolitical tension affect Apple's supply chain?",
+     "AAPL", "Global supply chains can be highly concentrated, and an"),
+    ("Why does the state of the world economy matter so much to Apple's results?",
+     "AAPL", "The Company’s operations and performance depend"),
+    ("What harm could hacking or security flaws cause Microsoft?", "MSFT", "Threats to security can take a variety of"),
+    ("Why might NVIDIA end up with too much or too little product compared to what customers want?",
+     "NVDA", "We have long manufacturing lead times and build finished products and"),
+    ("How do currency movements affect Amazon's international results?",
+     "AMZN", "The results of operations of, and certain of our"),
+    ("How does government supervision shape the way JPMorgan runs its business?",
+     "JPM", "JPMorganChase’s businesses are highly regulated and are"),
+    ("Could lawsuits or government probes hurt Visa?", "V", "We are subject to numerous litigation matters,"),
+    ("What happens to UnitedHealth if it misjudges how much patient care will cost?",
+     "UNH", "If we fail to estimate, price for and manage our medical"),
+    ("How dependent is Pfizer on a small number of its best-selling drugs?",
+     "PFE", "If these products or any of our other major products were"),
+    ("Why are fake medicines a risk for Pfizer?", "PFE", "Our reputation, in-line and pipeline portfolios render our"),
+    ("How could countries' net-zero climate policies affect ExxonMobil?",
+     "XOM", "Driven by concern over the risks of climate change, a number of"),
+    ("Could worries about sugar and weight gain reduce demand for Coca-Cola drinks?",
+     "KO", "There is ongoing concern among consumers, public health"),
+    ("Why are relationships with bottlers important to Coca-Cola?",
+     "KO", "We rely on our bottling partners for a significant portion of our"),
+    ("How could a disease outbreak affect Walmart?", "WMT", "The emergence, severity, magnitude and duration of global"),
+    ("What would new limits on carbon emissions mean for NextEra Energy?",
+     "NEE", "NEE's and FPL's business could be negatively affected by"),
+    ("What is the biggest cost in making Linde's industrial gases, and how does Linde manage it?",
+     "LIN", "Energy is the single largest cost item in the production"),
+    ("Why is Caterpillar sensitive to the economic cycle?", "CAT", "Our results of operations are materially affected by"),
+    ("Why does Home Depot care so much about its brand and reputation?",
+     "HD", "A positive brand and reputation are critical to our"),
 ]
 
 # India: hand-written, reworded questions about SEBI annual-report and BRSR passages. The answer
@@ -88,16 +101,6 @@ MANDATE_QUESTIONS = [
 
 def build_golden() -> list[dict]:
     chunks = build_chunks()
-    by_id = {c.chunk_id: c for c in chunks}
-    ordered = [c.chunk_id for c in chunks]
-
-    def references(primary: str) -> list[str]:
-        refs = [primary]
-        if len(by_id[primary].text) < 220:  # a heading: the next paragraph holds the detail
-            nxt = ordered[ordered.index(primary) + 1]
-            if by_id[nxt].doc_id == by_id[primary].doc_id:
-                refs.append(nxt)
-        return refs
 
     items = []
     for c in chunks:
@@ -112,7 +115,7 @@ def build_golden() -> list[dict]:
                 "reference": f"{name} reported total revenue of {m.group(1)} for the fiscal year ended {m.group(2)}.",
                 "reference_ids": [c.chunk_id],
             })
-    for cid, acc in store.accounts().items():
+    for cid, acc in store.seed_accounts().items():  # the committed demo clients, not ones added in the UI
         mandate = [c for c in chunks if c.doc_type == "mandate" and c.client_id == cid]
         for i, (template, pattern) in enumerate(MANDATE_QUESTIONS):
             hit = next(c for c in mandate if re.search(pattern, c.text, re.I))
@@ -124,6 +127,7 @@ def build_golden() -> list[dict]:
                 "reference": sentence.strip(),
                 "reference_ids": [hit.chunk_id],
             })
+
     def norm(text: str) -> str:
         return re.sub(r"\s+", " ", text).lower()
 
@@ -139,14 +143,18 @@ def build_golden() -> list[dict]:
             "reference": hit.text[:1200],
             "reference_ids": [hit.chunk_id],
         })
-    for i, (question, primary) in enumerate(RISK_QUESTIONS):
-        refs = references(primary)
+    for i, (question, ticker, anchor) in enumerate(RISK_QUESTIONS):
+        hit = next((c for c in chunks if c.ticker == ticker and c.doc_type == "risk_factors"
+                    and norm(anchor) in norm(c.text)), None)
+        if hit is None:
+            print(f"warning: anchor not found, skipping: {anchor!r}")
+            continue
         items.append({
             "id": f"risk-{i:02d}",
             "kind": "risk",
             "question": question,
-            "reference": " ".join(by_id[r].text for r in refs)[:1200],
-            "reference_ids": refs,
+            "reference": hit.text[:1200],
+            "reference_ids": [hit.chunk_id],
         })
     return items
 

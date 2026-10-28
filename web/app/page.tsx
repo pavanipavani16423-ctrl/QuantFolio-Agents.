@@ -5,7 +5,7 @@ import { Accent } from "@/components/ui";
 
 const STEPS = [
   { icon: FileSearch, title: "Reads the reports", body: "Annual reports of US (SEC) and Indian (SEBI) companies." },
-  { icon: Scale, title: "Picks the stocks", body: "Follows the client's rules. Normal and quantum computer compared." },
+  { icon: Scale, title: "Picks the stocks", body: "Checks every combination against the client's rules, then double-checks." },
   { icon: UserCheck, title: "You decide", body: "Approve, change or reject. It learns from your changes." },
 ];
 

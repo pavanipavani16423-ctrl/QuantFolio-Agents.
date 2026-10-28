@@ -5,8 +5,6 @@ from typing import Any, Literal
 
 from pydantic import BaseModel, Field
 
-Method = Literal["classical", "quantum", "hybrid"]
-
 
 # ---- intake --------------------------------------------------------------------------------
 class IntakeResult(BaseModel):
@@ -43,21 +41,45 @@ class RiskFlag(BaseModel):
     source: int = Field(description="Number n of the supporting source [n]")
 
 
-class ResearchAnswer(BaseModel):
-    """LLM output schema for the research analyst."""
+class CompanyFindings(BaseModel):
+    ticker: str
+    key_points: list[str] = Field(default_factory=list,
+                                  description="2-3 short sentences on what the sources say about the question, each with [n]")
+    risks: list[str] = Field(default_factory=list, description="1-3 short risk sentences, each with [n]")
 
-    answer: str = Field(description="3-6 sentences. Cite every factual sentence with [n].")
+
+class ResearchAnswer(BaseModel):
+    """LLM output schema for the research analyst: a short report, every sentence cited."""
+
+    answer: str = Field(description="Executive summary: 2-4 sentences that answer the question. Cite every sentence with [n].")
+    companies: list[CompanyFindings] = Field(default_factory=list, description="One entry per company in the sources")
+    not_covered: list[str] = Field(default_factory=list,
+                                   description="Parts of the question the sources do not answer (no citation needed)")
     risk_flags: list[RiskFlag] = Field(default_factory=list)
+
+    def text(self) -> str:
+        """Every cited sentence, for the guardrails."""
+        parts = [self.answer]
+        for c in self.companies:
+            parts += [*c.key_points, *c.risks]
+        return " ".join(p.strip().rstrip(".") + "." for p in parts if p.strip())
 
 
 class ResearchResult(BaseModel):
     question: str
     answer: str
+    companies: list[CompanyFindings] = Field(default_factory=list)
+    not_covered: list[str] = Field(default_factory=list)
+    key_figures: list[dict[str, Any]] = Field(default_factory=list)  # computed from facts, not written by a model
     risk_flags: list[RiskFlag] = Field(default_factory=list)
     sources: list[Source]
     queries: list[str]
-    method: str  # llm | rules | rules_after_llm_error
+    method: str  # llm | rules | rules_after_llm_error | rules_after_guardrail | memory
     retrieval_mode: str
+    quarantined: list[dict[str, Any]] = Field(default_factory=list)  # passages kept out of the prompt
+    guardrails: list[dict[str, Any]] = Field(default_factory=list)
+    self_corrections: int = 0
+    cache: dict[str, Any] | None = None  # set when the answer was reused from memory
 
 
 # ---- compliance ----------------------------------------------------------------------------
@@ -128,18 +150,16 @@ class Memo(BaseModel):
     summary: str = Field(description="4-6 plain-language sentences for the client")
     key_changes: list[str] = Field(description="Bullet points: the main buys and sells")
     risks: list[str] = Field(description="Bullet points: the main risks, with source [n] when from filings")
-    quantum_note: str = Field(description="1-2 sentences on how the quantum optimizer compared")
 
 
 # ---- runs ----------------------------------------------------------------------------------
 RunStatus = Literal["queued", "running", "awaiting_approval", "approved", "rejected",
-                    "completed", "failed"]
+                    "executed", "blocked", "completed", "failed"]
 
 
 class RunRequest(BaseModel):
     client_id: str = "C-102"
     request: str = Field(min_length=3, max_length=2000)
-    methods: list[Method] = Field(default_factory=lambda: ["classical", "quantum", "hybrid"])
 
 
 class StepInfo(BaseModel):

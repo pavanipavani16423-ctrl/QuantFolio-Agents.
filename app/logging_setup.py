@@ -1,7 +1,7 @@
 import logging
 import sys
 
-NOISY = ("httpx", "httpcore", "a2a", "mcp", "fastembed", "qiskit", "urllib3", "langfuse",
+NOISY = ("httpx", "httpcore", "a2a", "mcp", "fastembed", "urllib3", "langfuse",
          "opentelemetry", "sse_starlette", "aiosqlite", "huggingface_hub", "ragas")
 
 

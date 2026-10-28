@@ -5,16 +5,19 @@ from typing import Any
 
 from app.data import store
 from app.graph.context import RunContext
+from app.guardrails import Finding, worst
+from app.guardrails.output import apply_fixes, check_memo, feedback
 from app.schemas import Memo
 
 SYSTEM = (
     "You are a portfolio manager writing to a client advisor. Use ONLY the facts given in the "
-    "JSON. Plain language, short sentences, no hype. Mention numbers as given (percentages "
-    "with one decimal). When a risk comes from a research source, keep its [n] citation. "
-    "Say clearly that the quantum optimizer ran on a simulator and whether it matched the "
-    "classical optimum; write any gap as a percentage. Only if the JSON has advisor_preferences, say in one sentence that the "
-    "proposal follows them. Use the client's currency. Never promise returns; past performance "
-    "does not guarantee results."
+    "JSON. Plain language, short sentences, no hype. Quote numbers exactly as given (percentages "
+    "with one decimal); do not compute new ones. When a risk comes from a research source, keep "
+    "its [n] citation. Only if the JSON has advisor_guidance, follow it for tone and content as "
+    "long as it agrees with the facts; only if it has advisor_preferences, say in one sentence "
+    "that the proposal follows them; only if it has previous_reviews, you may refer to the last "
+    "one. Use the client's currency. Never promise returns, and end the summary with: Past "
+    "performance does not guarantee future results."
 )
 
 
@@ -49,21 +52,11 @@ def template_memo(facts: dict[str, Any]) -> Memo:
     risks = [f"{f['ticker']}: {f['risk']} [{f['source']}]" for f in facts["research"]["risk_flags"][:3]]
     risks += facts["risk_warnings"][:2]
     if not risks:
-        risks = ["Concentration in a small number of large US stocks."]
-    q = facts["quantum"]
-    if q.get("ran"):
-        if q["found_optimum"]:
-            qnote = (f"The quantum optimizer (QAOA, {q['qubits']} simulated qubits) chose the same "
-                     f"{rec['k']} stocks as the exact classical search; it took {q['seconds']:.1f} s "
-                     f"versus {q['classical_seconds']:.2f} s.")
-        else:
-            qnote = (f"The quantum optimizer (QAOA, {q['qubits']} simulated qubits) came within "
-                     f"{q['gap']:.1%} of the classical optimum; the hybrid step closed the gap.")
-    else:
-        qnote = "The quantum optimizer was not run for this request."
+        risks = ["Concentration in a small number of large companies."]
     oos = bt.get("recommended") or {}
     summary = (
-        f"We recommend holding {rec['k']} stocks chosen by the {rec['label'].lower()}. "
+        f"We recommend holding {rec['k']} stocks, the best combination found by searching "
+        f"{facts['selection']['combinations_text']}. "
         f"Based on {facts['window']}, the expected annual return is {rec['expected_return']:.1%} with "
         f"expected volatility of {rec['volatility']:.1%}. "
         f"In the {bt.get('days', 0)} trading days after that window (not used to build the portfolio) "
@@ -74,15 +67,41 @@ def template_memo(facts: dict[str, Any]) -> Memo:
     headline = (f"Rebalance {facts['client']['name']} into {rec['k']} stocks: "
                 f"{rec['expected_return']:.1%} expected return at {rec['volatility']:.1%} volatility.")
     return Memo(headline=headline, summary=summary, key_changes=moves or ["No material changes."],
-                risks=risks, quantum_note=qnote)
+                risks=risks)
 
 
-async def run_report(ctx: RunContext, facts: dict[str, Any]) -> tuple[Memo, str]:
+async def run_report(ctx: RunContext, facts: dict[str, Any],
+                     critique: str | None = None, previous: Memo | None = None) -> tuple[Memo, str]:
     from app.agents.research import normalize_citations
 
-    memo, method = await ctx.llm.structured("report_writer", Memo, SYSTEM,
-                                            json.dumps(facts, default=str, indent=1)[:12000],
-                                            fallback=lambda: template_memo(facts))
+    user = json.dumps(facts, default=str, indent=1)[:12000]
+    if critique and previous is not None:
+        user += f"\n\nYour previous draft:\n{previous.model_dump_json()}\n\n{critique}"
+    memo, method = await ctx.llm.structured("report_writer_revision" if critique else "report_writer",
+                                            Memo, SYSTEM, user, fallback=lambda: template_memo(facts))
     memo.risks = [normalize_citations(r) for r in memo.risks]
     memo.summary = normalize_citations(memo.summary)
     return memo, method
+
+
+async def write_checked_memo(ctx: RunContext, facts: dict[str, Any],
+                             valid_sources: set[int]) -> tuple[Memo, str, list[dict], int]:
+    """Draft -> output guardrails -> (one revision with the findings) -> template if still failing."""
+    memo, method = await run_report(ctx, facts)
+    findings = check_memo(memo.model_dump(), facts, valid_sources)
+    corrections = 0
+    if method == "llm" and worst(findings) == "block":
+        corrections = 1
+        revised, method2 = await run_report(ctx, facts, critique=feedback(findings), previous=memo)
+        revised_findings = check_memo(revised.model_dump(), facts, valid_sources)
+        if method2 == "llm" and worst(revised_findings) != "block":
+            fixed = {f.check for f in findings if f.verdict == "block"}
+            memo, findings = revised, [Finding(f.layer, f.check, "fixed", f"fixed on the second draft: {f.detail}")
+                                       if f.check in fixed and f.verdict == "pass" else f for f in revised_findings]
+        else:
+            memo, method = template_memo(facts), "template_after_guardrail"
+            findings = [*check_memo(memo.model_dump(), facts, valid_sources),
+                        Finding("output", "memo_fallback", "fixed",
+                                "the model's drafts failed the checks; used the fact-based template")]
+    memo = Memo.model_validate(apply_fixes(memo.model_dump(), findings))
+    return memo, method, [f.to_dict() for f in findings], corrections

@@ -2,24 +2,25 @@
 
 A run produces this tree in Langfuse (numbers keep the order readable):
 
-    portfolio-run                                    (trace, tags: client, mode, llm)
-    ├── 01 Intake agent                              agent
+    portfolio-run                                    (trace, tags: client, profile, llm)
+    ├── 01 Input guardrails                          guardrail (PII, prompt injection, scope)
+    ├── 02 Intake agent - recall memory              agent
     │   └── llm.intake                               generation (when an LLM is configured)
-    ├── 02 Research agent - hybrid RAG               agent
+    ├── 03 Research agent - hybrid RAG               agent
     │   ├── rag.search "<query>"                     retriever (BM25 / dense / RRF / rerank)
-    │   └── llm.research_answer                      generation
-    ├── 03 Risk agent (A2A)                          agent  -> remote span from the A2A service
-    ├── 04 Compliance agent (A2A) - mandate rules    agent  -> remote span from the A2A service
-    ├── 05 Portfolio optimizer                       agent
-    │   ├── mcp.optimizer.select_classical           tool
-    │   ├── mcp.optimizer.select_quantum (QAOA)      tool
-    │   └── mcp.optimizer.select_hybrid              tool
-    ├── 06 Backtest (out-of-sample)                  tool
-    ├── 07 Compliance check (A2A)                    guardrail
-    ├── 08 Report writer                             agent
-    ├── 09 Quality evaluation (RAGAS)                evaluator  -> scores on the trace
-    └── 10 Human approval / 11 Paper trade           span (later, same trace)
+    │   ├── llm.research_answer                      generation
+    │   └── llm.research_answer_revision             generation (only after a failed check)
+    ├── 04 Risk agent (A2A)                          agent  -> remote span from the A2A service
+    ├── 05 Compliance agent (A2A) - mandate rules    agent  -> remote span from the A2A service
+    ├── 06 Portfolio optimizer                       agent
+    │   └── mcp.optimizer.select_stocks              tool
+    ├── 07 Backtest (out-of-sample)                  tool
+    ├── 08 Compliance check (A2A)                    guardrail
+    ├── 09 Report writer - output guardrails         agent
+    ├── 10 Quality evaluation (RAGAS)                evaluator  -> scores on the trace
+    └── 11 Trades / 12 Human approval / 13 Execute   tool / span / tool (later, same trace)
 
+Personal data is masked out of every input, output and metadata field before export.
 When Langfuse keys are missing every call is a no-op, so the code path is identical.
 """
 
@@ -50,6 +51,15 @@ class _NoopObservation:
 NOOP = _NoopObservation()
 
 
+def _mask(*, data: Any, **_: Any) -> Any:
+    from app.guardrails.pii import redact_any
+
+    try:
+        return redact_any(data)
+    except Exception:  # noqa: BLE001 - masking must never drop a trace
+        return data
+
+
 class Tracer:
     def __init__(self, settings: Settings) -> None:
         self.settings = settings
@@ -68,6 +78,8 @@ class Tracer:
                     # only this project's spans: the MCP SDK also emits OpenTelemetry spans
                     # (gen_ai.* attributes) that would show up as loose top-level tools
                     should_export_span=is_langfuse_span,
+                    # personal data never reaches the trace store (inputs, outputs, metadata)
+                    mask=_mask if settings.guardrails_enabled else None,
                 )
             except Exception as exc:  # noqa: BLE001 - tracing must never break a run
                 logger.warning("langfuse disabled: %s", exc)

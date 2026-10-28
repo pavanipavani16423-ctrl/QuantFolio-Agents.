@@ -1,10 +1,11 @@
 """All runtime configuration, read from environment variables or `.env`."""
 
+import os
 from functools import lru_cache
 from pathlib import Path
 from typing import Literal
 
-from pydantic import SecretStr
+from pydantic import Field, SecretStr
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -37,11 +38,14 @@ class Settings(BaseSettings):
     log_level: str = "INFO"
     api_key: SecretStr | None = None
     cors_origins: list[str] = ["http://localhost:3000", "http://127.0.0.1:3000"]
-    public_base_url: str = "http://localhost:8000"
+    cors_origin_regex: str | None = None  # e.g. https://quantfolio-.*\.vercel\.app for Vercel previews
+    # where the hosted A2A agents are reachable; Render sets RENDER_EXTERNAL_URL itself
+    public_base_url: str = Field(default_factory=lambda: os.environ.get("RENDER_EXTERNAL_URL", "http://localhost:8000"))
 
     database_url: str = f"sqlite+aiosqlite:///{(ROOT / 'data' / 'quantfolio.db').as_posix()}"
     checkpoint_db: str = str(ROOT / "data" / "checkpoints.db")
     data_dir: Path = ROOT / "data"
+    clients_dir: Path = ROOT / "data" / "clients"  # clients the advisor adds in the UI (git-ignored)
 
     # LLM ("mock" = offline: deterministic rules, no model calls)
     llm_provider: Literal["mock", "groq", "openai", "anthropic", "ollama"] = "mock"
@@ -66,11 +70,18 @@ class Settings(BaseSettings):
     langfuse_base_url: str = "https://cloud.langfuse.com"
     langfuse_environment: str = "development"
 
-    # RAG
+    # RAG. Chosen with scripts/tune_rag.py (experiments/results/rag_tuning_*.json): 1100-char chunks
+    # beat 500/800; bge-base and the query prefix did not improve the reranked result; MiniLM-L-12
+    # found one more of 78 questions but ranked worse (MRR) at twice the latency, so L-6 stays.
     embedding_model: str = "BAAI/bge-small-en-v1.5"
     reranker_model: str = "Xenova/ms-marco-MiniLM-L-6-v2"
+    embedding_query_prefix: bool = False  # the model's retrieval instruction on queries
+    chunk_target_chars: int = 1100
+    chunk_max_chars: int = 1600
     rag_top_k: int = 6
     rag_candidates: int = 40
+    rag_rerank_top: int = 20
+    prompt_passage_chars: int = 1600  # passage text given to the research model and the judge (whole chunks)
     rag_mode: Literal["bm25", "dense", "hybrid", "hybrid_rerank"] = "hybrid_rerank"
 
     # A2A: the risk and compliance agents are separate A2A services. By default the API
@@ -83,15 +94,35 @@ class Settings(BaseSettings):
     mcp_transport: Literal["inprocess", "stdio"] = "inprocess"
     mcp_timeout_seconds: float = 300.0
 
-    # Portfolio and quantum
+    # Portfolio
     train_start: str = "2024-01-02"
     train_end: str = "2026-04-30"  # estimation window; everything after is out-of-sample
-    qaoa_reps: int = 2
-    qaoa_shots: int = 2048
-    qaoa_maxiter: int = 60
-    qaoa_mixer: Literal["xy", "x"] = "xy"
-    qaoa_max_qubits: int = 20
     risk_free_rate: float = 0.04
+
+    # Guardrails and security
+    guardrails_enabled: bool = True
+    injection_block_threshold: float = 1.0  # signal score at or above which a request is stopped
+    # second stage of the injection detector (embedding similarity to attack intents); set by
+    # scripts/eval_guardrails.py (highest benign similarity + 0.02, bge-small); None switches it off
+    semantic_injection_threshold: float | None = 0.706
+    citation_gate_enabled: bool = True
+    # cross-encoder score (MiniLM-L-6): 5th percentile of correctly cited claims, from
+    # scripts/calibrate_citations.py; accepts 95% of them, rejects 94% of same-company wrong-source claims
+    citation_support_threshold: float = 1.24
+    approval_secret: SecretStr | None = None  # signs approval tokens; a local file is used if unset
+    approval_ttl_seconds: int = 900
+    rate_limit_runs: int = 12  # new runs per client address per rate_limit_window_seconds
+    rate_limit_window_seconds: int = 600
+    max_tool_calls_per_run: int = 120
+    max_order_fraction: float = 0.35  # no single order above this share of the account value
+    max_turnover: float = 2.0  # buys + sells as a multiple of the account value
+
+    # Memory
+    memory_episodes_recalled: int = 3
+    memory_notes_recalled: int = 5
+    research_cache_enabled: bool = True
+    research_cache_similarity: float = 0.95
+    research_cache_ttl_hours: float = 168.0
 
     run_timeout_seconds: float = 900.0
     max_body_bytes: int = 256_000

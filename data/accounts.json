@@ -19,7 +19,13 @@
       },
       "as_of": "2026-10-23",
       "note": "Synthetic starting account for the demo. Positions are share counts.",
-      "market": "US"
+      "market": "US",
+      "who": "Retired teacher",
+      "rules_summary": "Low risk · 10 stocks · max 15% each",
+      "examples": [
+        "Rebalance Meera's portfolio. What risks could hurt the earnings of Johnson & Johnson and Coca-Cola?",
+        "Rebalance the portfolio. Is Walmart's business stable?"
+      ]
     },
     "C-102": {
       "client_id": "C-102",
@@ -39,7 +45,13 @@
       },
       "as_of": "2026-10-23",
       "note": "Synthetic starting account for the demo. Positions are share counts.",
-      "market": "US"
+      "market": "US",
+      "who": "Environmental charity",
+      "rules_summary": "No oil & gas · 8 stocks · max 20% each",
+      "examples": [
+        "Rebalance the GreenLeaf endowment. What climate or environmental risks do NVIDIA and NextEra disclose?",
+        "Rebalance the endowment. What are Microsoft's main risks?"
+      ]
     },
     "C-103": {
       "client_id": "C-103",
@@ -63,7 +75,13 @@
       },
       "as_of": "2026-10-23",
       "note": "Synthetic starting account for the demo. Positions are share counts.",
-      "market": "US"
+      "market": "US",
+      "who": "Family office",
+      "rules_summary": "No Pfizer · 12 stocks · max 12% each",
+      "examples": [
+        "Rebalance the Kumar family portfolio. What are the main risks for Apple and JPMorgan?",
+        "Rebalance the portfolio. How exposed is Amazon to competition?"
+      ]
     },
     "C-201": {
       "client_id": "C-201",
@@ -83,7 +101,13 @@
         "ONGC": 1538
       },
       "as_of": "2026-10-23",
-      "note": "Synthetic starting account for the demo (Indian rupees). Positions are share counts."
+      "note": "Synthetic starting account for the demo (Indian rupees). Positions are share counts.",
+      "who": "Family trust, Pune",
+      "rules_summary": "No tobacco (ITC) · 8 stocks · max 18% each",
+      "examples": [
+        "Rebalance the Sharma trust portfolio. What risks do Reliance and TCS report?",
+        "Rebalance the portfolio. What sustainability risks do Tata Steel and NTPC disclose in their BRSR?"
+      ]
     }
   }
 }

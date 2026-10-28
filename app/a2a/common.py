@@ -36,6 +36,7 @@ from fastapi import FastAPI
 from google.protobuf.json_format import MessageToDict
 
 from app.observability.tracing import get_tracer
+from app.reliability import retry_async
 
 logger = logging.getLogger(__name__)
 
@@ -151,8 +152,12 @@ class A2AAgentClient:
         self.card: dict[str, Any] | None = None
 
     async def ask(self, skill: str, data: dict[str, Any], metadata: dict[str, Any]) -> dict[str, Any]:
+        from app.config import get_settings
+
+        key = get_settings().api_key
+        headers = {"x-api-key": key.get_secret_value()} if key else {}
         async with httpx.AsyncClient(transport=self.transport, timeout=self.timeout,
-                                     base_url=self.base_url) as http:
+                                     base_url=self.base_url, headers=headers) as http:
             card_response = await http.get(f"{self.base_url}{AGENT_CARD_PATH}")
             card_response.raise_for_status()
             self.card = card_response.json()
@@ -176,12 +181,35 @@ class A2AAgentClient:
         return body
 
 
+class _ServerError(Exception):
+    def __init__(self, cause: httpx.HTTPStatusError) -> None:
+        super().__init__(str(cause))
+        self.cause = cause
+
+
+TRANSIENT = (httpx.ReadTimeout, httpx.RemoteProtocolError, httpx.ReadError, _ServerError)
+
+
 async def ask_with_fallback(primary: A2AAgentClient, local_app: Any, skill: str,
                             data: dict[str, Any], metadata: dict[str, Any]) -> tuple[dict[str, Any], str]:
-    """Network A2A first; if the service is unreachable, the same protocol against the
-    ASGI app that hosts the agent in this process (no socket)."""
+    """Network A2A first (transient failures - read timeouts, dropped connections, 5xx - are
+    retried with jittered backoff); if the service is unreachable, the same protocol against
+    the ASGI app that hosts the agent in this process (no socket)."""
+
+    async def once() -> dict[str, Any]:
+        try:
+            return await primary.ask(skill, data, metadata)
+        except httpx.HTTPStatusError as exc:
+            if exc.response.status_code >= 500:
+                raise _ServerError(exc) from exc
+            raise
+
     try:
-        return await primary.ask(skill, data, metadata), "http"
+        try:
+            return await retry_async(once, attempts=3, base=0.5, retry_on=TRANSIENT,
+                                     label=f"A2A {primary.base_url} {skill}"), "http"
+        except _ServerError as exc:
+            raise exc.cause from exc
     except (TimeoutError, httpx.ConnectError, httpx.ConnectTimeout, httpx.HTTPStatusError) as exc:
         # unreachable, or something else answers on that port (no agent card there)
         if local_app is None or (

@@ -7,9 +7,9 @@ Output quality:
     output_compliance_pass
 Deterministic RAG checks (always):
     rag_citation_coverage, rag_numeric_grounding, rag_top_rerank_score
-Portfolio / quantum:
-    portfolio_oos_sharpe, portfolio_oos_excess_return_vs_spy, quantum_optimality_gap,
-    quantum_feasible_probability, quantum_approximation_ratio
+Portfolio:
+    portfolio_oos_sharpe, portfolio_oos_excess_return_vs_benchmark, portfolio_baseline_gap
+Guardrails, memory and self-correction scores are written by the steps that produce them.
 
 Without a judge the LLM metrics are reported as skipped (never invented).
 """
@@ -21,7 +21,7 @@ import re
 from pathlib import Path
 from typing import Any
 
-from app.config import Settings
+from app.config import Settings, get_settings
 from app.evaluation.ragas_adapters import FastEmbedEmbeddings, make_judge
 
 MEMO_RUBRIC = {
@@ -29,7 +29,7 @@ MEMO_RUBRIC = {
     "score2_description": "The memo has a recommendation but important numbers or risks are missing or wrong.",
     "score3_description": "The memo is mostly accurate but vague about risks, changes or how the methods compared.",
     "score4_description": "The memo is accurate and clear with minor omissions; risks and changes are stated.",
-    "score5_description": "The memo is accurate, uses the given numbers correctly, states the main changes, cites risks, explains the quantum comparison honestly and avoids promises.",
+    "score5_description": "The memo is accurate, uses the given numbers correctly, states the main changes, cites risks, follows the advisor's guidance when given and avoids promises.",
 }
 
 CITATION = re.compile(r"\[(\d+)\]")
@@ -64,7 +64,7 @@ def numeric_grounding(answer: str, contexts: list[str]) -> float | None:
 def rule_extraction_accuracy(client_id: str, rules: dict, truth_path: Path) -> float | None:
     if not truth_path.exists():
         return None
-    truth = json.loads(truth_path.read_text()).get(client_id)
+    truth = json.loads(truth_path.read_text("utf-8")).get(client_id)
     if not truth:
         return None
     hits = 0
@@ -139,9 +139,17 @@ async def ragas_scores(settings: Settings, question: str, answer: str, contexts:
     return scores, judge.model_name, notes
 
 
+def report_text(research: dict[str, Any]) -> str:
+    """The whole research report (summary + every company point and risk) as one text."""
+    parts = [research["answer"]]
+    for c in research.get("companies") or []:
+        parts += [*c.get("key_points", []), *c.get("risks", [])]
+    return " ".join(p.strip().rstrip(".") + "." for p in parts if p.strip())
+
+
 def judge_context(source: dict[str, Any]) -> str:
     company = source["title"].split(" - ")[0]
-    return f"{company} - {source.get('section') or source['doc_type']}\n{source['text'][:900]}"
+    return f"{company} - {source.get('section') or source['doc_type']}\n{source['text'][:get_settings().prompt_passage_chars]}"
 
 
 def deterministic_scores(settings: Settings, state: dict[str, Any]) -> dict[str, dict]:
@@ -154,9 +162,10 @@ def deterministic_scores(settings: Settings, state: dict[str, Any]) -> dict[str,
         if value is not None and not (isinstance(value, float) and math.isnan(value)):
             scores[name] = {"value": float(value), "comment": comment, "source": "deterministic"}
 
-    put("rag_citation_coverage", citation_coverage(research["answer"]),
+    text = report_text(research)
+    put("rag_citation_coverage", citation_coverage(text),
         "share of answer sentences with a [n] citation")
-    put("rag_numeric_grounding", numeric_grounding(research["answer"], contexts),
+    put("rag_numeric_grounding", numeric_grounding(text, contexts),
         "share of numbers in the answer found in the sources")
     reranks = [s["rerank_score"] for s in research["sources"] if s.get("rerank_score") is not None]
     put("rag_top_rerank_score", max(reranks) if reranks else None, "best cross-encoder score")
@@ -173,13 +182,8 @@ def deterministic_scores(settings: Settings, state: dict[str, Any]) -> dict[str,
     if rec and "benchmark" in bt:
         put("portfolio_oos_excess_return_vs_benchmark", rec["total_return"] - bt["benchmark"]["total_return"],
             "out-of-sample total return minus the market index")
-    opt = state["optimization"]
-    if "quantum" in opt:
-        put("quantum_optimality_gap", opt.get("quantum_gap"), "QAOA vs exact classical selection")
-        put("quantum_feasible_probability", opt["quantum"].get("feasible_probability"),
-            "probability mass on exactly-k selections")
-        put("quantum_approximation_ratio", opt["quantum"].get("feasible_approximation_ratio"),
-            "QAOA approximation ratio over feasible selections")
+    put("portfolio_baseline_gap", state["optimization"].get("baseline_gap"),
+        "how far the rule-of-thumb portfolio falls short of the best combination")
     return scores
 
 
@@ -190,11 +194,10 @@ async def llm_scores(settings: Settings, state: dict[str, Any]) -> tuple[dict[st
     # "we" and "our products"; without the label the judge cannot tell whose risk it is.
     judged_contexts = [judge_context(s) for s in research["sources"][:6]]
     memo = state["memo"]
-    memo_text = "\n".join([memo["headline"], memo["summary"], *memo["key_changes"], *memo["risks"],
-                           memo["quantum_note"]])
+    memo_text = "\n".join([memo["headline"], memo["summary"], *memo["key_changes"], *memo["risks"]])
     if not settings.online_evaluation:
         return {}, None, ["online LLM evaluation is switched off (ONLINE_EVALUATION=false)"]
-    return await ragas_scores(settings, research["question"], research["answer"], judged_contexts,
+    return await ragas_scores(settings, research["question"], report_text(research), judged_contexts,
                               memo_text, json.dumps(state.get("memo_facts", {}), default=str))
 
 

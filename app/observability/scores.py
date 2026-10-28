@@ -3,7 +3,7 @@
 `ensure_score_configs()` registers them as Langfuse score configs, so the dashboard shows
 the description next to each score and validates the value range. Names are grouped by
 prefix: `rag_*` (retrieval and answer quality, mostly RAGAS), `output_*` (the final memo),
-`portfolio_*`, `quantum_*` and `human_*`.
+`portfolio_*`, `guardrail_*`, `memory_*` and `human_*`.
 """
 
 from dataclasses import dataclass
@@ -43,19 +43,36 @@ SCORES: tuple[ScoreSpec, ...] = (
               "Share of mandate rules the compliance agent extracted correctly, checked against the hand-written truth file."),
     ScoreSpec("output_compliance_pass", "BOOLEAN",
               "1 if the final portfolio passed every mandate rule checked by the compliance agent.", None, None),
-    # Portfolio and quantum
+    # Portfolio
     ScoreSpec("portfolio_oos_sharpe", "NUMERIC",
               "Out-of-sample Sharpe ratio of the recommended portfolio (buy-and-hold after the estimation window).",
               None, None),
     ScoreSpec("portfolio_oos_excess_return_vs_benchmark", "NUMERIC",
               "Out-of-sample total return of the recommended portfolio minus the market index "
               "(S&P 500 for US clients, Nifty 50 for Indian clients) over the same days.", None, None),
-    ScoreSpec("quantum_optimality_gap", "NUMERIC",
-              "Relative utility gap of the QAOA selection to the proven classical optimum (0 = optimal)."),
-    ScoreSpec("quantum_feasible_probability", "NUMERIC",
-              "Probability mass of the final QAOA state on feasible selections (exactly k stocks)."),
-    ScoreSpec("quantum_approximation_ratio", "NUMERIC",
-              "QAOA approximation ratio over feasible selections (1 = all probability on the optimum)."),
+    ScoreSpec("portfolio_baseline_gap", "NUMERIC",
+              "Relative utility shortfall of the rule-of-thumb portfolio versus the best combination "
+              "(what the exact search adds; 0 = same answer).", 0.0, None),
+    # Guardrails and self-correction
+    ScoreSpec("guardrail_input_blocked", "BOOLEAN",
+              "1 if the input guardrails stopped the request (prompt injection or scope policy).", None, None),
+    ScoreSpec("guardrail_pii_redacted", "NUMERIC",
+              "Number of personal-data values removed from the request before storage, models and traces.",
+              0.0, None),
+    ScoreSpec("guardrail_quarantined_passages", "NUMERIC",
+              "Retrieved passages kept out of the research prompt because they read like instructions "
+              "(indirect prompt injection).", 0.0, None),
+    ScoreSpec("guardrail_output_violations", "NUMERIC",
+              "Output checks the memo's first draft failed (promises, ungrounded numbers, unknown stocks, "
+              "bad citations, currency); each is fixed by a revision or the template.", 0.0, None),
+    ScoreSpec("self_corrections", "NUMERIC",
+              "Revisions the research and report agents made after failing a guardrail check.", 0.0, None),
+    # Memory
+    ScoreSpec("memory_items_recalled", "NUMERIC",
+              "Long-term memory items recalled at intake (past reviews, preferences, advisor notes).", 0.0, None),
+    ScoreSpec("research_cache_hit", "BOOLEAN",
+              "1 if the research answer was reused from the semantic cache (same companies and index, "
+              "near-identical question).", None, None),
     # Human in the loop
     ScoreSpec("human_approved", "BOOLEAN",
               "1 if the advisor approved the proposed trades, 0 if rejected.", None, None),

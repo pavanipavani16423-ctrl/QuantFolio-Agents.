@@ -71,24 +71,3 @@ export function BacktestChart({ run }: { run: Run }) {
     </RunSection>
   );
 }
-
-export function ConvergenceChart({ values }: { values: number[] }) {
-  const data = values.map((v, i) => ({ step: i + 1, value: v }));
-  return (
-    <div className="h-48 w-full">
-      <ResponsiveContainer>
-        <LineChart data={data} margin={{ top: 8, right: 12, bottom: 0, left: -8 }}>
-          <CartesianGrid stroke="var(--grid)" vertical={false} />
-          <XAxis dataKey="step" {...axis} />
-          <YAxis {...axis} width={56} tickFormatter={(v: number) => v.toFixed(3)} domain={["auto", "auto"]} />
-          <Tooltip
-            contentStyle={{ background: "var(--card)", border: "1px solid var(--border)", borderRadius: 12, fontSize: 12 }}
-            formatter={(v) => [Number(v).toFixed(5), "energy (lower is better)"]}
-            labelFormatter={(l) => `optimizer step ${l}`}
-          />
-          <Line type="monotone" dataKey="value" stroke="var(--series-quantum)" strokeWidth={2} dot={false} isAnimationActive={false} />
-        </LineChart>
-      </ResponsiveContainer>
-    </div>
-  );
-}

@@ -3,9 +3,9 @@
 import { useEffect, useState } from "react";
 import { ExternalLink, Loader2 } from "lucide-react";
 import { Bar, BarChart, CartesianGrid, LabelList, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
-import { Accent, Badge, Card, EmptyState, SectionHeading } from "@/components/ui";
+import { Accent, Card, EmptyState, SectionHeading } from "@/components/ui";
 import { api } from "@/lib/api";
-import { num, pct, seconds } from "@/lib/format";
+import { num, pct } from "@/lib/format";
 
 interface RagEval {
   created: string;
@@ -17,28 +17,50 @@ interface RagEval {
   notes: string[];
 }
 
-interface QuantumCase {
-  client: string;
-  n: number;
-  k: number;
-  mixer: string;
-  reps: number;
-  gap: number;
-  found_optimum: boolean;
-  approximation_ratio: number | null;
-  optimal_probability: number | null;
-  feasible_probability: number | null;
-  seconds: number;
-  classical_seconds: number;
-  after_local_search_gap: number;
+interface Rates {
+  attack_block_rate: number | null;
+  benign_pass_rate: number | null;
 }
 
-interface QuantumEval {
+interface GuardrailEval {
   created: string;
-  cases: QuantumCase[];
-  summary: Record<string, Record<string, number>>;
-  notes: string[];
+  counts: Record<string, number>;
+  metrics: Record<string, number>;
+  semantic_threshold: { calibrated: number; configured: number | null };
+  stages: Record<string, { n: number; pattern_only: Rates; two_stage: Rates; misses: { id: string; kind: string; expect: string }[] }>;
+  by_kind: Record<string, { n: number; correct: number }>;
 }
+
+interface TuningRow {
+  hit_rate: number;
+  mrr: number;
+  recall: number;
+  latency_ms: number;
+  context_chars: number;
+  [key: string]: unknown;
+}
+
+interface RagTuning {
+  created: string;
+  items: number;
+  stages: Record<string, TuningRow[]>;
+  best: { size: number[]; model: string; prefix: boolean; reranker: string; candidates: number; rerank_top: number; k: number };
+}
+
+const GUARD_METRIC: Record<string, string> = {
+  attack_block_rate: "Attacks stopped",
+  benign_pass_rate: "Normal requests allowed",
+  pii_recall: "Personal data removed",
+  pii_clean_untouched: "Financial text left alone",
+  poisoned_passages_quarantined: "Poisoned passages set aside",
+  clean_passages_kept: "Clean passages kept",
+};
+
+const STAGE_LABEL: Record<string, string> = {
+  training: "Written with the rules",
+  heldout_v1: "Held-out set 1",
+  heldout_v2: "Held-out set 2 (clean test)",
+};
 
 const MODE_LABEL: Record<string, string> = {
   bm25: "Keyword only (BM25)",
@@ -76,7 +98,7 @@ function RetrievalChart({ data, metric }: { data: RagEval; metric: string }) {
 }
 
 export function EvaluationsView() {
-  const [data, setData] = useState<{ rag_eval?: RagEval; quantum_eval?: QuantumEval } | null>(null);
+  const [data, setData] = useState<{ rag_eval?: RagEval; rag_tuning?: RagTuning; guardrail_eval?: GuardrailEval } | null>(null);
   const [error, setError] = useState(false);
   useEffect(() => {
     api.evaluations().then((d) => setData(d as never)).catch(() => setError(true));
@@ -86,7 +108,8 @@ export function EvaluationsView() {
   if (!data) return <div className="grid place-items-center py-24 text-muted-foreground"><Loader2 className="size-5 animate-spin" /></div>;
 
   const rag = data.rag_eval;
-  const q = data.quantum_eval;
+  const g = data.guardrail_eval;
+  const tune = data.rag_tuning;
   return (
     <div className="mt-16 flex flex-col gap-24">
       <section>
@@ -183,59 +206,114 @@ export function EvaluationsView() {
         )}
       </section>
 
+      {tune && <TuningSection tune={tune} />}
+
       <section>
         <SectionHeading
-          eyebrow="Quantum"
+          eyebrow="Safety"
           title={
             <>
-              Quantum vs the <Accent>exact answer</Accent>.
+              Red-team test of the <Accent>guardrails</Accent>.
             </>
           }
-          lead="For each client, the quantum algorithm (QAOA) chooses the stocks and is compared with an exhaustive search that is guaranteed to be optimal. Two quantum designs are tested: the standard one and one that can only produce valid answers (XY mixer)."
+          lead="Attacks (hidden instructions, jailbreaks, insider trading, off-topic requests), tricky but normal requests, personal data, and real report passages with an instruction planted inside. Held-out sets were written after the rules and never used to tune them."
         />
-        {q ? (
+        {g ? (
           <>
-            <div className="mt-10 overflow-x-auto rounded-3xl border bg-card">
+            <div className="mt-10 grid gap-3 sm:grid-cols-3">
+              {Object.entries(g.metrics).map(([k, v]) => (
+                <div key={k} className="rounded-2xl bg-panel-2 p-4">
+                  <p className="text-xs text-muted-foreground">{GUARD_METRIC[k] ?? k}</p>
+                  <p className="tabular mt-1 text-2xl font-semibold">{pct(v, 0)}</p>
+                </div>
+              ))}
+            </div>
+            <div className="mt-4 overflow-x-auto rounded-3xl border bg-card">
               <table className="w-full text-sm">
                 <thead className="bg-panel-2 text-left text-muted-foreground">
                   <tr>
-                    {["Client", "Qubits", "Pick", "Quantum design", "Layers", "Gap to best", "Valid answers", "P(best)", "Quality ratio", "Quantum time", "Exact time", "After swaps"].map((h) => (
-                      <th key={h} className="px-3 py-2 font-medium whitespace-nowrap">{h}</th>
-                    ))}
+                    <th className="px-4 py-2 font-medium">Test set</th>
+                    <th className="px-4 py-2 font-medium">Cases</th>
+                    <th className="px-4 py-2 font-medium">Attacks stopped (patterns)</th>
+                    <th className="px-4 py-2 font-medium">Attacks stopped (patterns + meaning)</th>
+                    <th className="px-4 py-2 font-medium">Normal requests allowed</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {q.cases.map((c, i) => (
-                    <tr key={i} className="border-t">
-                      <td className="px-3 py-2 font-medium">{c.client}</td>
-                      <td className="tabular px-3 py-2">{c.n}</td>
-                      <td className="tabular px-3 py-2">{c.k}</td>
-                      <td className="px-3 py-2">{c.mixer === "xy" ? "XY (valid only)" : "Standard (X)"}</td>
-                      <td className="tabular px-3 py-2">{c.reps}</td>
-                      <td className="px-3 py-2">
-                        <Badge tone={c.found_optimum ? "good" : c.gap < 0.05 ? "warning" : "critical"}>{c.found_optimum ? "0% ✓" : pct(c.gap)}</Badge>
-                      </td>
-                      <td className="tabular px-3 py-2">{pct(c.feasible_probability, 0)}</td>
-                      <td className="tabular px-3 py-2">{pct(c.optimal_probability, 2)}</td>
-                      <td className="tabular px-3 py-2">{num(c.approximation_ratio, 3)}</td>
-                      <td className="tabular px-3 py-2">{seconds(c.seconds)}</td>
-                      <td className="tabular px-3 py-2">{seconds(c.classical_seconds)}</td>
-                      <td className="tabular px-3 py-2">{pct(c.after_local_search_gap)}</td>
+                  {Object.entries(g.stages).map(([name, s]) => (
+                    <tr key={name} className="border-t">
+                      <td className="px-4 py-2 font-medium">{STAGE_LABEL[name] ?? name}</td>
+                      <td className="tabular px-4 py-2">{s.n}</td>
+                      <td className="tabular px-4 py-2">{pct(s.pattern_only.attack_block_rate, 0)}</td>
+                      <td className="tabular px-4 py-2 font-semibold">{pct(s.two_stage.attack_block_rate, 0)}</td>
+                      <td className="tabular px-4 py-2">{pct(s.two_stage.benign_pass_rate, 0)}</td>
                     </tr>
                   ))}
                 </tbody>
               </table>
             </div>
-            <ul className="mt-4 list-disc pl-5 text-sm text-muted-foreground">
-              {q.notes.map((n) => (
-                <li key={n}>{n}</li>
-              ))}
-            </ul>
+            <p className="mt-4 text-sm text-muted-foreground">
+              Rules catch the attacks they were written for; the meaning check (similarity to known attack types) catches
+              many reworded ones. Neither is perfect, which is why trades also need your signed approval and pass hard
+              broker limits whatever the AI says.
+            </p>
           </>
         ) : (
-          <div className="mt-10"><EmptyState>Run <code>uv run python scripts/quantum_experiment.py</code> to create this report.</EmptyState></div>
+          <div className="mt-10"><EmptyState>Run <code>uv run python scripts/eval_guardrails.py</code> to create this report.</EmptyState></div>
         )}
       </section>
     </div>
+  );
+}
+
+function TuningSection({ tune }: { tune: RagTuning }) {
+  const best = tune.best;
+  const tables: { key: string; title: string; label: (r: TuningRow) => string }[] = [
+    { key: "A_chunk_size", title: "Chunk size", label: (r) => `${r.chunk_target} characters (${r.chunks} chunks) · ${SHORT_LABEL[String(r.mode)] ?? r.mode}` },
+    { key: "B_embedding", title: "Embedding model", label: (r) => `${String(r.embedding).split("/")[1]}${r.query_prefix ? " + instruction" : ""} · ${SHORT_LABEL[String(r.mode)] ?? r.mode}` },
+    { key: "C_reranker", title: "Reranker", label: (r) => String(r.reranker).split("/")[1] },
+    { key: "D_depth", title: "Candidates, rerank depth, top-k", label: (r) => `${r.candidates} candidates · rerank ${r.rerank_top} · top ${r.k}` },
+  ];
+  return (
+    <section>
+      <SectionHeading
+        eyebrow="Search settings"
+        title={
+          <>
+            Every setting <Accent>chosen by measurement</Accent>.
+          </>
+        }
+        lead={`Each choice was tested on the ${tune.items} labelled questions, one stage at a time. Chosen: ${best.size[0]}-character chunks, ${best.model.split("/")[1]}${best.prefix ? " with its search instruction" : ""}, ${best.reranker.split("/")[1]} reranking the top ${best.rerank_top} of ${best.candidates} candidates, ${best.k} passages per answer.`}
+      />
+      <div className="mt-10 grid gap-4 lg:grid-cols-2">
+        {tables.map(({ key, title, label }) =>
+          tune.stages[key] ? (
+            <Card key={key} className="p-5">
+              <h3 className="font-semibold">{title}</h3>
+              <table className="mt-3 w-full text-sm">
+                <thead className="text-left text-xs text-muted-foreground">
+                  <tr>
+                    <th className="py-1 font-medium">Setting</th>
+                    <th className="py-1 font-medium">Found</th>
+                    <th className="py-1 font-medium">MRR</th>
+                    <th className="py-1 font-medium">Time</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {tune.stages[key].map((r, i) => (
+                    <tr key={i} className="border-t">
+                      <td className="py-1.5 pr-2 text-xs">{label(r)}</td>
+                      <td className="tabular py-1.5">{pct(r.hit_rate, 1)}</td>
+                      <td className="tabular py-1.5">{num(r.mrr, 3)}</td>
+                      <td className="tabular py-1.5 text-xs">{Math.round(r.latency_ms)} ms</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </Card>
+          ) : null,
+        )}
+      </div>
+    </section>
   );
 }

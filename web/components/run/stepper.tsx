@@ -30,7 +30,7 @@ export function Stepper({ run }: { run: Run }) {
           : run.status === "failed"
             ? `Stopped: ${run.error ?? "an error"}`
             : run.status === "blocked"
-              ? "Stopped: the plan broke a client rule"
+              ? "Stopped by a safety check (see why above)"
               : current
                 ? `${current.title}…`
                 : "Starting…";

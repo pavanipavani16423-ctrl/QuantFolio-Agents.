@@ -3,6 +3,11 @@
 Every chunk carries a short contextual header ("Apple Inc. (AAPL) 10-K risk factors: ...")
 that is indexed together with the chunk text, so a paragraph that never names its company
 can still be found by a query that does.
+
+The Indian annual reports are text extracted from PDFs: lines break mid-sentence. They are
+reflowed into sentences first, otherwise every short capitalised line looks like a heading and
+sentences end up split across chunks. Chunks below MIN_CHARS are merged into a neighbour, and
+the "Source: ..." line and page numbers are dropped (the source URL is kept as metadata).
 """
 
 import re
@@ -10,8 +15,15 @@ from dataclasses import asdict, dataclass
 
 from app.data.store import Document
 
-TARGET_CHARS = 1100
+TARGET_CHARS = 1100  # defaults; the live values come from settings (chosen by scripts/tune_rag.py)
 MAX_CHARS = 1600
+MIN_CHARS = 300  # a chunk shorter than this is merged into its neighbour (headings, fragments)
+
+PDF_TYPES = {"ar_mdna", "ar_risk", "brsr"}  # extracted from PDF annual reports
+# a line ending on one of these continues on the next line (it is not a heading)
+CONNECTIVES = frozenset("a an and as at by for from in into of on or the to with that which whose "
+                        "your our its their is are was were be has have this these such than".split())
+PAGE_NUMBER = re.compile(r"[\d\s|\-\u2013]+")
 
 DOC_TYPE_LABEL = {
     "risk_factors": "10-K Item 1A risk factors",
@@ -58,17 +70,58 @@ def _is_heading(line: str) -> bool:
     return 3 < len(line) < 120 and not line.endswith((".", ",", ";", ":")) and line[0].isupper()
 
 
-def _pack(paragraphs: list[tuple[str, str]]) -> list[tuple[str, str]]:
-    """Greedy paragraph packing to ~TARGET_CHARS; overly long paragraphs are split on sentences."""
+def _reflow(lines: list[str]) -> list[tuple[str, str]]:
+    """Join PDF lines back into paragraphs. A line is a heading only if it stands alone: the text
+    before it ended a sentence, it is short, has no final punctuation, does not end on a
+    connective word, and the next line starts with a capital letter."""
+    paragraphs: list[tuple[str, str]] = []
+    section, buf = "", ""
+    for i, line in enumerate(lines):
+        nxt = lines[i + 1] if i + 1 < len(lines) else ""
+        ended = not buf or buf.endswith((".", "!", "?", ":", ";"))
+        last = line.rsplit(" ", 1)[-1].lower()
+        if (ended and len(line) <= 70 and line[0].isupper() and not line.endswith((".", ",", ";", ":"))
+                and last not in CONNECTIVES and (not nxt or nxt[0].isupper())):
+            if buf:
+                paragraphs.append((section, buf))
+                buf = ""
+            section = line
+        elif buf and ended and line[0].isupper():
+            paragraphs.append((section, buf))
+            buf = line
+        elif buf.endswith("-") and line[0].islower():
+            buf = buf[:-1] + line  # a word hyphenated across lines
+        else:
+            buf = f"{buf} {line}".strip()
+    if buf:
+        paragraphs.append((section, buf))
+    return paragraphs
+
+
+def _merge_small(chunks: list[tuple[str, str]], min_chars: int, max_chars: int) -> list[tuple[str, str]]:
+    out: list[tuple[str, str]] = []
+    for section, text in chunks:
+        if out and (len(text) < min_chars or len(out[-1][1]) < min_chars) \
+                and len(out[-1][1]) + len(text) + 2 <= max_chars:
+            out[-1] = (out[-1][0] or section, f"{out[-1][1]}\n\n{text}")
+        else:
+            out.append((section, text))
+    return out
+
+
+def _pack(paragraphs: list[tuple[str, str]], target: int = TARGET_CHARS,
+          max_chars: int = MAX_CHARS) -> list[tuple[str, str]]:
+    """Greedy paragraph packing to ~target chars; overly long paragraphs are split on sentences
+    (never mid-sentence), and a chunk never crosses a section heading."""
     pieces: list[tuple[str, str]] = []
     for section, para in paragraphs:
-        if len(para) <= MAX_CHARS:
+        if len(para) <= max_chars:
             pieces.append((section, para))
             continue
         sentences = re.split(r"(?<=[.!?])\s+", para)
         buf = ""
         for sentence in sentences:
-            if buf and len(buf) + len(sentence) > TARGET_CHARS:
+            if buf and len(buf) + len(sentence) > target:
                 pieces.append((section, buf.strip()))
                 buf = ""
             buf += sentence + " "
@@ -78,7 +131,7 @@ def _pack(paragraphs: list[tuple[str, str]]) -> list[tuple[str, str]]:
     chunks: list[tuple[str, str]] = []
     section, buf = "", ""
     for sec, piece in pieces:
-        if buf and (len(buf) + len(piece) > TARGET_CHARS or sec != section):
+        if buf and (len(buf) + len(piece) > target or sec != section):
             chunks.append((section, buf.strip()))
             buf = ""
         if not buf:
@@ -86,12 +139,16 @@ def _pack(paragraphs: list[tuple[str, str]]) -> list[tuple[str, str]]:
         buf += piece + "\n\n"
     if buf.strip():
         chunks.append((section, buf.strip()))
-    return chunks
+    return _merge_small(chunks, min(MIN_CHARS, target // 2), max_chars)
 
 
-def _chunk_filing(doc: Document) -> list[tuple[str, str]]:
-    lines = doc.text.splitlines()
-    body = [ln for ln in lines[1:] if not ln.startswith(("Source: SEC EDGAR", "(Excerpt:"))]
+def _chunk_filing(doc: Document, target: int, max_chars: int) -> list[tuple[str, str]]:
+    # U+FFFD is an apostrophe or quote lost when the PDF text was extracted
+    lines = doc.text.replace("\ufffd", "'").splitlines()
+    body = [ln for ln in lines[1:] if not ln.startswith(("Source: ", "(Excerpt:"))]
+    if doc.doc_type in PDF_TYPES:
+        kept = [ln.strip() for ln in body if ln.strip() and not PAGE_NUMBER.fullmatch(ln.strip())]
+        return _pack(_reflow(kept), target, max_chars)
     paragraphs: list[tuple[str, str]] = []
     section = ""
     for line in (ln.strip() for ln in body):
@@ -101,7 +158,7 @@ def _chunk_filing(doc: Document) -> list[tuple[str, str]]:
             section = line
             continue
         paragraphs.append((section, line))
-    return _pack(paragraphs)
+    return _pack(paragraphs, target, max_chars)
 
 
 def _chunk_facts(doc: Document) -> list[tuple[str, str]]:
@@ -121,13 +178,18 @@ def _chunk_mandate(doc: Document) -> list[tuple[str, str]]:
     return out
 
 
-def chunk_document(doc: Document) -> list[Chunk]:
+def chunk_document(doc: Document, target: int | None = None, max_chars: int | None = None) -> list[Chunk]:
+    if target is None or max_chars is None:
+        from app.config import get_settings
+
+        s = get_settings()
+        target, max_chars = target or s.chunk_target_chars, max_chars or s.chunk_max_chars
     if doc.doc_type == "facts":
         parts = _chunk_facts(doc)
     elif doc.doc_type == "mandate":
         parts = _chunk_mandate(doc)
     else:
-        parts = _chunk_filing(doc)
+        parts = _chunk_filing(doc, target, max_chars)
     return [
         Chunk(
             chunk_id=f"{doc.doc_id}#{i:03d}",

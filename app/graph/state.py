@@ -8,11 +8,18 @@ class RunState(TypedDict, total=False):
     run_id: str
     client_id: str
     market: str
-    request: str
-    methods: list[str]
+    request: str  # already redacted (personal data removed before the run starts)
+    pii: dict[str, int]  # what was redacted, by kind
+
+    # guardrails: findings accumulate over the run, tagged with step and revision
+    input_guard: dict[str, Any]
+    guardrails: Annotated[list[dict[str, Any]], add]
+
+    # memory recalled at intake (episodic, semantic, procedural)
+    memory: dict[str, Any]
 
     # human-in-the-loop learning
-    preferences: list[dict[str, Any]]  # remembered from earlier reviews of this client
+    preferences: list[dict[str, Any]]  # semantic + screened procedural memory for this client
     feedback: Annotated[list[dict[str, Any]], add]  # "Change" requests in this run
     applied: dict[str, Any]  # what the preferences/feedback changed
     effective_rules: dict[str, Any]  # mandate rules tightened by the above
@@ -33,6 +40,7 @@ class RunState(TypedDict, total=False):
     evaluation: dict[str, Any]
     trades: dict[str, Any]
     approval: dict[str, Any]
+    approval_token: str | None  # signed; never copied into the run document
     execution: dict[str, Any]
 
     route: list[str]

@@ -6,7 +6,8 @@ Transports
   JSON-RPC session (initialize, tools/list, tools/call) over memory streams.
 * ``stdio``: each server is launched as ``python -m app.mcp.servers.<name>``.
 
-Agents never see the hub; each gets a `Toolbox` limited by `AGENT_TOOL_ACL` (least privilege).
+Agents never see the hub; each gets a `Toolbox` limited by `AGENT_TOOL_ACL` (least privilege),
+and one run may make at most `max_calls` tool calls.
 Every call becomes a Langfuse *tool* observation and an entry in the run's tool log.
 """
 
@@ -71,12 +72,15 @@ def is_allowed(agent: str, server: str, tool: str) -> bool:
     return f"{server}.{tool}" in allowed or f"{server}.*" in allowed
 
 
+SECRET_ARGS = frozenset({"approval_token"})
+
+
 def _preview(value: Any, depth: int = 0) -> Any:
-    """Small summary of arguments/results for the trace and the UI."""
+    """Small summary of arguments/results for the trace and the UI (credentials removed)."""
     if isinstance(value, dict):
         if depth >= 2:
             return f"<object: {len(value)} keys>"
-        return {k: _preview(v, depth + 1) for k, v in list(value.items())[:14]}
+        return {k: "<redacted>" if k in SECRET_ARGS else _preview(v, depth + 1) for k, v in list(value.items())[:14]}
     if isinstance(value, list):
         if len(value) <= 6 and all(isinstance(v, (str, int, float, bool)) for v in value):
             return value
@@ -101,11 +105,14 @@ def _jsonable(arguments: dict[str, Any]) -> dict[str, Any]:
 
 class MCPHub:
     def __init__(self, transport: str = "inprocess", timeout: float = 300.0,
-                 max_retries: int = 1, recorder: ToolRecorder | None = None) -> None:
+                 max_retries: int = 1, recorder: ToolRecorder | None = None,
+                 max_calls: int | None = None) -> None:
         self.transport = transport
         self.timeout = timeout
         self.max_retries = max_retries
         self.recorder = recorder
+        self.max_calls = max_calls  # tool-call budget for one run (unbounded consumption guard)
+        self.calls = 0
         self._clients: dict[str, Client] = {}
         self._tools: dict[str, dict[str, Any]] = {}
         self._stack: AsyncExitStack | None = None
@@ -159,6 +166,12 @@ class MCPHub:
             raise MCPToolError(f"unknown MCP server {server!r}")
         if tool not in self._tools[server]:
             raise MCPToolError(f"server {server!r} has no tool {tool!r}")
+        self.calls += 1
+        if self.max_calls is not None and self.calls > self.max_calls:
+            await self._record({"agent": agent, "server": server, "tool": tool, "status": "denied",
+                                "error": f"tool-call budget of {self.max_calls} exhausted",
+                                "started_at": datetime.now(UTC).isoformat(), "latency_ms": 0})
+            raise MCPPermissionError(f"tool-call budget of {self.max_calls} calls for this run is exhausted")
         payload = _jsonable(arguments)
         tracer = get_tracer()
         with tracer.section(f"mcp.{server}.{tool}", as_type="tool", input=_preview(payload),

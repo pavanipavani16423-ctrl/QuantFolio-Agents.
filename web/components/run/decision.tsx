@@ -6,6 +6,7 @@ import { Button, cn } from "@/components/ui";
 import { api } from "@/lib/api";
 import { money, pct } from "@/lib/format";
 import type { Run } from "@/lib/types";
+import { WhyThisPlan, sellReason } from "./why";
 
 type Mode = "idle" | "change" | "reject";
 
@@ -88,7 +89,10 @@ export function Decision({ run, onDecided }: { run: Run; onDecided: () => void }
         </p>
       </div>
 
-      <div className="mt-4 grid gap-3 sm:grid-cols-2">
+      <WhyThisPlan run={run} />
+
+      <p className="mt-5 text-sm font-semibold">The orders, if you approve</p>
+      <div className="mt-2 grid gap-3 sm:grid-cols-2">
         {[
           { label: "Sell", rows: sells, icon: ArrowDownRight, tone: "text-critical" },
           { label: "Buy", rows: buys, icon: ArrowUpRight, tone: "text-good" },
@@ -98,15 +102,20 @@ export function Decision({ run, onDecided }: { run: Run; onDecided: () => void }
               <g.icon className="size-4" /> {g.label} ({g.rows.length})
             </p>
             <ul className="text-sm">
-              {g.rows.slice(0, 6).map((t) => (
+              {g.rows.slice(0, 10).map((t) => (
                 <li key={t.ticker} className="flex justify-between gap-2 py-0.5">
-                  <span className="font-medium">{t.ticker}</span>
+                  <span className="min-w-0">
+                    <span className="font-medium">{t.ticker}</span>
+                    <span className="ml-2 text-xs text-subtle-foreground">
+                      {t.side === "sell" ? sellReason(t.ticker, run, t.weight_after) : t.weight_before > 0 ? "add more" : "new"}
+                    </span>
+                  </span>
                   <span className="tabular text-muted-foreground">
                     {pct(t.weight_before, 0)} → {pct(t.weight_after, 0)}
                   </span>
                 </li>
               ))}
-              {g.rows.length > 6 && <li className="text-xs text-subtle-foreground">+ {g.rows.length - 6} more</li>}
+              {g.rows.length > 10 && <li className="text-xs text-subtle-foreground">+ {g.rows.length - 10} more</li>}
               {!g.rows.length && <li className="text-muted-foreground">Nothing</li>}
             </ul>
           </div>
@@ -114,7 +123,12 @@ export function Decision({ run, onDecided }: { run: Run; onDecided: () => void }
       </div>
 
       {mode === "idle" && (
-        <div className="mt-5 grid gap-2 sm:grid-cols-3">
+        <>
+        <p className="mt-5 text-xs text-muted-foreground">
+          Approve places these as practice trades with a signed, single-use approval. Change asks the agents to re-plan.
+          Reject stops here. Nothing happens until you choose.
+        </p>
+        <div className="mt-2 grid gap-2 sm:grid-cols-3">
           <Button size="lg" onClick={() => send("approve")} disabled={busy}>
             {busy ? <Loader2 className="size-4 animate-spin" /> : <Check className="size-4" />} Approve
           </Button>
@@ -125,6 +139,7 @@ export function Decision({ run, onDecided }: { run: Run; onDecided: () => void }
             <X className="size-4" /> Reject
           </Button>
         </div>
+        </>
       )}
 
       {mode === "change" && (

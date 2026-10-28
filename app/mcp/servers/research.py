@@ -6,7 +6,7 @@ import anyio
 from mcp.server.mcpserver import MCPServer
 from mcp.server.mcpserver.exceptions import ToolError
 
-from app.rag.index import MODES, corpus_stats, get_index
+from app.rag.index import MODES, corpus_stats, ensure_client, get_index
 
 MAX_K = 20
 
@@ -27,6 +27,8 @@ async def search_documents(
     k = max(1, min(k, MAX_K))
 
     def run() -> dict[str, Any]:
+        if client_id:
+            ensure_client(client_id)  # a client added through another process (separate A2A service)
         hits, trace = get_index().search(query, k=k, mode=mode, tickers=tickers,
                                          doc_types=doc_types, client_id=client_id, market=market)
         return {

@@ -15,7 +15,7 @@ const instrument = Instrument_Serif({
 export const metadata: Metadata = {
   title: { default: "QuantFolio Agents", template: "%s · QuantFolio Agents" },
   description:
-    "An AI investment team: agents read SEC filings, check client rules and pick a portfolio with a normal and a (simulated) quantum computer. You approve every trade.",
+    "An AI investment team: agents read company reports, check client rules, pick a portfolio and explain it, with safety checks at every step. You approve every trade.",
 };
 
 export const viewport: Viewport = {
@@ -43,7 +43,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
               <span className="font-semibold text-foreground">QuantFolio Agents</span> · research
               project · paper trading only, not investment advice
             </p>
-            <p>Real SEC and NSE filings, Yahoo Finance prices · quantum results come from a simulator</p>
+            <p>Real SEC and NSE filings, Yahoo Finance prices · every step traced in Langfuse</p>
           </div>
         </footer>
       </body>

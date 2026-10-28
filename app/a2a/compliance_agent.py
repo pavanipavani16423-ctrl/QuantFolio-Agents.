@@ -16,6 +16,7 @@ from a2a.types import AgentSkill
 from app.a2a.common import SkillContext, SkillExecutor, agent_card
 from app.config import get_settings
 from app.data.universe import BY_TICKER, SECTORS
+from app.guardrails.injection import SPOTLIGHT_RULE, scan, spotlight
 from app.llm.gateway import LLMGateway
 from app.mcp.hub import MCPHub
 from app.schemas import ComplianceReport, MandateRules, RuleCheck, RuleCitation
@@ -136,7 +137,7 @@ async def extract_mandate_rules(data: dict[str, Any], ctx: SkillContext) -> dict
     client_id = data["client_id"]
     chunks: dict[str, dict] = {}
     searches = []
-    async with MCPHub(settings.mcp_transport, settings.mcp_timeout_seconds,
+    async with MCPHub(settings.mcp_transport, settings.mcp_timeout_seconds, max_calls=settings.max_tool_calls_per_run,
                       recorder=ctx.record_tool) as hub:
         tools = hub.toolbox("compliance_agent")
         for rule, query in RULE_QUERIES.items():
@@ -147,12 +148,24 @@ async def extract_mandate_rules(data: dict[str, Any], ctx: SkillContext) -> dict
             for hit in found["hits"]:
                 chunks.setdefault(hit["chunk_id"], hit)
     ordered = sorted(chunks.values(), key=lambda c: c["chunk_id"])
+    # retrieval rail: a policy passage that reads like an instruction to a model is used for
+    # neither reading (patterns or LLM), so it cannot loosen a limit
+    quarantined = []
+    if settings.guardrails_enabled:
+        kept = []
+        for c in ordered:
+            result = scan(c["text"])
+            if result.is_attack(settings.injection_block_threshold):
+                quarantined.append({"chunk_id": c["chunk_id"], "signals": result.signals})
+            else:
+                kept.append(c)
+        ordered = kept
     reference = rules_from_text(client_id, ordered)
 
     gateway = LLMGateway(settings, recorder=ctx.record_llm)
-    excerpts = "\n\n".join(f"[chunk {c['chunk_id']}]\n{c['text']}" for c in ordered)
+    excerpts = "\n\n".join(spotlight(i, f"chunk {c['chunk_id']}", c["text"]) for i, c in enumerate(ordered, 1))
     rules, method = await gateway.structured(
-        "compliance_extract_rules", MandateRules, SYSTEM,
+        "compliance_extract_rules", MandateRules, f"{SYSTEM} {SPOTLIGHT_RULE}",
         f"Client id: {client_id}\n\nPolicy excerpts:\n{excerpts}",
         fallback=lambda: reference,
     )
@@ -161,7 +174,8 @@ async def extract_mandate_rules(data: dict[str, Any], ctx: SkillContext) -> dict
     if method == "llm":
         rules, notes = _sane(rules, reference)
     return {"rules": rules.model_dump(), "method": method, "notes": notes,
-            "retrieved_chunks": [c["chunk_id"] for c in ordered], "searches": searches}
+            "retrieved_chunks": [c["chunk_id"] for c in ordered], "searches": searches,
+            "quarantined": quarantined}
 
 
 def check_portfolio_rules(rules: MandateRules, weights: dict[str, float],

@@ -3,8 +3,10 @@
 * `structured()` returns a validated Pydantic object (`with_structured_output`).
 * Every call is a Langfuse *generation* (model, prompt, output, token usage, latency) inside
   the calling agent's section, and is also reported to the run log.
-* Failures are retried once; after that the agent's deterministic fallback is used and the
-  run records a warning. Nothing fails silently.
+* Failures are retried (tool call, then JSON mode, with jittered backoff); after that the
+  agent's deterministic fallback is used and the run records a warning. Nothing fails silently.
+* A circuit breaker per model skips the provider for a minute after repeated failures, so an
+  outage costs one fast fallback per call instead of a timeout per call.
 * With LLM_PROVIDER=mock no model is called: the fallback runs, and the run log says so, so
   every answer is truthful about what produced it.
 """
@@ -22,6 +24,7 @@ from pydantic import BaseModel
 from app.config import Settings
 from app.llm.providers import LLMConfigError, create_chat_model
 from app.observability.tracing import get_tracer
+from app.reliability import backoff_delays, breaker
 
 logger = logging.getLogger(__name__)
 
@@ -64,15 +67,27 @@ class LLMGateway:
                                error=self.config_error)
             return fallback(), "rules"
 
+        circuit = breaker(f"llm:{self.provider}:{self.model_name}")
+        if not circuit.allow():
+            # the provider failed repeatedly just now: answer from rules at once, and say so
+            await self._record(agent=agent, status="circuit_open", provider=self.provider,
+                               model=self.model_name, error=f"circuit open after {circuit.failures} failures")
+            return fallback(), "rules_circuit_open"
         tracer = get_tracer()
         # First a tool call (structured output). Some models occasionally name the tool wrongly
         # (e.g. "memo" for "Memo") and the provider rejects the call; then ask for plain JSON
-        # that matches the schema instead.
+        # that matches the schema instead. HTTP rate limits are retried inside the SDK client
+        # (Retry-After); between our own attempts we wait with jittered exponential backoff.
         schema_hint = ("\n\nReturn ONLY a JSON object that matches this JSON schema, with no other text:\n"
                        + json.dumps(schema.model_json_schema()))
         plans = ["function_calling"] + ["json_mode"] * max(1, attempts - 1)
+        delays = list(backoff_delays(len(plans), base=0.5, cap=4.0))
         last_error = "unknown error"
         for attempt, method in enumerate(plans, 1):
+            if attempt > 1:
+                if not circuit.allow():  # the previous attempt opened the circuit
+                    break
+                await asyncio.sleep(delays[attempt - 2])
             runnable = self._chat.with_structured_output(schema, include_raw=True, method=method)
             prompt_user = user + schema_hint if method == "json_mode" else user
             messages = [SystemMessage(content=system), HumanMessage(content=prompt_user)]
@@ -100,9 +115,15 @@ class LLMGateway:
                                        model=self.model_name, attempt=attempt,
                                        latency_ms=round((time.perf_counter() - started) * 1000, 1),
                                        **usage)
+                    circuit.success()
                     return parsed, "llm"
                 except Exception as exc:  # noqa: BLE001 - provider, timeout or validation error
                     last_error = f"{type(exc).__name__}: {exc}"[:500]
+                    # only provider failures count toward the breaker; a malformed answer does not
+                    if isinstance(exc, ValueError):
+                        circuit.neutral()
+                    else:
+                        circuit.failure()
                     gen.update(level="ERROR", status_message=last_error)
                     await self._record(agent=agent, status="error", provider=self.provider,
                                        model=self.model_name, attempt=attempt, error=last_error,

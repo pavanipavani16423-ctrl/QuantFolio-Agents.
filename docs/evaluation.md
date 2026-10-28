@@ -1,136 +1,183 @@
 # Evaluation results
 
-All numbers below were produced by the scripts in `scripts/` on the committed data snapshot.
-The raw results are in `experiments/results/`. Re-run them with:
+Every number here was produced by a script in `scripts/` on the committed data snapshot. The raw
+results are in `experiments/results/`, and `REPORT.md` there sums up the latest of each.
 
 ```bash
-uv run python scripts/eval_rag.py            # writes rag_eval_<ts>.json + Langfuse experiments
-uv run python scripts/quantum_experiment.py  # writes quantum_eval_<ts>.json
+uv run python scripts/run_evals.py          # guardrails, citation gate, retrieval -> REPORT.md
+uv run python scripts/run_evals.py --tune   # + the RAG configuration sweep (about an hour on CPU)
+uv run pytest                               # 96 tests, offline
+uv run --with pgserver python scripts/test_postgres.py   # the same tests on Postgres
 ```
 
 ## 1. Retrieval (hybrid RAG)
 
-**Test set**: 78 questions with the chunk ids that answer them (`data/eval/golden_rag.json`):
+**Test set** (`scripts/eval_rag.py`, also a Langfuse dataset `quantfolio-rag-golden`): 78
+questions.
 
-* 38 *facts* questions ("What total revenue did Apple Inc. report for fiscal year 2025?"),
-  generated from the US XBRL and Indian reported-financials documents;
-* 12 *mandate* questions about the four investment policy statements;
-* 18 US *risk* questions, hand-written to paraphrase one specific 10-K risk-factor passage in
-  plain words (e.g. "Why are fake medicines a risk for Pfizer?" for the passage on
-  counterfeit products), so keyword search cannot simply match the filing's wording;
-* 10 India *risk* questions written the same way about annual-report MD&A, risk and BRSR
-  passages (e.g. "How many steps are in Asian Paints' process for handling risks?").
-
-Each mode retrieves the top 6 over the **whole corpus** (4,585 chunks, both markets, no
-filters).
-
-| Mode | hit rate@6 | recall@6 | MRR@6 | RAGAS ID context recall | RAGAS ID context precision | median latency |
-|---|---|---|---|---|---|---|
-| BM25 (keyword) | 84.6% | 82.7% | 0.759 | 0.827 | 0.143 | 9 ms |
-| Dense (bge-small) | **96.2%** | **95.5%** | 0.822 | **0.955** | 0.171 | 10 ms |
-| Hybrid (RRF) | 94.9% | 93.0% | 0.836 | 0.930 | 0.162 | 19 ms |
-| Hybrid + rerank | 94.9% | 94.2% | **0.924** | 0.942 | 0.167 | 1.3 s |
-
-Hit rate by question type:
-
-| Mode | facts | mandate | US risk (paraphrased) | India risk (paraphrased) |
-|---|---|---|---|---|
-| BM25 | 100% | 100% | 55.6% | 60% |
-| Dense | 97.4% | 100% | **88.9%** | **100%** |
-| Hybrid | 100% | 100% | 77.8% | **100%** |
-| Hybrid + rerank | 100% | 100% | 77.8% | **100%** |
-
-**What this shows, honestly:**
-
-* Exact-token questions (company names, fiscal years, "Section 3.2") are easy for every
-  mode except dense, which misses one facts question.
-* On paraphrased questions, keyword search fails almost half the time; dense retrieval is
-  much better. Plain RRF fusion inherits part of BM25's misses on the US questions.
-* The cross-encoder **reranker gives the best ranking** (MRR 0.92: the right passage is
-  usually first), which matters most for the answer quality and for RAGAS context
-  precision. It is also the slowest stage on a laptop CPU.
-* Adding the Indian corpus more than doubled the index without hurting the US questions.
-* ID-based context precision is low for every mode by construction: one or two relevant
-  chunks among six retrieved.
-* The default (`hybrid_rerank`) was chosen before this test set existed; the test set was
-  not used to tune anything. A weighted fusion (more weight on dense) is an obvious next
-  experiment.
-
-Each mode is also a Langfuse experiment run on the dataset `quantfolio-rag-golden`, with
-per-item scores, so individual misses can be inspected.
-
-**LLM-judged metrics** (RAGAS, judge `qwen/qwen3.8-27b` on Groq): the research model
-(`gpt-oss-120b`) answered 8 risk questions (4 US, 4 India) from the `hybrid_rerank` top 6.
-
-| Metric | score | items |
+| Kind | Questions | How they are made |
 |---|---|---|
-| Faithfulness (claims supported by the retrieved passages) | **0.79** | 8 |
-| Factual correctness (F1 of claims vs the reference passage) | 0.16 | 7 (1 judge error) |
+| facts | 38 | "What total revenue did Apple Inc. report for fiscal year 2025?", from the US XBRL and Indian reported-financials documents |
+| mandate | 12 | questions about the four demo investment policies |
+| US risk | 18 | hand-written to reword one 10-K risk-factor passage ("Why are fake medicines a risk for Pfizer?" for the passage on counterfeit products), so keyword search cannot just match the filing's words |
+| India risk | 10 | the same, for annual-report MD&A, risk and BRSR passages |
 
-Factual correctness is low by construction here: the reference is the whole filing passage,
-while the answer is two to four sentences, so the recall half of the F1 penalises everything
-the answer leaves out. Faithfulness is the meaningful number for grounding; a short
-hand-written reference answer per question would make factual correctness informative. Per-run RAGAS scores
-(faithfulness, answer relevancy, context precision and relevance, memo rubric) are attached
-to every run's Langfuse trace.
+The answer passage is found by an anchor phrase from its text, not by a chunk id, so the set
+stays valid when the chunking changes. Each mode retrieves the top 6 over the whole corpus
+(2,900 chunks, both markets, no filters).
 
-## 2. Quantum (QAOA) vs exact search
+| Mode | hit rate@6 | MRR@6 | facts | mandate | US risk | India risk | RAGAS ID context recall |
+|---|---|---|---|---|---|---|---|
+| BM25 (keyword) | 85.9% | 0.743 | 100% | 100% | 44.4% | 90% | 0.859 |
+| Dense (bge-small) | 94.9% | 0.808 | 97.4% | 100% | **83.3%** | 100% | 0.949 |
+| Hybrid (RRF) | 92.3% | 0.817 | 100% | 100% | 66.7% | 100% | 0.923 |
+| **Hybrid + rerank** | **94.9%** | **0.901** | 100% | 100% | 77.8% | **100%** | 0.949 |
 
-Every client's real selection problem (prices of the training window), QAOA with
-COBYLA (60 iterations, linear-ramp start), 2,048 shots, seed 7. "Gap" compares QAOA's best
-valid sample with the exhaustive optimum.
+**LLM-judged** (RAGAS, judge `qwen/qwen3.8-27b` on Groq): the research model answered 8 risk
+questions (4 US, 4 India) from the hybrid + rerank top 6.
+* **Faithfulness** (claims supported by the passages): **0.92**.
+* Factual correctness: 0.19. This is low by construction: the reference is the whole passage,
+  while the answer is two to four sentences.
 
-| Client | qubits | pick k | design | p | gap to optimum | P(valid) | P(optimum) | approx. ratio | CX gates | QAOA time | exact time |
-|---|---|---|---|---|---|---|---|---|---|---|---|
-| C-101 | 20 | 10 | XY | 1 | **0%** (optimal) | 100% | 0.016% | 0.674 | 1,796 | 11.8 s | 0.36 s |
-| C-101 | 20 | 10 | XY | 2 | **0%** (optimal) | 100% | 0.048% | 0.681 | 2,256 | 15.6 s | 0.36 s |
-| C-101 | 20 | 10 | XY | 3 | **0%** (optimal) | 100% | 0.064% | 0.746 | 2,716 | 18.8 s | 0.36 s |
-| C-101 | 20 | 10 | X (penalty) | 1 | 10.99% | 7% | 0.000% | 0.538 | 380 | 29.7 s | 0.36 s |
-| C-101 | 20 | 10 | X (penalty) | 2 | 11.86% | 47% | 0.000% | 0.539 | 760 | 107.4 s | 0.36 s |
-| C-101 | 20 | 10 | X (penalty) | 3 | 6.19% | 62% | 0.000% | 0.535 | 1,140 | 137.4 s | 0.36 s |
-| C-102 | 18 | 8 | XY | 1 | 3.14% | 100% | 0.039% | 0.643 | 1,356 | 2.5 s | 0.05 s |
-| C-102 | 18 | 8 | XY | 2 | **0%** (optimal) | 100% | 0.117% | 0.668 | 1,734 | 3.2 s | 0.05 s |
-| C-102 | 18 | 8 | XY | 3 | **0%** (optimal) | 100% | 0.013% | 0.692 | 2,112 | 3.3 s | 0.05 s |
-| C-102 | 18 | 8 | X (penalty) | 1 | 7.13% | 17% | 0.000% | 0.473 | 306 | 7.0 s | 0.05 s |
-| C-102 | 18 | 8 | X (penalty) | 2 | 10.83% | 4% | 0.000% | 0.484 | 612 | 23.1 s | 0.05 s |
-| C-102 | 18 | 8 | X (penalty) | 3 | 12.62% | 2% | 0.000% | 0.507 | 918 | 32.8 s | 0.05 s |
-| C-103 | 19 | 12 | XY | 1 | 0.08% | 100% | 0.024% | 0.684 | 1,810 | 5.7 s | 0.07 s |
-| C-103 | 19 | 12 | XY | 2 | **0%** (optimal) | 100% | 0.043% | 0.701 | 2,228 | 5.6 s | 0.07 s |
-| C-103 | 19 | 12 | XY | 3 | 0.08% | 100% | 0.014% | 0.724 | 2,646 | 5.4 s | 0.07 s |
-| C-103 | 19 | 12 | X (penalty) | 1 | 1.46% | 41% | 0.001% | 0.502 | 342 | 25.2 s | 0.07 s |
-| C-103 | 19 | 12 | X (penalty) | 2 | **0%** (optimal) | 41% | 0.001% | 0.502 | 684 | 42.8 s | 0.07 s |
-| C-103 | 19 | 12 | X (penalty) | 3 | 3.83% | 15% | 0.000% | 0.494 | 1,026 | 61.4 s | 0.07 s |
-| C-201 (India) | 17 | 8 | XY | 1 | 10.31% | 100% | 0.018% | 0.647 | 1,244 | 1.2 s | 0.03 s |
-| C-201 (India) | 17 | 8 | XY | 2 | 9.87% | 100% | 0.020% | 0.657 | 1,584 | 1.4 s | 0.03 s |
-| C-201 (India) | 17 | 8 | XY | 3 | 9.87% | 100% | 0.012% | 0.658 | 1,924 | 1.6 s | 0.03 s |
-| C-201 (India) | 17 | 8 | X (penalty) | 1 | 15.30% | 19% | 0.001% | 0.492 | 272 | 3.0 s | 0.03 s |
-| C-201 (India) | 17 | 8 | X (penalty) | 2 | 74.31% | 0% | 0.000% | 0.407 | 544 | 9.0 s | 0.03 s |
-| C-201 (India) | 17 | 8 | X (penalty) | 3 | 22.51% | 4% | 0.000% | 0.486 | 816 | 13.0 s | 0.03 s |
+**What this shows:**
+* Exact-token questions (company names, fiscal years, "Section 3.2") are easy for every mode.
+* On reworded risk questions, keyword search fails most often and dense search finds the most.
+  Plain RRF inherits part of BM25's misses.
+* The cross-encoder reranker gives the best ranking: MRR 0.90, so the right passage is usually
+  first. That matters most for the answer, because the model reads the top passages first.
+* Median latency of hybrid + rerank is about 1.4 s on an idle laptop CPU. (The latest run shows
+  3.8 s because it shared the CPU with other jobs.)
 
-Summary:
+## 2. A data-quality fix found by testing a real client
 
-| Design | runs | optimum found | mean gap | mean P(valid) | mean approx. ratio | mean time |
-|---|---|---|---|---|---|---|
-| XY mixer + Dicke start | 12 | **6/12** (3/4 at p = 2, the default) | 2.78% | **100%** | 0.681 | 6.3 s |
-| X mixer + penalty | 12 | 1/12 | 14.75% | 22% | 0.497 | 41.0 s |
+Testing an added client end to end, the research report covered TCS with one passage and HDFC
+Bank with none. The trace showed three causes:
+* The intake model had dropped HDFC Bank from its ticker list.
+* One search over three companies let one of them take four of six passages.
+* The chunker cut the Indian reports into fragments.
 
-**What this shows, honestly:**
+The Indian reports are PDF text, with a line break in the middle of most sentences. Any short
+line starting with a capital letter was taken for a heading, and chunks never cross a heading.
+So **18% of all chunks (826 of 4,585) were fragments under 120 characters** ("in building the
+Nilaya brand as a top"). HDFC Bank's best BRSR "passage" was its "Source: …" line.
 
-* Building the constraint into the circuit matters more than depth. The XY design never
-  wastes a shot on an invalid portfolio and finds the optimum in half the runs (3 of 4 at the
-  default depth); the
-  penalty-based standard QAOA produces mostly invalid bitstrings (22% valid on average) and
-  falls up to 74% short (15% on average).
-* The probability of measuring the optimum directly is tiny (at most 0.12%). QAOA finds the
-  optimum because the best of 2,048 measured portfolios is kept. The approximation ratio
-  (0.64-0.75) shows the state is biased toward good portfolios, not concentrated on the best.
-* Deeper is not always better at a fixed 60-iteration budget (C-103, p = 3).
-* The Indian mandate (C-201, 17 qubits) is the hardest case: no QAOA run hit the optimum
-  (best gap 9.9%, XY at p = 2 and 3), while the penalty design fell 15-74% short with
-  0.4-19% valid samples.
-* One round of classical 1-swap local search (the hybrid method) reaches the optimum from
-  every QAOA answer in all 24 cases.
-* Exhaustive classical search solves each instance in 0.03-0.4 s; QAOA on the simulator takes
-  1-140 s. **No quantum advantage is observed or claimed.** The circuits (1,200-2,700 CX
-  gates for XY) are also too deep for today's noisy hardware without error mitigation.
+The fixes:
+* **The chunker reflows PDF text** into sentences. A line is a heading only if it stands alone.
+  Chunks under 300 characters are merged into a neighbour, and source lines and page numbers are
+  dropped.
+* **One filtered search per company**, then the passages are merged.
+* **The intake model's ticker list is merged with a name matcher.**
+* **The extractive fallback quotes whole sentences only.**
 
+| | before | after |
+|---|---|---|
+| chunks | 4,585 | 2,900 |
+| chunks under 120 characters | 826 (18%) | 0 |
+| hit rate@6, hybrid + rerank | 94.9% | 94.9% |
+| MRR@6, hybrid + rerank | 0.924 | 0.901 |
+| RAGAS faithfulness (8 answers) | 0.79 | **0.92** |
+| passages for TCS / HDFC Bank / Hindustan Unilever, live question | 1 / 1 / 4 (one a source line) | 2 / 2 / 2 |
+| the model's first draft passes the checks (that question) | no, extractive fallback | yes |
+
+The answers became more grounded, and retrieval found the answer passage as often as before.
+Ranking moved by about two questions of 78 (the answer second instead of first), which is
+within noise for this set. Each fix has a regression test.
+
+## 3. RAG configuration sweep
+
+`scripts/tune_rag.py`, a staged sweep on the 78 questions (relevance by text anchors, so
+different chunkings compare fairly). Each stage starts from the best of the previous one. It
+ran before the chunking fix of section 2, which changes the Indian chunk boundaries but not the
+settings compared here.
+
+| Stage | Option | hit rate | MRR | latency |
+|---|---|---|---|---|
+| A. chunk size (hybrid + rerank) | 500 characters (6,811 chunks) | 92.3% | 0.892 | 1.4 s |
+| | 800 (5,230) | 92.3% | 0.902 | 1.8 s |
+| | **1100 (4,585)** | **94.9%** | **0.934** | 2.2 s |
+| B. embedding (dense alone / hybrid + rerank) | **bge-small** | 96.2% / 94.9% | 0.829 / **0.934** | |
+| | bge-small + query instruction | 96.2% / 94.9% | 0.847 / 0.934 | |
+| | bge-base | 97.4% / 94.9% | 0.850 / 0.934 | |
+| | bge-base + query instruction | 94.9% / 94.9% | 0.846 / 0.934 | |
+| C. reranker | **MiniLM-L-6** | 94.9% | **0.934** | **1.4 s** |
+| | MiniLM-L-12 | 96.2% | 0.923 | 3.2 s |
+| | jina-reranker-v1-turbo | 96.2% | 0.921 | 1.6 s |
+| | bge-reranker-v2-m3 (int8) | 94.9% | 0.912 | 20.8 s |
+| D. depth (with MiniLM-L-12) | candidates 20/40 × rerank 10/20/30, k 4/6/8 | 94.9-97.4% | 0.921-0.927 | 1.3-5.7 s |
+
+**Decisions:**
+* 1100-character chunks.
+* bge-small without the query instruction. The bigger model helps dense search alone, but not
+  after reranking.
+* **MiniLM-L-6.** The sweep's automatic pick was MiniLM-L-12 (one more question found), but it
+  ranks worse and takes twice as long. One question in 78 is noise.
+* 40 candidates, rerank depth 20, top 6. Top 8 finds 97.4%, but it means 30% more text in every
+  prompt.
+
+## 4. Guardrails red team
+
+`scripts/eval_guardrails.py`, also the Langfuse dataset `quantfolio-guardrails-redteam`. The
+attacks are split into a set the rules were written against and two held-out sets written
+afterwards. The second held-out set was written before the semantic stage was calibrated.
+
+| Test set | cases | attacks stopped, patterns only | attacks stopped, two stages | normal requests allowed |
+|---|---|---|---|---|
+| training | 50 | 100% | 100% | 100% |
+| held-out 1 | 15 | 60% | 70% | 80% |
+| held-out 2 | 15 | 50% | **87.5%** | 100% |
+
+* **Personal data:** 100% of 8 cases redacted (email, phone, PAN, Aadhaar, card with Luhn, SSN,
+  IFSC, account number); 5 clean texts left untouched.
+* **Poisoned documents:** an instruction planted into 200 real report passages. 100% were set
+  aside, and 100% of the clean versions were kept.
+* **Semantic stage:** embedding similarity to 13 generic attack intents. The threshold is 0.706:
+  the highest similarity of any normal request (0.686) plus a margin.
+
+**What this shows:** the rules are perfect on what they were written for and clearly weaker on
+unseen attacks. The meaning-based stage closes much of that gap. That is why the actions do not
+depend on the guardrails alone: orders need a signed approval bound to the exact orders, and the
+broker enforces hard limits.
+
+## 5. Citation gate
+
+`scripts/calibrate_citations.py`. Every sentence with a citation [n] in a research answer is
+scored against the passage it cites by the cross-encoder. The test pairs:
+* supported: a sentence from the passage;
+* hard negative: a sentence from another passage of the same company;
+* easy negative: a sentence from another company.
+
+279 pairs. The threshold is the 5th percentile of supported scores: **1.24**.
+
+| | share |
+|---|---|
+| supported claims accepted | 95.0% |
+| hard negatives rejected | 94.3% |
+| easy negatives rejected | 100% |
+
+A research answer is blocked when more than a third of its cited claims fail. It is then
+rewritten once with the findings as feedback, and if it fails again it falls back to quoting
+the passages.
+
+## 6. Agents and the whole system
+
+* **Rule extraction:** the compliance agent reads every rule of all four demo policies correctly
+  (`output_rule_extraction_accuracy` = 1.0). For an added client, a test checks the round trip:
+  form, then policy document, then the same rules back.
+* **Every recommended portfolio passes every rule**, and excluded sectors and companies never
+  appear (end-to-end tests on all clients).
+* **96 tests**, each run on SQLite and on Postgres. They cover the full HTTP flow:
+  * guardrails at every layer;
+  * pause for approval, then approve, change and reject;
+  * signed single-use approvals, including concurrent approvals;
+  * broker limits;
+  * memory and poisoned notes;
+  * the audit chain;
+  * adding and removing a client;
+  * the A2A fallback.
+
+## What is not measured yet
+
+* Factual correctness against short hand-written reference answers (the current reference is the
+  whole passage).
+* Multi-turn and adversarial conversations beyond single requests.
+* Portfolio quality beyond the short out-of-sample backtest (no transaction costs).

@@ -1,4 +1,4 @@
-import type { ChangeRequest, Client, Preference, Run, RunSummary } from "./types";
+import type { AuditEntry, ChangeRequest, Client, ClientRules, Memory, NewClient, Preference, Run, RunSummary } from "./types";
 
 export const API_URL = (process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000").replace(/\/$/, "");
 const API_KEY = process.env.NEXT_PUBLIC_API_KEY ?? "";
@@ -66,7 +66,7 @@ export const api = {
   resetAccount: (id: string) => request(`/api/v1/clients/${id}/reset`, { method: "POST" }),
   runs: (limit = 30) => request<RunSummary[]>(`/api/v1/runs?limit=${limit}`),
   run: (id: string) => request<Run>(`/api/v1/runs/${id}`),
-  startRun: (body: { client_id: string; request: string; methods: string[] }) =>
+  startRun: (body: { client_id: string; request: string }) =>
     request<Run>("/api/v1/runs", { method: "POST", body: JSON.stringify(body) }),
   decide: (
     id: string,
@@ -75,9 +75,29 @@ export const api = {
   preferences: (clientId: string) => request<Preference[]>(`/api/v1/clients/${clientId}/preferences`),
   forgetPreference: (clientId: string, id: number) =>
     request(`/api/v1/clients/${clientId}/preferences/${id}`, { method: "DELETE" }),
+  memory: (clientId: string) => request<Memory>(`/api/v1/clients/${clientId}/memory`),
+  forgetClient: (clientId: string) => request(`/api/v1/clients/${clientId}/memory`, { method: "DELETE" }),
+  audit: (runId: string) =>
+    request<{ entries: AuditEntry[]; chain: { valid: boolean; entries: number; broken_at: number | null } }>(
+      `/api/v1/runs/${runId}/audit`,
+    ),
   chunk: (id: string) => request<{ chunk_id: string; title: string; section: string; text: string; source_url: string | null }>(
     `/api/v1/chunks/${encodeURIComponent(id)}`,
   ),
+  universe: (market: string) =>
+    request<{ market: string; assets: { ticker: string; name: string; sector: string }[] }>(`/api/v1/universe?market=${market}`),
+  previewClient: (body: NewClient) =>
+    request<{ problems: string[]; policy: string; rules_summary: string }>("/api/v1/clients/preview", {
+      method: "POST",
+      body: JSON.stringify(body),
+    }),
+  createClient: (body: NewClient) =>
+    request<Client & { personal_data_removed: Record<string, number> }>("/api/v1/clients", {
+      method: "POST",
+      body: JSON.stringify(body),
+    }),
+  removeClient: (clientId: string) => request(`/api/v1/clients/${clientId}`, { method: "DELETE" }),
+  clientRules: (clientId: string) => request<ClientRules>(`/api/v1/clients/${clientId}/rules`),
   mandate: (clientId: string) => request<{ title: string; text: string }>(`/api/v1/mandates/${clientId}`),
   system: () => request<SystemInfo>("/api/v1/system"),
   evaluations: () => request<Record<string, unknown>>("/api/v1/evaluations"),

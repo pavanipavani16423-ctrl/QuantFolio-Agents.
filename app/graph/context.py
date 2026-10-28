@@ -29,28 +29,32 @@ class StepSpec:
 
 
 STEPS: dict[str, StepSpec] = {
-    "intake": StepSpec(1, "Intake agent - understand the request, recall learned preferences",
-                       "agent", "Reading your request"),
-    "research": StepSpec(2, "Research agent - hybrid RAG over company disclosures", "agent",
+    "guard": StepSpec(1, "Input guardrails - personal data, prompt injection, scope policy",
+                      "guardrail", "Safety check on your request"),
+    "intake": StepSpec(2, "Intake agent - understand the request, recall memory",
+                       "agent", "Reading your request and what we remember"),
+    "research": StepSpec(3, "Research agent - hybrid RAG with retrieval and output guardrails", "agent",
                          "Reading company annual reports"),
-    "risk": StepSpec(3, "Risk agent (A2A) - market risk profile", "agent",
+    "risk": StepSpec(4, "Risk agent (A2A) - market risk profile", "agent",
                      "Measuring how risky each stock is"),
-    "mandate": StepSpec(4, "Compliance agent (A2A) - read the client mandate", "agent",
+    "mandate": StepSpec(5, "Compliance agent (A2A) - read the client mandate", "agent",
                         "Reading the client's investment rules"),
-    "optimize": StepSpec(5, "Portfolio optimizer - classical vs quantum vs hybrid", "agent",
-                         "Choosing the best stocks: normal vs quantum computer"),
-    "backtest": StepSpec(6, "Backtest - out-of-sample performance", "tool",
+    "optimize": StepSpec(6, "Portfolio optimizer - exact search vs baseline", "agent",
+                         "Choosing the best combination of stocks"),
+    "backtest": StepSpec(7, "Backtest - out-of-sample performance", "tool",
                          "Testing the portfolio on recent months it never saw"),
-    "check": StepSpec(7, "Compliance and risk check (A2A)", "guardrail",
+    "check": StepSpec(8, "Compliance and risk check (A2A)", "guardrail",
                       "Double-checking every rule"),
-    "report": StepSpec(8, "Report writer - investment memo", "agent",
-                       "Writing the recommendation"),
-    "evaluate": StepSpec(9, "Quality evaluation - RAGAS and checks", "evaluator",
+    "report": StepSpec(9, "Report writer - memo with output guardrails", "agent",
+                       "Writing and checking the recommendation"),
+    "evaluate": StepSpec(10, "Quality evaluation - RAGAS and checks", "evaluator",
                          "Scoring the quality of the answer"),
-    "trades": StepSpec(10, "Trade proposal - paper broker (MCP)", "tool",
+    "trades": StepSpec(11, "Trade proposal - paper broker (MCP) with order limits", "tool",
                        "Preparing the buy and sell orders"),
-    "approval": StepSpec(11, "Human approval", "span", "Waiting for the advisor to approve"),
-    "execute": StepSpec(12, "Paper trade execution (MCP)", "tool", "Placing the practice trades"),
+    "approval": StepSpec(12, "Human approval - signed approval token", "span",
+                         "Waiting for the advisor to decide"),
+    "execute": StepSpec(13, "Paper trade execution (MCP) - token verified", "tool",
+                        "Placing the practice trades"),
 }
 
 
@@ -77,11 +81,17 @@ class RunContext:
     hub: MCPHub | None = None
     trace_id: str | None = None
     attempt_counter: dict[str, int] = field(default_factory=dict)
-    # learned client preferences (read at the start, written after a review)
-    load_preferences: Callable[[str], Awaitable[list[dict[str, Any]]]] | None = None
-    save_preferences: Callable[[list[dict[str, Any]]], Awaitable[None]] | None = None
+    # long-term memory (episodic, semantic, procedural, research cache)
+    memory: Any = None  # app.memory.MemoryManager
+    # append to the hash-chained audit log
+    audit: Callable[..., Awaitable[Any]] | None = None
     # run work after this step without blocking the graph (used for RAGAS scoring)
     spawn: Callable[[Any], None] | None = None
+
+    async def record(self, action: str, actor: str = "system", **details: Any) -> None:
+        if self.audit is not None:
+            await self.audit(actor=actor, action=action, run_id=self.run_id,
+                             client_id=details.pop("client_id", None), details=details)
 
     @asynccontextmanager
     async def step(self, key: str, input: Any = None) -> AsyncIterator[StepHandle]:

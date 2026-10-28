@@ -20,7 +20,7 @@ NAME = "risk-agent"
 
 async def market_risk_profile(data: dict[str, Any], ctx: SkillContext) -> dict[str, Any]:
     settings = get_settings()
-    async with MCPHub(settings.mcp_transport, settings.mcp_timeout_seconds,
+    async with MCPHub(settings.mcp_transport, settings.mcp_timeout_seconds, max_calls=settings.max_tool_calls_per_run,
                       recorder=ctx.record_tool) as hub:
         stats = await hub.toolbox("risk_agent").call(
             "market", "get_market_stats", tickers=data["tickers"],
@@ -39,7 +39,7 @@ async def market_risk_profile(data: dict[str, Any], ctx: SkillContext) -> dict[s
 
 async def portfolio_risk_check(data: dict[str, Any], ctx: SkillContext) -> dict[str, Any]:
     settings = get_settings()
-    async with MCPHub(settings.mcp_transport, settings.mcp_timeout_seconds,
+    async with MCPHub(settings.mcp_transport, settings.mcp_timeout_seconds, max_calls=settings.max_tool_calls_per_run,
                       recorder=ctx.record_tool) as hub:
         risk = await hub.toolbox("risk_agent").call(
             "market", "get_portfolio_risk", weights=data["weights"],

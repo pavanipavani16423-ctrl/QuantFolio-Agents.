@@ -1,7 +1,7 @@
 {
-  "hash": "c7234730431b0bfc",
-  "chunks": 4585,
+  "hash": "a2b4fc8e7edba5f9",
+  "chunks": 2900,
   "model": "BAAI/bge-small-en-v1.5",
   "dim": 384,
-  "build_seconds": 871.4
+  "build_seconds": 713.8
 }

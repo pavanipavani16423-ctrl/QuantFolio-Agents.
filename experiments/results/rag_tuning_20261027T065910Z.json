@@ -1,0 +1,499 @@
+{
+  "created": "2026-10-27T06:51:32.837135+00:00",
+  "k": 6,
+  "items": 78,
+  "stages": {
+    "A_chunk_size": [
+      {
+        "chunk_target": 500,
+        "chunks": 6811,
+        "mode": "dense",
+        "hit_rate": 0.9231,
+        "mrr": 0.7686,
+        "recall": 0.9167,
+        "latency_ms": 15.2,
+        "context_chars": 2512,
+        "by_kind": {
+          "facts": 0.9737,
+          "mandate": 1.0,
+          "risk_india": 0.8,
+          "risk": 0.8333
+        }
+      },
+      {
+        "chunk_target": 500,
+        "chunks": 6811,
+        "mode": "hybrid",
+        "hit_rate": 0.9103,
+        "mrr": 0.8006,
+        "recall": 0.8974,
+        "latency_ms": 35.3,
+        "context_chars": 2721,
+        "by_kind": {
+          "facts": 1.0,
+          "mandate": 1.0,
+          "risk_india": 0.7,
+          "risk": 0.7778
+        }
+      },
+      {
+        "chunk_target": 500,
+        "chunks": 6811,
+        "mode": "hybrid_rerank",
+        "hit_rate": 0.9231,
+        "mrr": 0.8921,
+        "recall": 0.9167,
+        "latency_ms": 1441.0,
+        "context_chars": 2739,
+        "by_kind": {
+          "facts": 1.0,
+          "mandate": 1.0,
+          "risk_india": 0.8,
+          "risk": 0.7778
+        }
+      },
+      {
+        "chunk_target": 800,
+        "chunks": 5230,
+        "mode": "dense",
+        "hit_rate": 0.9231,
+        "mrr": 0.7776,
+        "recall": 0.9167,
+        "latency_ms": 15.2,
+        "context_chars": 3071,
+        "by_kind": {
+          "facts": 0.9737,
+          "mandate": 1.0,
+          "risk_india": 0.8,
+          "risk": 0.8333
+        }
+      },
+      {
+        "chunk_target": 800,
+        "chunks": 5230,
+        "mode": "hybrid",
+        "hit_rate": 0.8974,
+        "mrr": 0.8088,
+        "recall": 0.8846,
+        "latency_ms": 35.7,
+        "context_chars": 3128,
+        "by_kind": {
+          "facts": 1.0,
+          "mandate": 1.0,
+          "risk_india": 0.7,
+          "risk": 0.7222
+        }
+      },
+      {
+        "chunk_target": 800,
+        "chunks": 5230,
+        "mode": "hybrid_rerank",
+        "hit_rate": 0.9231,
+        "mrr": 0.9017,
+        "recall": 0.9167,
+        "latency_ms": 1765.5,
+        "context_chars": 3243,
+        "by_kind": {
+          "facts": 1.0,
+          "mandate": 1.0,
+          "risk_india": 0.8,
+          "risk": 0.7778
+        }
+      },
+      {
+        "chunk_target": 1100,
+        "chunks": 4585,
+        "mode": "dense",
+        "hit_rate": 0.9615,
+        "mrr": 0.8288,
+        "recall": 0.9551,
+        "latency_ms": 28.5,
+        "context_chars": 3419,
+        "by_kind": {
+          "facts": 0.9737,
+          "mandate": 1.0,
+          "risk_india": 1.0,
+          "risk": 0.8889
+        }
+      },
+      {
+        "chunk_target": 1100,
+        "chunks": 4585,
+        "mode": "hybrid",
+        "hit_rate": 0.9487,
+        "mrr": 0.844,
+        "recall": 0.9295,
+        "latency_ms": 70.4,
+        "context_chars": 3448,
+        "by_kind": {
+          "facts": 1.0,
+          "mandate": 1.0,
+          "risk_india": 1.0,
+          "risk": 0.7778
+        }
+      },
+      {
+        "chunk_target": 1100,
+        "chunks": 4585,
+        "mode": "hybrid_rerank",
+        "hit_rate": 0.9487,
+        "mrr": 0.9338,
+        "recall": 0.9423,
+        "latency_ms": 2239.9,
+        "context_chars": 3615,
+        "by_kind": {
+          "facts": 1.0,
+          "mandate": 1.0,
+          "risk_india": 1.0,
+          "risk": 0.7778
+        }
+      }
+    ],
+    "B_embedding": [
+      {
+        "embedding": "BAAI/bge-small-en-v1.5",
+        "query_prefix": false,
+        "mode": "dense",
+        "hit_rate": 0.9615,
+        "mrr": 0.8288,
+        "recall": 0.9551,
+        "latency_ms": 19.1,
+        "context_chars": 3419,
+        "by_kind": {
+          "facts": 0.9737,
+          "mandate": 1.0,
+          "risk_india": 1.0,
+          "risk": 0.8889
+        }
+      },
+      {
+        "embedding": "BAAI/bge-small-en-v1.5",
+        "query_prefix": false,
+        "mode": "hybrid_rerank",
+        "hit_rate": 0.9487,
+        "mrr": 0.9338,
+        "recall": 0.9423,
+        "latency_ms": 2071.8,
+        "context_chars": 3615,
+        "by_kind": {
+          "facts": 1.0,
+          "mandate": 1.0,
+          "risk_india": 1.0,
+          "risk": 0.7778
+        }
+      },
+      {
+        "embedding": "BAAI/bge-small-en-v1.5",
+        "query_prefix": true,
+        "mode": "dense",
+        "hit_rate": 0.9615,
+        "mrr": 0.847,
+        "recall": 0.9551,
+        "latency_ms": 20.5,
+        "context_chars": 3471,
+        "by_kind": {
+          "facts": 0.9737,
+          "mandate": 1.0,
+          "risk_india": 1.0,
+          "risk": 0.8889
+        }
+      },
+      {
+        "embedding": "BAAI/bge-small-en-v1.5",
+        "query_prefix": true,
+        "mode": "hybrid_rerank",
+        "hit_rate": 0.9487,
+        "mrr": 0.9338,
+        "recall": 0.9423,
+        "latency_ms": 2130.4,
+        "context_chars": 3634,
+        "by_kind": {
+          "facts": 1.0,
+          "mandate": 1.0,
+          "risk_india": 1.0,
+          "risk": 0.7778
+        }
+      },
+      {
+        "embedding": "BAAI/bge-base-en-v1.5",
+        "query_prefix": false,
+        "mode": "dense",
+        "hit_rate": 0.9744,
+        "mrr": 0.8504,
+        "recall": 0.9679,
+        "latency_ms": 35.4,
+        "context_chars": 3407,
+        "by_kind": {
+          "facts": 1.0,
+          "mandate": 0.9167,
+          "risk_india": 1.0,
+          "risk": 0.9444
+        }
+      },
+      {
+        "embedding": "BAAI/bge-base-en-v1.5",
+        "query_prefix": false,
+        "mode": "hybrid_rerank",
+        "hit_rate": 0.9487,
+        "mrr": 0.9338,
+        "recall": 0.9423,
+        "latency_ms": 1408.5,
+        "context_chars": 3627,
+        "by_kind": {
+          "facts": 1.0,
+          "mandate": 1.0,
+          "risk_india": 1.0,
+          "risk": 0.7778
+        }
+      },
+      {
+        "embedding": "BAAI/bge-base-en-v1.5",
+        "query_prefix": true,
+        "mode": "dense",
+        "hit_rate": 0.9487,
+        "mrr": 0.8455,
+        "recall": 0.9423,
+        "latency_ms": 49.7,
+        "context_chars": 3459,
+        "by_kind": {
+          "facts": 1.0,
+          "mandate": 0.9167,
+          "risk_india": 0.9,
+          "risk": 0.8889
+        }
+      },
+      {
+        "embedding": "BAAI/bge-base-en-v1.5",
+        "query_prefix": true,
+        "mode": "hybrid_rerank",
+        "hit_rate": 0.9487,
+        "mrr": 0.9338,
+        "recall": 0.9423,
+        "latency_ms": 1355.5,
+        "context_chars": 3622,
+        "by_kind": {
+          "facts": 1.0,
+          "mandate": 1.0,
+          "risk_india": 1.0,
+          "risk": 0.7778
+        }
+      }
+    ],
+    "C_reranker": [
+      {
+        "reranker": "Xenova/ms-marco-MiniLM-L-6-v2",
+        "hit_rate": 0.9487,
+        "mrr": 0.9338,
+        "recall": 0.9423,
+        "latency_ms": 1428.8,
+        "context_chars": 3615,
+        "by_kind": {
+          "facts": 1.0,
+          "mandate": 1.0,
+          "risk_india": 1.0,
+          "risk": 0.7778
+        }
+      },
+      {
+        "reranker": "Xenova/ms-marco-MiniLM-L-12-v2",
+        "hit_rate": 0.9615,
+        "mrr": 0.9231,
+        "recall": 0.9487,
+        "latency_ms": 3167.5,
+        "context_chars": 3675,
+        "by_kind": {
+          "facts": 1.0,
+          "mandate": 1.0,
+          "risk_india": 1.0,
+          "risk": 0.8333
+        }
+      },
+      {
+        "reranker": "jinaai/jina-reranker-v1-turbo-en",
+        "hit_rate": 0.9615,
+        "mrr": 0.9209,
+        "recall": 0.9551,
+        "latency_ms": 1612.5,
+        "context_chars": 3689,
+        "by_kind": {
+          "facts": 1.0,
+          "mandate": 1.0,
+          "risk_india": 1.0,
+          "risk": 0.8333
+        }
+      },
+      {
+        "reranker": "BAAI/bge-reranker-v2-m3-int8",
+        "hit_rate": 0.9487,
+        "mrr": 0.9124,
+        "recall": 0.9359,
+        "latency_ms": 20766.4,
+        "context_chars": 3812,
+        "by_kind": {
+          "facts": 1.0,
+          "mandate": 1.0,
+          "risk_india": 1.0,
+          "risk": 0.7778
+        }
+      }
+    ],
+    "D_depth": [
+      {
+        "candidates": 20,
+        "rerank_top": 10,
+        "k": 6,
+        "hit_rate": 0.9487,
+        "mrr": 0.9209,
+        "recall": 0.9423,
+        "latency_ms": 1319.8,
+        "context_chars": 3595,
+        "by_kind": {
+          "facts": 1.0,
+          "mandate": 1.0,
+          "risk_india": 1.0,
+          "risk": 0.7778
+        }
+      },
+      {
+        "candidates": 20,
+        "rerank_top": 20,
+        "k": 6,
+        "hit_rate": 0.9615,
+        "mrr": 0.9231,
+        "recall": 0.9487,
+        "latency_ms": 3069.6,
+        "context_chars": 3658,
+        "by_kind": {
+          "facts": 1.0,
+          "mandate": 1.0,
+          "risk_india": 1.0,
+          "risk": 0.8333
+        }
+      },
+      {
+        "candidates": 20,
+        "rerank_top": 30,
+        "k": 6,
+        "hit_rate": 0.9615,
+        "mrr": 0.9231,
+        "recall": 0.9487,
+        "latency_ms": 3124.9,
+        "context_chars": 3658,
+        "by_kind": {
+          "facts": 1.0,
+          "mandate": 1.0,
+          "risk_india": 1.0,
+          "risk": 0.8333
+        }
+      },
+      {
+        "candidates": 40,
+        "rerank_top": 10,
+        "k": 6,
+        "hit_rate": 0.9487,
+        "mrr": 0.9274,
+        "recall": 0.9359,
+        "latency_ms": 1417.9,
+        "context_chars": 3548,
+        "by_kind": {
+          "facts": 1.0,
+          "mandate": 1.0,
+          "risk_india": 1.0,
+          "risk": 0.7778
+        }
+      },
+      {
+        "candidates": 40,
+        "rerank_top": 20,
+        "k": 6,
+        "hit_rate": 0.9615,
+        "mrr": 0.9231,
+        "recall": 0.9487,
+        "latency_ms": 3118.6,
+        "context_chars": 3675,
+        "by_kind": {
+          "facts": 1.0,
+          "mandate": 1.0,
+          "risk_india": 1.0,
+          "risk": 0.8333
+        }
+      },
+      {
+        "candidates": 40,
+        "rerank_top": 30,
+        "k": 6,
+        "hit_rate": 0.9487,
+        "mrr": 0.9209,
+        "recall": 0.9423,
+        "latency_ms": 5661.5,
+        "context_chars": 3699,
+        "by_kind": {
+          "facts": 1.0,
+          "mandate": 1.0,
+          "risk_india": 1.0,
+          "risk": 0.7778
+        }
+      },
+      {
+        "candidates": 20,
+        "rerank_top": 20,
+        "k": 4,
+        "hit_rate": 0.9487,
+        "mrr": 0.9209,
+        "recall": 0.9423,
+        "latency_ms": 3588.0,
+        "context_chars": 2455,
+        "by_kind": {
+          "facts": 1.0,
+          "mandate": 1.0,
+          "risk_india": 1.0,
+          "risk": 0.7778
+        }
+      },
+      {
+        "candidates": 20,
+        "rerank_top": 20,
+        "k": 6,
+        "hit_rate": 0.9615,
+        "mrr": 0.9231,
+        "recall": 0.9487,
+        "latency_ms": 3525.3,
+        "context_chars": 3658,
+        "by_kind": {
+          "facts": 1.0,
+          "mandate": 1.0,
+          "risk_india": 1.0,
+          "risk": 0.8333
+        }
+      },
+      {
+        "candidates": 20,
+        "rerank_top": 20,
+        "k": 8,
+        "hit_rate": 0.9744,
+        "mrr": 0.9249,
+        "recall": 0.9679,
+        "latency_ms": 3525.3,
+        "context_chars": 4800,
+        "by_kind": {
+          "facts": 1.0,
+          "mandate": 1.0,
+          "risk_india": 1.0,
+          "risk": 0.8889
+        }
+      }
+    ]
+  },
+  "best": {
+    "size": [
+      1100,
+      1600
+    ],
+    "model": "BAAI/bge-small-en-v1.5",
+    "prefix": false,
+    "reranker": "Xenova/ms-marco-MiniLM-L-12-v2",
+    "candidates": 20,
+    "rerank_top": 20,
+    "k": 6
+  }
+}

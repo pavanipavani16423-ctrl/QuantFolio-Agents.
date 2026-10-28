@@ -3,9 +3,13 @@
 * looks up the run's dependencies (`RunContext`),
 * opens its numbered step (Langfuse section + UI event),
 * calls the agent / A2A service / MCP tools, and returns only the state keys it owns.
+
+Guardrail findings are returned under `guardrails` (a list that accumulates over the run),
+each tagged with the step and the proposal revision it belongs to.
 """
 
 import asyncio
+import math
 from typing import Any
 
 from langgraph.types import interrupt
@@ -15,13 +19,24 @@ from app.agents import supervisor
 from app.agents.intake import research_focus, run_intake
 from app.agents.optimizer import build_problem, run_optimizer
 from app.agents.preferences import effective_rules, feedback_to_preferences
-from app.agents.report import changes, run_report
+from app.agents.report import changes, write_checked_memo
 from app.agents.research import run_research
 from app.data import store
 from app.data.universe import MARKETS, tickers
 from app.evaluation.online import deterministic_scores, llm_scores
 from app.graph.context import get_context
-from app.schemas import IntakeResult, MandateRules
+from app.guardrails.input import check_request
+from app.memory import MemoryManager
+from app.schemas import IntakeResult, MandateRules, ResearchResult
+from app.security import approvals
+
+
+def _tag(findings: list[dict[str, Any]], step: str, revision: int = 0) -> list[dict[str, Any]]:
+    return [{**f, "step": step, "revision": revision} for f in findings]
+
+
+def _blocking(findings: list[dict[str, Any]]) -> int:
+    return sum(f["verdict"] == "block" for f in findings)
 
 
 async def supervisor_node(state: dict[str, Any]) -> dict[str, Any]:
@@ -35,19 +50,55 @@ def route(state: dict[str, Any]) -> list[str] | str:
     return state["route"] or "__end__"
 
 
+async def guard_node(state: dict[str, Any]) -> dict[str, Any]:
+    """Input rail: nothing else runs on a request that fails it."""
+    ctx = get_context(state["run_id"])
+    s = ctx.settings
+    async with ctx.step("guard", input={"request": state["request"]}) as step:
+        if s.guardrails_enabled:
+            verdict, findings = check_request(state["request"], state["market"], state.get("pii") or {},
+                                              s.injection_block_threshold, s.semantic_injection_threshold)
+        else:
+            verdict, findings = "pass", []
+        items = [f.to_dict() for f in findings]
+        blocked = [f for f in items if f["verdict"] == "block"]
+        reason = "; ".join(f["detail"] for f in blocked)
+        step.done(f"Stopped: {reason}" if blocked else
+                  "Request is safe: " + ", ".join(f"{f['check'].replace('_', ' ')} {f['verdict']}" for f in items),
+                  output=items, verdict=verdict)
+        if blocked:
+            step.observation.update(level="WARNING", status_message=reason[:300])
+    ctx.tracer.score(trace_id=ctx.trace_id, name="guardrail_input_blocked", value=1.0 if blocked else 0.0,
+                     comment=reason[:500] or None)
+    ctx.tracer.score(trace_id=ctx.trace_id, name="guardrail_pii_redacted",
+                     value=float(sum((state.get("pii") or {}).values())))
+    if blocked:
+        await ctx.record("request_blocked", client_id=state["client_id"],
+                         checks=[f["check"] for f in blocked], reason=reason[:300])
+    return {"input_guard": {"verdict": verdict, "blocked": bool(blocked), "reason": reason or None},
+            "guardrails": _tag(items, "guard")}
+
+
 async def intake_node(state: dict[str, Any]) -> dict[str, Any]:
     ctx = get_context(state["run_id"])
     async with ctx.step("intake", input={"request": state["request"],
                                          "client_id": state["client_id"]}) as step:
         intake, method = await run_intake(ctx, state["request"], state["client_id"])
-        preferences = await ctx.load_preferences(state["client_id"]) if ctx.load_preferences else []
-        learned = f" Remembered {len(preferences)} preference(s) from past reviews." if preferences else ""
+        memory = await ctx.memory.recall(state["client_id"]) if ctx.memory else {}
+        preferences = MemoryManager.preferences(memory)
+        counts = {layer: len(memory.get(layer, [])) for layer in ("episodic", "semantic", "procedural")}
+        recalled = sum(counts.values())
+        learned = (f" Remembered {recalled} item(s): {counts['episodic']} past review(s), "
+                   f"{counts['semantic']} preference(s), {counts['procedural']} note(s).") if recalled else ""
         step.done(f"Question: {intake.research_question}.{learned}", output=intake.model_dump(),
-                  method=method, preferences=preferences)
+                  method=method, memory=counts)
     ctx.tracer.score(trace_id=ctx.trace_id, name="learned_preferences_applied",
-                     value=float(len([p for p in preferences if p["kind"] != "note"])),
-                     comment="; ".join(f"{p['kind']}={p['value']}" for p in preferences)[:500] or None)
-    return {"intake": {**intake.model_dump(), "method": method}, "preferences": preferences}
+                     value=float(counts.get("semantic", 0)),
+                     comment="; ".join(f"{p['kind']}={p['value']}" for p in memory.get("semantic", []))[:500] or None)
+    ctx.tracer.score(trace_id=ctx.trace_id, name="memory_items_recalled", value=float(recalled))
+    return {"intake": {**intake.model_dump(), "method": method}, "preferences": preferences,
+            "memory": {**memory, "counts": counts},
+            "guardrails": _tag(memory.get("quarantined", []), "intake")}
 
 
 async def research_node(state: dict[str, Any]) -> dict[str, Any]:
@@ -58,12 +109,29 @@ async def research_node(state: dict[str, Any]) -> dict[str, Any]:
     async with ctx.step("research", input={"question": intake.research_question, "tickers": focus,
                                            "market": market,
                                            "sources": MARKETS[market].research_sources}) as step:
-        result = await run_research(ctx, intake.research_question, focus, market)
-        step.done(f"{len(result.sources)} sources from {len({s.doc_id for s in result.sources})} "
-                  f"documents; answer by {result.method}",
-                  output={"answer": result.answer, "sources": [s.chunk_id for s in result.sources]},
-                  method=result.method)
-    return {"research": result.model_dump()}
+        cached = await ctx.memory.cached_research(market, focus, intake.research_question) if ctx.memory else None
+        if cached:
+            result = ResearchResult.model_validate(cached["result"])
+            result.cache = {k: cached[k] for k in ("similarity", "question", "run_id", "when")}
+            result.method = "memory"
+            summary = (f"Reused a checked answer from memory (asked {cached['when']}, similarity "
+                       f"{cached['similarity']:.2f}); {len(result.sources)} sources")
+        else:
+            result = await run_research(ctx, intake.research_question, focus, market)
+            if ctx.memory and result.method == "llm" and not _blocking(result.guardrails):
+                await ctx.memory.cache_research(market, focus, intake.research_question,
+                                                result.model_dump(exclude={"cache"}), state["run_id"])
+            summary = (f"{len(result.sources)} sources from {len({s.doc_id for s in result.sources})} "
+                       f"documents; answer by {result.method}"
+                       + (f"; {len(result.quarantined)} passage(s) quarantined" if result.quarantined else "")
+                       + ("; revised once after the checks" if result.self_corrections else ""))
+        step.done(summary, output={"answer": result.answer, "sources": [s.chunk_id for s in result.sources]},
+                  method=result.method, guardrails=result.guardrails)
+    ctx.tracer.score(trace_id=ctx.trace_id, name="research_cache_hit", value=1.0 if cached else 0.0)
+    ctx.tracer.score(trace_id=ctx.trace_id, name="guardrail_quarantined_passages",
+                     value=float(len(result.quarantined)))
+    return {"research": result.model_dump(),
+            "guardrails": [] if cached else _tag(result.guardrails, "research")}
 
 
 async def _a2a(ctx, name: str, skill: str, data: dict[str, Any]) -> tuple[dict, dict]:  # noqa: ANN001
@@ -97,39 +165,58 @@ async def mandate_node(state: dict[str, Any]) -> dict[str, Any]:
         step.done(f"{rules.holdings} stocks, max {rules.max_weight:.0%} each, sector cap "
                   f"{rules.max_sector_weight:.0%}, volatility <= {rules.max_volatility:.0%}, "
                   f"excluded: {excl}", output=rules.model_dump(), a2a=info, method=result["method"])
+    held = result.get("quarantined") or []
+    findings = [{"layer": "retrieval", "check": "mandate_injection", "verdict": "fixed" if held else "pass",
+                 "detail": (f"{len(held)} policy passage(s) quarantined" if held
+                            else f"{len(result['retrieved_chunks'])} policy passages scanned, none quarantined")}]
     return {"rules": rules.model_dump(), "a2a_calls": [info],
-            "mandate_meta": {k: result[k] for k in ("method", "notes", "retrieved_chunks", "searches")}}
+            "mandate_meta": {k: result.get(k) for k in ("method", "notes", "retrieved_chunks", "searches",
+                                                         "quarantined")},
+            "guardrails": _tag(findings, "mandate")}
 
 
 async def optimize_node(state: dict[str, Any]) -> dict[str, Any]:
     ctx = get_context(state["run_id"])
-    rules, applied = effective_rules(MandateRules.model_validate(state["rules"]),
-                                     state.get("preferences") or [], state.get("feedback") or [])
+    mandate = MandateRules.model_validate(state["rules"])
     attempts = state.get("attempts", 0) + 1
     override = None
     if attempts > 1 and state.get("optimization"):
         override = state["optimization"]["problem"]["risk_aversion"] * 2
-    problem = build_problem(state["risk_profile"], rules, override)
-    async with ctx.step("optimize", input={"qubits": len(problem["tickers"]), "k": problem["k"],
+    # advisor exclusions must leave enough stocks to hold: if they do not, drop the remembered
+    # ones first, then this review's, and say so (never fail every future run for the client)
+    findings: list[dict[str, Any]] = []
+    for prefs, feedback, note in ((state.get("preferences") or [], state.get("feedback") or [], None),  # noqa: B007 - `note` of the feasible option is read after the loop
+                                  ([], state.get("feedback") or [], "remembered exclusions ignored"),
+                                  ([], [], "advisor exclusions ignored")):
+        rules, applied = effective_rules(mandate, prefs, feedback)
+        problem = build_problem(state["risk_profile"], rules, override)
+        if len(problem["tickers"]) >= problem["k"]:
+            break
+    else:
+        raise RuntimeError(f"the mandate leaves {len(problem['tickers'])} stocks but requires {problem['k']}")
+    if note:
+        findings.append({"layer": "memory", "check": "preferences_feasible", "verdict": "warn",
+                         "detail": f"{note}: they left fewer than {problem['k']} allowed stocks"})
+    combos = math.comb(len(problem["tickers"]), problem["k"]) if problem["k"] <= len(problem["tickers"]) else 0
+    async with ctx.step("optimize", input={"allowed_stocks": len(problem["tickers"]), "k": problem["k"],
+                                           "combinations": combos,
                                            "risk_aversion": problem["risk_aversion"],
-                                           "methods": state["methods"],
                                            "advisor_changes": applied["sources"]}) as step:
-        result = await run_optimizer(ctx, problem, state["methods"])
+        result = await run_optimizer(ctx, problem)
         rec = result["proposals"][result["recommended"]]
-        q = ""
-        if "quantum_gap" in result:
-            q = (" Quantum matched the optimum." if result["quantum_found_optimum"]
-                 else f" Quantum gap {result['quantum_gap']:.1%}.")
         learned = f" Applied: {', '.join(applied['sources'])}." if applied["sources"] else ""
-        step.done(f"{len(problem['tickers'])} qubits; picked {', '.join(rec['selected'])} "
-                  f"({result['recommended']}).{q}{learned}", output={
+        gap = result.get("baseline_gap")
+        base = f" The rule of thumb falls {gap:.1%} short." if gap else ""
+        step.done(f"Searched {combos:,} combinations of {len(problem['tickers'])} allowed stocks; picked "
+                  f"{', '.join(rec['selected'])}.{base}{learned}", output={
                       "recommended": result["recommended"],
-                      "utilities": {m: p["utility"] for m, p in result["proposals"].items()},
-                      "quantum_gap": result.get("quantum_gap")})
+                      "utilities": {m: p["utility"] for m, p in result["proposals"].items()}})
     result["problem_full"] = problem
+    result["combinations"] = combos
     # a new optimization invalidates everything downstream of it
     return {"optimization": result, "attempts": attempts, "backtest": None, "compliance": None,
-            "risk_check": None, "applied": applied, "effective_rules": rules.model_dump()}
+            "risk_check": None, "applied": applied, "effective_rules": rules.model_dump(),
+            "guardrails": _tag(findings, "optimize", state.get("revision", 0))}
 
 
 def _weights(state: dict[str, Any], method: str) -> dict[str, float]:
@@ -193,8 +280,11 @@ def memo_facts(state: dict[str, Any]) -> dict[str, Any]:
     account = store.account(state["client_id"])
     market = MARKETS[state["market"]]
     bt = state["backtest"]["metrics"]
-    q = opt.get("quantum") or {}
     applied = state.get("applied") or {}
+    memory = state.get("memory") or {}
+    combos = opt.get("combinations") or 0
+    search = opt.get("search") or {}
+    rec_return = (bt.get("recommended") or {}).get("total_return")
     facts = {
         "client": {"id": state["client_id"], "name": account["name"], "profile": account["profile"],
                    "market": market.name, "currency": market.currency},
@@ -202,38 +292,52 @@ def memo_facts(state: dict[str, Any]) -> dict[str, Any]:
         "recommended": {"method": opt["recommended"], "label": rec["label"], "k": len(rec["selected"]),
                         "weights": {t: round(w, 4) for t, w in rec["weights"].items()},
                         "expected_return": rec["expected_return"], "volatility": rec["volatility"]},
-        "comparison": {m: {"label": p["label"], "utility": round(p["utility"], 6),
-                           "seconds": round(p["seconds"], 2), "selected": p["selected"]}
-                       for m, p in opt["proposals"].items()},
+        "selection": {"allowed_stocks": len(opt["problem_full"]["tickers"]), "combinations": combos,
+                      "combinations_text": (f"all {combos:,} possible combinations" if search.get("subsets_evaluated")
+                                            else f"the {len(opt['problem_full']['tickers'])} allowed stocks"),
+                      "optimality": search.get("optimality"),
+                      "rule_of_thumb_shortfall": opt.get("baseline_gap")},
         "changes": changes(state["client_id"], rec["weights"]),
         "backtest": {"days": state["backtest"]["days"], "recommended": bt.get("recommended"),
                      "benchmark_name": market.benchmark_name,
                      "benchmark_return": bt["benchmark"]["total_return"],
-                     "current_return": bt["current"]["total_return"]},
+                     "current_return": bt["current"]["total_return"],
+                     "difference_vs_benchmark": (rec_return - bt["benchmark"]["total_return"])
+                     if rec_return is not None else None},
         "compliance": state["compliance"],
         "risk_warnings": state["risk_check"]["warnings"],
         "research": {"question": state["research"]["question"], "answer": state["research"]["answer"],
                      "risk_flags": state["research"]["risk_flags"]},
-        "quantum": {"ran": "quantum" in opt, "qubits": opt.get("qubits"),
-                    "found_optimum": opt.get("quantum_found_optimum", False),
-                    "gap": opt.get("quantum_gap", 0.0),
-                    "seconds": opt["proposals"].get("quantum", {}).get("seconds", q.get("execution_time", 0.0)),
-                    "classical_seconds": opt["proposals"]["classical"]["seconds"],
-                    "mixer": q.get("mixer"), "reps": q.get("reps")},
     }
-    # only when something was applied, so the writer cannot claim preferences that do not exist
-    if applied.get("sources") or applied.get("notes"):
-        facts["advisor_preferences"] = {"applied": applied.get("sources", []), "notes": applied.get("notes", [])}
+    # only when present, so the writer cannot claim memory or preferences that do not exist
+    if applied.get("sources"):
+        facts["advisor_preferences"] = {"applied": applied["sources"]}
+    notes = [n["value"] for n in memory.get("procedural", [])] + [
+        n for n in applied.get("notes", []) if n not in {p["value"] for p in memory.get("procedural", [])}]
+    if notes:
+        facts["advisor_guidance"] = notes[-5:]
+    if memory.get("episodic"):
+        facts["previous_reviews"] = [f"{e['when']}: {e['summary']}" for e in memory["episodic"]]
     return facts
 
 
 async def report_node(state: dict[str, Any]) -> dict[str, Any]:
     ctx = get_context(state["run_id"])
     facts = memo_facts(state)
+    valid = {s["n"] for s in state["research"]["sources"]}
+    revision = state.get("revision", 0)
     async with ctx.step("report", input={"facts": list(facts)}) as step:
-        memo, method = await run_report(ctx, facts)
-        step.done(memo.headline, output=memo.model_dump(), method=method)
-    return {"memo": {**memo.model_dump(), "method": method}, "memo_facts": facts}
+        memo, method, findings, corrections = await write_checked_memo(ctx, facts, valid)
+        fixed = [f for f in findings if f["verdict"] == "fixed"]
+        step.done(memo.headline + (f" ({len(fixed)} check(s) fixed)" if fixed else ""),
+                  output=memo.model_dump(), method=method, guardrails=findings)
+    ctx.tracer.score(trace_id=ctx.trace_id, name="guardrail_output_violations",
+                     value=float(sum(f["verdict"] in ("fixed", "block") and f["check"] != "memo_disclaimer"
+                                     for f in findings)))
+    ctx.tracer.score(trace_id=ctx.trace_id, name="self_corrections",
+                     value=float(corrections + state["research"].get("self_corrections", 0)))
+    return {"memo": {**memo.model_dump(), "method": method, "self_corrections": corrections},
+            "memo_facts": facts, "guardrails": _tag(findings, "report", revision)}
 
 
 async def evaluate_node(state: dict[str, Any]) -> dict[str, Any]:
@@ -262,7 +366,7 @@ async def _ragas_in_background(ctx, state: dict[str, Any], parent_span_id: str |
     """Returns the update the run service merges into the run's evaluation when it finishes."""
     run_id = ctx.run_id
     trace_context = {"trace_id": ctx.trace_id, "parent_span_id": parent_span_id} if ctx.trace_id else None
-    with ctx.tracer.section("09b RAGAS quality scoring (background)", as_type="evaluator",
+    with ctx.tracer.section("10b RAGAS quality scoring (background)", as_type="evaluator",
                             input={"question": state["research"]["question"]},
                             trace_context=trace_context) as obs:
         scores, judge, notes = await llm_scores(ctx.settings, state)
@@ -278,13 +382,21 @@ async def trades_node(state: dict[str, Any]) -> dict[str, Any]:
     ctx = get_context(state["run_id"])
     opt = state["optimization"]
     weights = opt["proposals"][opt["recommended"]]["weights"]
+    revision = state.get("revision", 0)
     async with ctx.step("trades", input={"target": weights}) as step:
         preview = await ctx.toolbox("trader_agent").call(
             "broker", "preview_rebalance", client_id=state["client_id"], target_weights=weights)
         buys = sum(t["side"] == "buy" for t in preview["trades"])
+        failed = [c for c in preview["limits"] if not c["passed"]]
         step.done(f"{len(preview['trades'])} orders ({buys} buys, {len(preview['trades']) - buys} sells), "
-                  f"turnover {preview['turnover']:.0%}", output=preview)
-    return {"trades": preview}
+                  f"turnover {preview['turnover']:.0%}; "
+                  + ("order limits: " + "; ".join(c["detail"] for c in failed) if failed
+                     else f"all {len(preview['limits'])} order limits pass"), output=preview)
+        if failed:
+            step.observation.update(level="WARNING", status_message="order limits failed")
+    findings = [{"layer": "action", "check": c["check"], "verdict": "pass" if c["passed"] else "block",
+                 "detail": c["detail"]} for c in preview["limits"]]
+    return {"trades": preview, "guardrails": _tag(findings, "trades", revision)}
 
 
 async def approval_node(state: dict[str, Any]) -> dict[str, Any]:
@@ -292,25 +404,49 @@ async def approval_node(state: dict[str, Any]) -> dict[str, Any]:
     decision = interrupt({"run_id": state["run_id"], "trades": state["trades"]["trades"]})
     ctx = get_context(state["run_id"])
     action = decision.get("action") or ("approve" if decision.get("approved") else "reject")
-    reviewer = decision.get("reviewer", "advisor")
-    async with ctx.step("approval", input=decision) as step:
-        if decision.get("remember", True) and ctx.save_preferences:
-            rows = feedback_to_preferences(state["client_id"], decision, state["run_id"])
+    reviewer = decision.get("reviewer") or "advisor"
+    client_id = state["client_id"]
+    revision = state.get("revision", 0)
+    findings: list[dict[str, Any]] = []
+    if decision.get("note") and ctx.memory:
+        # the note feeds this run's memo guidance and later runs: an instruction attack is withheld
+        safe, finding = ctx.memory.screen_note(decision["note"])
+        if safe is None:
+            decision = {**decision, "note": None, "note_withheld": True}
+            findings.append(finding.to_dict())
+    async with ctx.step("approval", input={k: v for k, v in decision.items() if k != "approval_token"}) as step:
+        if decision.get("remember", True) and ctx.memory:
+            rows = feedback_to_preferences(client_id, decision, state["run_id"])
             if rows:
-                await ctx.save_preferences(rows)
-        revision = state.get("revision", 0)
+                findings += [f.to_dict() for f in await ctx.memory.remember_preferences(rows)]
+        outcome = {"change": "changed", "approve": "approved", "reject": "rejected"}[action]
+        if ctx.memory:
+            await ctx.memory.remember_episode(client_id, state["run_id"], outcome, state, decision)
         if action == "change":
+            await ctx.record("change_requested", actor=reviewer, client_id=client_id, revision=revision,
+                             changes=decision.get("changes"), note=decision.get("note"))
             step.done(f"{reviewer} asked for changes; the agents re-plan", output=decision)
             # clear the proposal so the supervisor re-optimizes with the change
             return {"feedback": [decision], "revision": revision + 1, "attempts": 0, "approval": None,
                     "optimization": None, "backtest": None, "compliance": None, "risk_check": None,
-                    "memo": None, "evaluation": None, "trades": None}
+                    "memo": None, "evaluation": None, "trades": None,
+                    "guardrails": _tag(findings, "approval", revision)}
         approved = action == "approve"
+        token = None
+        trades = state["trades"]["trades"]
+        if approved:
+            token = approvals.issue(state["run_id"], client_id, reviewer, trades, ctx.settings.approval_ttl_seconds)
+            findings.append({"layer": "action", "check": "approval_token", "verdict": "pass",
+                             "detail": f"signed, single-use token for {len(trades)} orders issued to {reviewer}"})
+        await ctx.record("approved" if approved else "rejected", actor=reviewer, client_id=client_id,
+                         revision=revision, orders=len(trades), note=decision.get("note"),
+                         orders_hash=approvals.orders_hash(trades))
         ctx.tracer.score(trace_id=ctx.trace_id, name="human_approved", value=1.0 if approved else 0.0,
                          comment=f"{reviewer}: {decision.get('note') or ''}".strip())
         ctx.tracer.score(trace_id=ctx.trace_id, name="human_revisions", value=float(revision))
         step.done(("Approved" if approved else "Rejected") + f" by {reviewer}", output=decision)
-    return {"approval": {**decision, "approved": approved, "action": action}}
+    return {"approval": {**decision, "approved": approved, "action": action}, "approval_token": token,
+            "guardrails": _tag(findings, "approval", revision)}
 
 
 async def execute_node(state: dict[str, Any]) -> dict[str, Any]:
@@ -318,8 +454,11 @@ async def execute_node(state: dict[str, Any]) -> dict[str, Any]:
     async with ctx.step("execute", input={"orders": len(state["trades"]["trades"])}) as step:
         result = await ctx.toolbox("trader_agent").call(
             "broker", "execute_orders", client_id=state["client_id"], trades=state["trades"]["trades"],
-            approval_id=state["run_id"], approved_by=state["approval"].get("reviewer", "advisor"))
+            approval_token=state["approval_token"])
         cur = MARKETS[state["market"]].symbol
         step.done(f"{len(result['fills'])} paper orders filled; account value "
                   f"{cur}{result['account']['market_value']:,.0f}", output=result)
-    return {"execution": result}
+    await ctx.record("orders_executed", actor="trader_agent", client_id=state["client_id"],
+                     fills=len(result["fills"]), approved_by=result.get("approved_by"),
+                     token_id=result.get("approval_id"))
+    return {"execution": result, "approval_token": None}

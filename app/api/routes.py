@@ -11,6 +11,7 @@ from sse_starlette.sse import EventSourceResponse
 
 from app.a2a import registry
 from app.config import ROOT
+from app.data import clients as added_clients
 from app.data import store
 from app.data.universe import BY_TICKER, MARKETS
 from app.data.universe import universe as market_universe
@@ -19,6 +20,7 @@ from app.mcp.servers import broker
 from app.observability.scores import SCORES
 from app.observability.tracing import get_tracer
 from app.schemas import ApprovalRequest, RunRequest
+from app.security.http import client_key
 from app.services.runs import ConflictError
 
 TERMINAL = {"completed", "failed", "rejected", "approved", "executed", "blocked"}
@@ -57,19 +59,88 @@ async def health(request: Request) -> dict[str, Any]:
 
 
 # ---- clients ---------------------------------------------------------------------------------
+async def _client_row(cid: str, acc: dict[str, Any]) -> dict[str, Any]:
+    snap = await broker.get_account(cid)
+    market = MARKETS[acc["market"]]
+    return {"client_id": cid, "name": acc["name"], "profile": acc["profile"],
+            "who": acc.get("who") or acc["profile"], "rules_summary": acc.get("rules_summary", ""),
+            "examples": acc.get("examples") or added_clients.example_requests(acc),
+            "custom": bool(acc.get("custom")),
+            "mandate_doc": acc["mandate_doc"], "market_value": snap["market_value"],
+            "holdings": len(snap["positions"]), "price_date": snap["price_date"],
+            "market": market.code, "market_name": market.name, "currency": market.currency,
+            "currency_symbol": market.symbol, "benchmark_name": market.benchmark_name,
+            "research_sources": market.research_sources}
+
+
 @api.get("/clients")
 async def clients() -> list[dict[str, Any]]:
-    out = []
-    for cid, acc in store.accounts().items():
-        snap = await broker.get_account(cid)
-        market = MARKETS[acc["market"]]
-        out.append({"client_id": cid, "name": acc["name"], "profile": acc["profile"],
-                    "mandate_doc": acc["mandate_doc"], "market_value": snap["market_value"],
-                    "holdings": len(snap["positions"]), "price_date": snap["price_date"],
-                    "market": market.code, "market_name": market.name, "currency": market.currency,
-                    "currency_symbol": market.symbol, "benchmark_name": market.benchmark_name,
-                    "research_sources": market.research_sources})
-    return out
+    return [await _client_row(cid, acc) for cid, acc in store.accounts().items()]
+
+
+@api.post("/clients/preview")
+async def preview_client(body: added_clients.NewClient) -> dict[str, Any]:
+    """The policy document the form would create, and anything that stops it from working."""
+    problems = await asyncio.to_thread(added_clients.problems, body)
+    return {"problems": problems, "policy": added_clients.render_policy(body),
+            "rules_summary": added_clients.rules_summary(added_clients.normalized(body))}
+
+
+@api.post("/clients", status_code=201)
+async def create_client(body: added_clients.NewClient, request: Request) -> dict[str, Any]:
+    """Add a client: the answers become a policy document the compliance agent reads with RAG."""
+    from app.rag.index import refresh_client
+
+    try:
+        account, removed = await asyncio.to_thread(added_clients.create, body)
+    except added_clients.ClientError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
+    cid = account["client_id"]
+    if request.app.state.index_ready:
+        await asyncio.to_thread(refresh_client, cid)
+    await request.app.state.db.audit(actor=f"api:{client_key(request)}", action="client_added", client_id=cid,
+                                     details={"market": account["market"], "rules": account["rules_summary"],
+                                              "personal_data_removed": removed})
+    return {**await _client_row(cid, account), "personal_data_removed": removed}
+
+
+@api.delete("/clients/{client_id}")
+async def remove_client(client_id: str, request: Request) -> dict[str, Any]:
+    """Remove a client added in the UI (the demo clients stay). Past runs and the audit log are kept."""
+    from app.rag.index import refresh_client
+
+    if client_id not in store.accounts():
+        raise HTTPException(status_code=404, detail=f"unknown client {client_id}")
+    if not added_clients.is_custom(client_id):
+        raise HTTPException(status_code=403, detail="the demo clients cannot be removed")
+    active = [r for r in await request.app.state.db.list_runs(200, client_id)
+              if r.get("status") in ("queued", "running", "awaiting_approval")]
+    if active:
+        raise HTTPException(status_code=409, detail="this client has a plan waiting for a decision; finish it first")
+    added_clients.remove(client_id)
+    broker.forget_account(client_id)
+    removed = await request.app.state.db.forget_client(client_id)
+    if request.app.state.index_ready:
+        await asyncio.to_thread(refresh_client, client_id)
+    await request.app.state.db.audit(actor=f"api:{client_key(request)}", action="client_removed",
+                                     client_id=client_id, details=removed)
+    return {"client_id": client_id, "removed": True}
+
+
+@api.get("/clients/{client_id}/rules")
+async def client_rules(client_id: str) -> dict[str, Any]:
+    """The client's rules as the compliance agent's document reader sees them, each with its quote."""
+    from app.a2a.compliance_agent import rules_from_text
+    from app.rag.chunking import chunk_document
+
+    try:
+        doc = store.document(f"mandate_{client_id}")
+    except KeyError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+    chunks = [{"chunk_id": c.chunk_id, "text": c.text} for c in chunk_document(doc)]
+    rules = rules_from_text(client_id, chunks)
+    return {"client_id": client_id, "title": doc.title, "rules": rules.model_dump(),
+            "names": {t: BY_TICKER[t].name for t in rules.excluded_tickers}}
 
 
 @api.get("/clients/{client_id}/preferences")
@@ -85,6 +156,26 @@ async def forget_preference(client_id: str, pref_id: int, request: Request) -> d
     if not await request.app.state.db.forget_preference(client_id, pref_id):
         raise HTTPException(status_code=404, detail="preference not found")
     return {"forgotten": pref_id}
+
+
+@api.get("/clients/{client_id}/memory")
+async def client_memory(client_id: str, request: Request) -> dict[str, Any]:
+    """Everything the agents remember about this client, by memory layer."""
+    if client_id not in store.accounts():
+        raise HTTPException(status_code=404, detail=f"unknown client {client_id}")
+    memory = await request.app.state.runs.memory.recall(client_id)
+    return {**memory, "research_cache_entries": await request.app.state.db.cache_size()}
+
+
+@api.delete("/clients/{client_id}/memory")
+async def forget_client(client_id: str, request: Request) -> dict[str, Any]:
+    """Forget what was learned about a client (the audit log keeps the decisions)."""
+    if client_id not in store.accounts():
+        raise HTTPException(status_code=404, detail=f"unknown client {client_id}")
+    removed = await request.app.state.db.forget_client(client_id)
+    await request.app.state.db.audit(actor=f"api:{client_key(request)}", action="memory_forgotten",
+                                     client_id=client_id, details=removed)
+    return {"client_id": client_id, "removed": removed}
 
 
 @api.get("/clients/{client_id}/account")
@@ -140,9 +231,8 @@ async def chunk(chunk_id: str) -> dict[str, Any]:
 async def start_run(body: RunRequest, request: Request) -> dict[str, Any]:
     if body.client_id not in store.accounts():
         raise HTTPException(status_code=404, detail=f"unknown client {body.client_id}")
-    if not body.methods:
-        raise HTTPException(status_code=422, detail="choose at least one method")
-    return await request.app.state.runs.start(body)
+    request.app.state.run_limiter.check(client_key(request))
+    return await request.app.state.runs.start(body, requested_by=f"api:{client_key(request)}")
 
 
 @api.get("/runs")
@@ -156,7 +246,7 @@ async def list_runs(request: Request, limit: int = Query(30, ge=1, le=200),
         row = {k: d.get(k) for k in keep}
         opt = d.get("result", {}).get("optimization") or {}
         row["recommended"] = opt.get("recommended")
-        row["quantum_gap"] = opt.get("quantum_gap")
+        row["blocked_reason"] = d.get("blocked_reason")
         out.append(row)
     return out
 
@@ -177,6 +267,20 @@ async def approve(run_id: str, body: ApprovalRequest, request: Request) -> dict[
         raise HTTPException(status_code=404, detail="run not found") from exc
     except ConflictError as exc:
         raise HTTPException(status_code=409, detail=str(exc)) from exc
+
+
+@api.get("/runs/{run_id}/audit")
+async def run_audit(run_id: str, request: Request) -> dict[str, Any]:
+    """The run's entries in the hash-chained audit log, and whether the whole chain is intact."""
+    if await request.app.state.runs.get(run_id) is None:
+        raise HTTPException(status_code=404, detail="run not found")
+    db = request.app.state.db
+    return {"entries": await db.audit_entries(run_id=run_id), "chain": await db.verify_audit()}
+
+
+@api.get("/audit/verify")
+async def verify_audit(request: Request) -> dict[str, Any]:
+    return await request.app.state.db.verify_audit()
 
 
 @api.get("/runs/{run_id}/events")
@@ -242,9 +346,17 @@ async def system(request: Request) -> dict[str, Any]:
         "settings": {"llm_provider": s.llm_provider, "llm_model": s.resolved_llm_model,
                      "judge": f"{s.resolved_judge_provider}:{s.resolved_judge_model}",
                      "rag_mode": s.rag_mode, "embedding_model": s.embedding_model,
-                     "reranker_model": s.reranker_model, "qaoa": {"reps": s.qaoa_reps,
-                     "maxiter": s.qaoa_maxiter, "shots": s.qaoa_shots, "mixer": s.qaoa_mixer},
-                     "train_window": [s.train_start, s.train_end]},
+                     "reranker_model": s.reranker_model,
+                     "train_window": [s.train_start, s.train_end],
+                     "guardrails": {"enabled": s.guardrails_enabled,
+                                    "injection_block_threshold": s.injection_block_threshold,
+                                    "max_order_fraction": s.max_order_fraction, "max_turnover": s.max_turnover,
+                                    "max_tool_calls_per_run": s.max_tool_calls_per_run,
+                                    "rate_limit": f"{s.rate_limit_runs} runs / {s.rate_limit_window_seconds} s"},
+                     "memory": {"episodes_recalled": s.memory_episodes_recalled,
+                                "notes_recalled": s.memory_notes_recalled,
+                                "research_cache": s.research_cache_enabled,
+                                "cache_similarity": s.research_cache_similarity}},
     }
 
 
@@ -252,8 +364,8 @@ async def system(request: Request) -> dict[str, Any]:
 async def evaluations() -> dict[str, Any]:
     folder = ROOT / "experiments" / "results"
     out: dict[str, Any] = {}
-    for name in ("rag_eval", "quantum_eval"):
+    for name in ("rag_eval", "rag_tuning", "guardrail_eval", "citation_calibration"):
         files = sorted(folder.glob(f"{name}_*.json"))
         if files:
-            out[name] = json.loads(Path(files[-1]).read_text())
+            out[name] = json.loads(Path(files[-1]).read_text("utf-8"))
     return out

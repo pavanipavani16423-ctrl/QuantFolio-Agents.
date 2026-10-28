@@ -1,0 +1,32 @@
+{
+  "created": "2026-10-28T01:31:11.801378+00:00",
+  "reranker": "Xenova/ms-marco-MiniLM-L-6-v2",
+  "pairs": 267,
+  "threshold": 1.534,
+  "supported_accepted": 0.9476,
+  "hard_negatives_rejected": 0.9663,
+  "easy_negatives_rejected": 0.9963,
+  "quantiles": {
+    "supported": [
+      1.534,
+      3.871,
+      5.462,
+      6.439,
+      8.237
+    ],
+    "hard_negative": [
+      -11.123,
+      -10.216,
+      -8.755,
+      -4.66,
+      0.597
+    ],
+    "easy_negative": [
+      -11.251,
+      -10.99,
+      -10.565,
+      -9.988,
+      -7.443
+    ]
+  }
+}

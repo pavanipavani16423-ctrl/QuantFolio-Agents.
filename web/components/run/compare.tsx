@@ -5,44 +5,39 @@ import { METHOD } from "@/lib/plain";
 import type { Run } from "@/lib/types";
 import { RunSection } from "./section";
 
-const ORDER = ["classical", "quantum", "hybrid", "greedy"];
-
 export function Comparison({ run }: { run: Run }) {
   const opt = run.result.optimization;
   if (!opt) return null;
-  const best = opt.proposals.classical;
+  const best = opt.proposals.optimal ?? opt.proposals[opt.recommended];
+  const base = opt.proposals.baseline;
   const bestSet = new Set(best.selected);
-  const methods = ORDER.filter((m) => opt.proposals[m]);
+  const combos = opt.search.subsets_evaluated ?? opt.combinations ?? 0;
+  const same = base ? base.selected.filter((t) => bestSet.has(t)).length : 0;
   return (
     <RunSection
       id="compare"
-      eyebrow="Normal vs quantum"
+      eyebrow="How the stocks were chosen"
       title={
-        opt.quantum_found_optimum ? (
-          <>The quantum computer found the same best portfolio.</>
-        ) : opt.quantum_gap !== undefined ? (
-          <>The quantum computer came within {pct(opt.quantum_gap)} of the best.</>
+        combos ? (
+          <>Every one of the {combos.toLocaleString()} combinations was checked.</>
         ) : (
-          <>The normal computer chose the stocks.</>
+          <>The best combination was found by a step-by-step search.</>
         )
       }
-      lead={`Choosing ${opt.problem.k} of ${opt.problem.tickers.length} allowed stocks has ${opt.classical.subsets_evaluated.toLocaleString()} possible combinations. The quantum version uses one qubit per stock: ${opt.qubits} qubits.`}
+      lead={`Choosing ${opt.problem.k} of ${opt.candidates} allowed stocks. Each combination is scored by expected return minus a risk penalty set by the client's rules; the highest score wins.`}
     >
       <div className="grid gap-3 md:grid-cols-2">
-        {methods.map((m) => {
-          const p = opt.proposals[m];
-          const same = p.selected.filter((t) => bestSet.has(t)).length;
-          const quality = best.selection_utility > 0 ? p.selection_utility / best.selection_utility : 1;
-          const isRec = opt.recommended === m;
+        {[best, base].filter(Boolean).map((p) => {
+          const isRec = opt.recommended === p!.method;
           return (
             <div
-              key={m}
+              key={p!.method}
               className={cn("flex flex-col gap-3 rounded-2xl border p-4", isRec ? "border-accent bg-accent-soft/40" : "bg-panel-2")}
             >
               <div className="flex items-center justify-between gap-2">
                 <span className="flex items-center gap-2 text-sm font-semibold">
-                  <span className="size-2.5 rounded-full" style={{ background: METHOD[m].color }} />
-                  {METHOD[m].name}
+                  <span className="size-2.5 rounded-full" style={{ background: METHOD[p!.method].color }} />
+                  {METHOD[p!.method].name}
                 </span>
                 {isRec && (
                   <Badge tone="accent">
@@ -50,36 +45,26 @@ export function Comparison({ run }: { run: Run }) {
                   </Badge>
                 )}
               </div>
-              <p className="text-xs text-muted-foreground">{METHOD[m].explain}</p>
-              <div className="grid grid-cols-2 gap-2 text-sm">
+              <p className="text-xs text-muted-foreground">{METHOD[p!.method].explain}</p>
+              <div className="grid grid-cols-3 gap-2 text-sm">
                 <div>
-                  <p className="text-xs text-subtle-foreground">Quality vs best</p>
-                  <p className="tabular text-lg font-semibold">{pct(Math.min(quality, 1), 1)}</p>
+                  <p className="text-xs text-subtle-foreground">Expected return</p>
+                  <p className="tabular text-lg font-semibold">{pct(p!.expected_return)}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-subtle-foreground">Ups and downs</p>
+                  <p className="tabular text-lg font-semibold">{pct(p!.volatility)}</p>
                 </div>
                 <div>
                   <p className="text-xs text-subtle-foreground">Time</p>
-                  <p className="tabular text-lg font-semibold">{seconds(p.seconds)}</p>
+                  <p className="tabular text-lg font-semibold">{seconds(p!.seconds)}</p>
                 </div>
               </div>
-              <p className="flex items-center gap-1.5 text-xs">
-                {same === best.selected.length ? (
-                  <>
-                    <Check className="size-3.5 text-good" /> Same {same} stocks as the best answer
-                  </>
-                ) : (
-                  <>
-                    <Minus className="size-3.5 text-warning" /> {same} of {best.selected.length} stocks match the best answer
-                  </>
-                )}
-              </p>
               <div className="flex flex-wrap gap-1">
-                {p.selected.map((t) => (
+                {p!.selected.map((t) => (
                   <span
                     key={t}
-                    className={cn(
-                      "rounded-md px-1.5 py-0.5 text-[11px] font-medium",
-                      bestSet.has(t) ? "bg-card" : "bg-warning-soft text-warning",
-                    )}
+                    className={cn("rounded-md px-1.5 py-0.5 text-[11px] font-medium", bestSet.has(t) ? "bg-card" : "bg-warning-soft text-warning")}
                   >
                     {t}
                   </span>
@@ -89,6 +74,20 @@ export function Comparison({ run }: { run: Run }) {
           );
         })}
       </div>
+      {base && (
+        <p className="mt-4 flex items-center gap-1.5 text-sm">
+          {same === best.selected.length ? (
+            <>
+              <Check className="size-4 text-good" /> The rule of thumb picks the same stocks here.
+            </>
+          ) : (
+            <>
+              <Minus className="size-4 text-warning" /> The rule of thumb shares {same} of {best.selected.length} stocks
+              {opt.baseline_gap ? <> and scores {pct(opt.baseline_gap, 1)} lower</> : null}: the full search is worth it.
+            </>
+          )}
+        </p>
+      )}
       {Object.keys(opt.errors).length > 0 && (
         <ul className="mt-3 text-xs text-muted-foreground">
           {Object.entries(opt.errors).map(([k, v]) => (
@@ -98,11 +97,6 @@ export function Comparison({ run }: { run: Run }) {
           ))}
         </ul>
       )}
-      <p className="mt-4 text-xs text-subtle-foreground">
-        “Quality vs best” compares how good each set of stocks is (expected return minus a risk penalty set by the
-        client&apos;s rules). The quantum computer is simulated on this laptop, so its time is not what real quantum
-        hardware would take.
-      </p>
     </RunSection>
   );
 }
@@ -118,7 +112,7 @@ export function Weights({ run }: { run: Run }) {
   const rows = Object.entries(rec.weights).sort((a, b) => b[1] - a[1]);
   const max = Math.max(...rows.map((r) => r[1]), 0.01);
   const sectorRows = Object.entries(rec.details.sector_weights).sort((a, b) => b[1] - a[1]);
-  const rules = run.result.rules;
+  const rules = run.result.effective_rules ?? run.result.rules; // the limits this plan was built under
   return (
     <RunSection
       id="portfolio"

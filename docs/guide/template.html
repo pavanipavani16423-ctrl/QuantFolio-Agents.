@@ -78,10 +78,12 @@ svg text{font-family:"Segoe UI",system-ui,sans-serif}
 .box-accent{fill:var(--accent-soft);stroke:var(--accent)}
 .line{stroke:var(--subtle);stroke-width:1.6;fill:none}
 .t{fill:var(--fg);font-size:13px}.ts{fill:var(--muted);font-size:11px}.tb{fill:var(--fg);font-size:13px;font-weight:650}
-/* qubits */
-.qubits{display:flex;flex-wrap:wrap;gap:6px;margin:14px 0}
-.qubit{width:54px;height:48px;border-radius:12px;display:grid;place-items:center;font-weight:650;font-size:.75rem;border:1px solid var(--border);background:var(--card);color:var(--subtle);cursor:pointer;transition:.15s}
-.qubit.on{background:var(--accent);border-color:var(--accent);color:#fff}
+.examples{display:flex;flex-wrap:wrap;gap:6px}
+.ex{border:1px solid var(--border);background:var(--card);color:var(--fg);border-radius:999px;padding:6px 12px;font-size:.85rem;cursor:pointer}
+.ex.on{background:var(--fg);color:var(--bg)}
+.verdict{display:inline-block;border-radius:999px;padding:2px 10px;font-size:.8rem;font-weight:700}
+.verdict.ok{background:var(--good-soft,#e3f3ea);color:var(--good,#1f7a4d)}
+.verdict.no{background:#fbe4e1;color:#b3261e}
 .bar{height:10px;border-radius:99px;background:var(--panel)}.bar i{display:block;height:100%;border-radius:99px}
 /* walkthrough */
 .steps-nav{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px}
@@ -114,7 +116,7 @@ footer{padding:40px 0 60px;color:var(--muted);font-size:.85rem;border-top:1px so
   <a class="logo" href="#top"><b>Q</b>QuantFolio Agents</a>
   <nav class="toc" aria-label="Guide sections">
     <a href="#what">What</a><a href="#flow">How it works</a><a href="#team">Agents</a><a href="#rag">Search</a>
-    <a href="#quantum">Quantum</a><a href="#loop">You decide</a><a href="#use">Using the app</a><a href="#quality">Quality</a>
+    <a href="#safety">Safety</a><a href="#memory">Memory</a><a href="#loop">You decide</a><a href="#use">Using the app</a><a href="#quality">Quality</a>
   </nav>
   <button class="theme" id="theme" type="button">Dark mode</button>
 </div></header>
@@ -123,11 +125,11 @@ footer{padding:40px 0 60px;color:var(--muted);font-size:.85rem;border-top:1px so
 <div class="hero"><div class="wrap">
   <span class="eyebrow">A visual guide</span>
   <h1 style="margin-top:22px">An AI investment team,<br><span class="serif">explained simply</span>.</h1>
-  <p class="lead">QuantFolio Agents reads company reports, follows a client's rules, picks a portfolio with a normal and a quantum computer, and waits for a person to approve. This page shows how it works and how to use it.</p>
+  <p class="lead">QuantFolio Agents reads company reports, follows a client's rules, picks the best portfolio, checks its own work at every step, remembers your feedback, and waits for a person to approve. This page shows how it works and how to use it.</p>
   <div class="grid g4" style="margin-top:34px">
     <div class="stat"><div class="num">9</div><div class="small muted">AI agents with one job each</div></div>
     <div class="stat"><div class="num">38</div><div class="small muted">real companies (US and India)</div></div>
-    <div class="stat"><div class="num">~1 min</div><div class="small muted">from question to plan</div></div>
+    <div class="stat"><div class="num">~20 s</div><div class="small muted">from question to plan</div></div>
     <div class="stat"><div class="num">0</div><div class="small muted">trades without your approval</div></div>
   </div>
 </div></div>
@@ -139,7 +141,7 @@ footer{padding:40px 0 60px;color:var(--muted);font-size:.85rem;border-top:1px so
   <div class="grid g3">
     <div class="card"><h3>Advisors and portfolio managers</h3><p class="muted small">Prepare a rebalancing plan for each client in a minute, with a plain-language memo they can send.</p></div>
     <div class="card"><h3>Compliance teams</h3><p class="muted small">Every client rule is read from the client's own document and checked, with a link to where it is written.</p></div>
-    <div class="card"><h3>Students and researchers</h3><p class="muted small">See AI agents, document search (RAG) and quantum optimization working together on a real problem.</p></div>
+    <div class="card"><h3>Risk and IT teams</h3><p class="muted small">Personal data is removed, hidden instructions are stopped, trades need a signed approval, and every decision is in a tamper-evident log.</p></div>
   </div>
 </div></section>
 
@@ -171,7 +173,7 @@ footer{padding:40px 0 60px;color:var(--muted);font-size:.85rem;border-top:1px so
     <text x="40" y="276" class="tb">MCP tool servers</text>
     <rect x="40" y="288" width="215" height="40" rx="10" class="box-accent"/><text x="147" y="313" text-anchor="middle" class="t">Market data · prices, risk</text>
     <rect x="270" y="288" width="215" height="40" rx="10" class="box-accent"/><text x="377" y="313" text-anchor="middle" class="t">Research · document search</text>
-    <rect x="500" y="288" width="215" height="40" rx="10" class="box-accent"/><text x="607" y="313" text-anchor="middle" class="t">Optimizer · normal + quantum</text>
+    <rect x="500" y="288" width="215" height="40" rx="10" class="box-accent"/><text x="607" y="313" text-anchor="middle" class="t">Optimizer · best combination</text>
     <rect x="730" y="288" width="230" height="40" rx="10" class="box-accent"/><text x="845" y="313" text-anchor="middle" class="t">Paper broker · practice trades</text>
     <path class="line" d="M260 178 V288 M425 178 V288 M750 178 V288 M910 188 V240 H147 V288" stroke-dasharray="4 4"/>
   </svg></div>
@@ -179,12 +181,13 @@ footer{padding:40px 0 60px;color:var(--muted);font-size:.85rem;border-top:1px so
     <thead><tr><th>Agent</th><th>Its job, in plain words</th></tr></thead>
     <tbody>
       <tr><td><b>Supervisor</b></td><td>Decides which agent works next, runs independent work at the same time, sends work back when a rule fails.</td></tr>
-      <tr><td><b>Intake</b></td><td>Understands the request (client, question, companies) and recalls what it learned from your earlier reviews.</td></tr>
+      <tr><td><b>Safety check</b></td><td>Removes personal data and stops hidden instructions or forbidden requests before any AI sees them.</td></tr>
+      <tr><td><b>Intake</b></td><td>Understands the request (client, question, companies) and recalls what the team remembers about the client.</td></tr>
       <tr><td><b>Research</b></td><td>Searches the companies' official reports and answers with numbered sources.</td></tr>
       <tr><td><b>Risk</b> <span class="tag">A2A</span></td><td>Measures how much each share's price moves, and checks the risk of the final plan.</td></tr>
       <tr><td><b>Compliance</b> <span class="tag">A2A</span></td><td>Reads the client's rules document, turns it into exact limits, checks the plan against each one.</td></tr>
-      <tr><td><b>Optimizer</b></td><td>Chooses the stocks and the money split: normal computer vs quantum computer vs both.</td></tr>
-      <tr><td><b>Report writer</b></td><td>Writes the recommendation in plain language.</td></tr>
+      <tr><td><b>Optimizer</b></td><td>Tries every combination of the allowed stocks, keeps the best one under the client's rules, then sets the money split.</td></tr>
+      <tr><td><b>Report writer</b></td><td>Writes the recommendation in plain language; it is checked and rewritten if a number, stock or promise is wrong.</td></tr>
       <tr><td><b>Quality judge</b></td><td>Grades the answer with RAGAS (are claims backed by sources? does it answer the question?).</td></tr>
       <tr><td><b>Trader</b></td><td>Prepares buy and sell orders; places them only after a person approves (practice account).</td></tr>
     </tbody></table></div>
@@ -214,25 +217,38 @@ footer{padding:40px 0 60px;color:var(--muted);font-size:.85rem;border-top:1px so
   <p class="small muted" style="margin-top:12px">Measured on 78 questions with known answers (US and India): meaning search found the right passage 96% of the time; keyword search failed on reworded questions; the reranker put the right passage first most often, and found every Indian answer.</p>
 </div></section>
 
-<section id="quantum"><div class="wrap">
-  <div class="sec-head"><span class="eyebrow">Quantum, simply</span>
-    <h2>Each stock is a <span class="serif">yes or no</span>.</h2>
-    <p>Choosing 10 of 20 stocks has 184,756 combinations, and the number explodes as problems grow. A qubit is a natural yes/no unit, so each stock gets one qubit. The quantum algorithm QAOA treats all combinations together and makes the good ones more likely. Click the squares to build a portfolio of exactly 10.</p></div>
+<section id="safety"><div class="wrap">
+  <div class="sec-head"><span class="eyebrow">Safety, simply</span>
+    <h2>Checked <span class="serif">at every door</span>.</h2>
+    <p>Plain rules, not AI, check every place where text comes in or goes out, so they cannot be talked out of a decision. Click an example to see what the real safety check says (these verdicts were produced by running the project's own code).</p></div>
   <div class="panel">
-    <div class="qubits" id="qubits"></div>
-    <p class="small" id="qubitInfo"></p>
+    <div class="examples" id="safetyBtns"></div>
+    <div class="card" id="safetyOut" style="margin-top:12px"></div>
   </div>
-  <div class="grid g3" style="margin-top:16px">
-    <div class="card"><h3>How it is used</h3><p class="small muted">One qubit per stock (17-20 qubits). The circuit can only produce valid answers (exactly the right number of stocks). It runs on a quantum simulator (Qiskit) on a laptop.</p></div>
-    <div class="card"><h3>How it is checked</h3><p class="small muted">A normal computer tries every combination, so the quantum answer is graded against the proven best. A "hybrid" step then polishes it with small swaps.</p></div>
-    <div class="card"><h3>What we found</h3><p class="small muted">At the default setting quantum found the proven best portfolio for 3 of the 4 clients and came within about 10% for the Indian client; the hybrid polish step reached the best every time. At this size the normal computer is faster and exact, so no "quantum advantage" is claimed. The value is a fair, working integration, ready for bigger problems.</p></div>
+  <div class="grid g4" style="margin-top:16px">
+    <div class="card"><h3>Your request</h3><p class="small muted">Personal data (PAN, Aadhaar, phone, email, card) is removed. Hidden instructions are found by patterns and by meaning. Insider trading, manipulation and promises of returns are refused.</p></div>
+    <div class="card"><h3>Documents read</h3><p class="small muted">A report passage that tries to give the AI orders is set aside. Sources are marked as data, never instructions.</p></div>
+    <div class="card"><h3>The answer</h3><p class="small muted">Every source number must exist and really support its sentence. Numbers must match the facts; no stock outside the plan; no promises. A failed check gets one rewrite, then a safe fallback.</p></div>
+    <div class="card"><h3>The trades</h3><p class="small muted">The broker enforces hard limits (no oversized orders, no short selling) and needs a signed, single-use approval for exactly the orders you saw.</p></div>
   </div>
   <div class="card" style="margin-top:14px">
-    <p class="small"><b>Found the best portfolio</b> (each client's real problem)</p>
-    <p class="small muted" style="margin:10px 0 4px">Quantum, built to give only valid answers</p><div class="bar"><i style="width:{{Q_XY_PCT}}%;background:var(--accent)"></i></div><p class="small">{{Q_XY_TEXT}}</p>
-    <p class="small muted" style="margin:10px 0 4px">Standard quantum design</p><div class="bar"><i style="width:{{Q_X_PCT}}%;background:var(--subtle)"></i></div><p class="small">{{Q_X_TEXT}}</p>
-    <p class="small muted" style="margin:10px 0 4px">Quantum + normal polish (hybrid)</p><div class="bar"><i style="width:100%;background:var(--teal)"></i></div><p class="small">every run</p>
+    <p class="small"><b>Red-team test</b> ({{SAFETY_COUNTS}})</p>
+    {{SAFETY_BARS}}
+    <p class="small muted" style="margin-top:8px">Held-out sets were written after the rules and never used to tune them. No filter is perfect, which is why trades also need your signed approval and pass the broker's limits.</p>
   </div>
+</div></section>
+
+<section id="memory"><div class="wrap">
+  <div class="sec-head"><span class="eyebrow">Memory</span>
+    <h2>It remembers <span class="serif">what you taught it</span>.</h2>
+    <p>Like a good assistant, the team keeps four kinds of memory. It writes memory only from your decisions, checks it before reusing it, and you can make it forget a client at any time.</p></div>
+  <div class="grid g4">
+    <div class="card"><h3>Working</h3><p class="small muted">Everything in the current run, saved after each step, so a plan waiting for you survives a restart.</p></div>
+    <div class="card"><h3>Past reviews</h3><p class="small muted">"Last time Priya approved an 8-stock plan." Used to explain what changed since then.</p></div>
+    <div class="card"><h3>Preferences</h3><p class="small muted">"Avoid ONGC", "at most 15% per stock", "lower risk". They make the client's rules stricter, never looser.</p></div>
+    <div class="card"><h3>How to write</h3><p class="small muted">Your notes, like "keep it simple for the trustees", reused as guidance for the memo. Notes that look like orders to the AI are not kept.</p></div>
+  </div>
+  <p class="small muted" style="margin-top:12px">A research memory also reuses a checked answer when the same question about the same companies comes back, saving time and cost.</p>
 </div></section>
 
 <section id="loop"><div class="wrap">
@@ -281,10 +297,10 @@ footer{padding:40px 0 60px;color:var(--muted);font-size:.85rem;border-top:1px so
     <tr><td><b>Risk / volatility</b></td><td>How much the value goes up and down</td><td><b>Back-test</b></td><td>How the plan would have done on recent days it did not see</td></tr>
     <tr><td><b>Agent</b></td><td>An AI helper with one job</td><td><b>LLM</b></td><td>The AI language model that reads and writes text</td></tr>
     <tr><td><b>RAG</b></td><td>Answering from looked-up documents, with sources</td><td><b>MCP</b></td><td>A standard way for agents to use tools</td></tr>
-    <tr><td><b>A2A</b></td><td>A standard way for agents to give each other tasks</td><td><b>Qubit</b></td><td>The yes/no unit of a quantum computer</td></tr>
-    <tr><td><b>QAOA</b></td><td>A quantum algorithm for "best combination" problems</td><td><b>RAGAS / Langfuse</b></td><td>Answer grading toolkit / dashboard of steps and scores</td></tr>
+    <tr><td><b>A2A</b></td><td>A standard way for agents to give each other tasks</td><td><b>Guardrail</b></td><td>A rule that checks what goes into or out of the AI</td></tr>
+    <tr><td><b>Prompt injection</b></td><td>Text that tries to give the AI secret orders</td><td><b>RAGAS / Langfuse</b></td><td>Answer grading toolkit / dashboard of steps and scores</td></tr>
   </tbody></table></div>
-  <p class="small muted" style="margin-top:14px">Research project: practice account only, not investment advice. Clients are made-up examples; companies, reports and prices are real. The quantum computer is simulated.</p>
+  <p class="small muted" style="margin-top:14px">Research project: practice account only, not investment advice. Clients are made-up examples; companies, reports and prices are real.</p>
 </div></section>
 </main>
 
@@ -293,10 +309,10 @@ footer{padding:40px 0 60px;color:var(--muted);font-size:.85rem;border-top:1px so
 <script>
 const FLOW = [
   ["You ask", "Pick a client (US or India) and type a request, e.g. “Rebalance the trust. What risks do Reliance and TCS report?”"],
-  ["Understand", "The intake agent finds the client, the question and the companies you mean, and recalls preferences you taught it before."],
+  ["Check and understand", "A safety check removes personal data and stops hidden instructions or forbidden requests. Then the intake agent finds the client, the question and the companies you mean, and recalls what the team remembers about this client."],
   ["Research", "At the same time: the research agent reads the companies' reports (SEC filings for US, SEBI annual reports and BRSR for India); the risk agent measures how risky each share is; the compliance agent reads the client's rules document."],
-  ["Choose stocks", "A normal computer checks every combination; a simulated quantum computer (QAOA) tries the same problem; a hybrid polishes the quantum answer. The best valid plan is kept."],
-  ["Check", "The plan is tested on recent months it never saw, every rule is checked again (and sent back once if the risk limit fails), and a plain-language memo is written."],
+  ["Choose stocks", "Every possible combination of the allowed stocks is scored (expected return minus a risk penalty from the client's rules), and the best one is kept. A simple rule of thumb is shown next to it, so you can see what the full search adds."],
+  ["Check", "The plan is tested on recent months it never saw, every rule is checked again (and sent back once if the risk limit fails), and a plain-language memo is written and checked: numbers, stocks, sources, no promises."],
   ["Score", "Quick checks run at once; an AI judge (RAGAS) grades the answer in the background. All scores go to the Langfuse dashboard."],
   ["You decide", "Approve (practice trades are placed), Change (it re-plans and remembers), or Reject (say why)."],
 ];
@@ -306,15 +322,14 @@ function showFlow(i){ [...flowBtns.children].forEach((b,j)=>b.classList.toggle("
 FLOW.forEach((f,i)=>{ const b=document.createElement("button"); b.type="button"; b.innerHTML=`<span class="n">${i+1}</span>${f[0]}`; b.onclick=()=>showFlow(i); flowBtns.appendChild(b); });
 showFlow(0);
 
-const TICKERS = ["AAPL","MSFT","NVDA","GOOGL","META","AMZN","HD","JPM","V","JNJ","UNH","PFE","XOM","CVX","PG","KO","WMT","CAT","NEE","LIN"];
-const BEST = new Set({{BEST_US}});
-const q = document.getElementById("qubits"), qi = document.getElementById("qubitInfo");
-function updQ(){ const on=[...q.children].filter(x=>x.classList.contains("on")).map(x=>x.dataset.t);
-  const same = on.filter(t=>BEST.has(t)).length;
-  qi.innerHTML = on.length===10 ? (same===10 ? `<span class="ok-t"><b>This is the proven best portfolio</b> for the Conservative Income client. The quantum computer found it too.</span>` : `Valid portfolio of 10 (bitstring ${[...q.children].map(x=>x.classList.contains("on")?1:0).join("")}). ${same} of 10 match the best one.`)
-    : `${on.length} selected. A valid answer has exactly 10. <span class="muted">(Each square is one qubit: lit = 1 = buy.)</span>`; }
-TICKERS.forEach(t=>{ const d=document.createElement("button"); d.type="button"; d.className="qubit"; d.textContent=t; d.dataset.t=t; d.onclick=()=>{d.classList.toggle("on"); updQ();}; q.appendChild(d); });
-updQ();
+const SAFETY = {{SAFETY}};
+const sb = document.getElementById("safetyBtns"), so = document.getElementById("safetyOut");
+function showSafety(i){ [...sb.children].forEach((b,j)=>b.classList.toggle("on", i===j)); const x=SAFETY[i];
+  so.innerHTML = `<p class="small muted">Request</p><p>“${x.text}”</p><p style="margin-top:10px"><span class="verdict ${x.blocked?"no":"ok"}">${x.blocked?"Stopped":"Allowed"}</span></p>` +
+    `<ul class="small" style="margin-top:8px">${x.findings.map(f=>`<li><b>${f.label}</b>: <span class="muted">${f.detail}</span></li>`).join("")}</ul>` +
+    (x.redacted !== x.text ? `<p class="small muted" style="margin-top:8px">Stored as: “${x.redacted}”</p>` : ""); }
+SAFETY.forEach((x,i)=>{ const b=document.createElement("button"); b.type="button"; b.className="ex"; b.textContent=x.short; b.onclick=()=>showSafety(i); sb.appendChild(b); });
+showSafety(0);
 
 const WALK = {{WALK}};
 const nav = document.getElementById("walkNav"), walk = document.getElementById("walk");

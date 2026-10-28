@@ -1,83 +1,20 @@
 import { ChevronDown } from "lucide-react";
 import { Badge } from "@/components/ui";
-import { num, pct, seconds } from "@/lib/format";
 import type { Run } from "@/lib/types";
-import { ConvergenceChart } from "./charts";
-
-function KV({ items }: { items: [string, string | number][] }) {
-  return (
-    <dl className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-      {items.map(([k, v]) => (
-        <div key={k} className="rounded-xl bg-panel-2 p-3">
-          <dt className="text-[11px] text-muted-foreground">{k}</dt>
-          <dd className="tabular mt-0.5 text-sm font-semibold">{v}</dd>
-        </div>
-      ))}
-    </dl>
-  );
-}
 
 export function TechnicalDetails({ run }: { run: Run }) {
-  const opt = run.result.optimization;
-  const q = opt?.quantum;
   return (
     <details className="group rounded-3xl border bg-card">
       <summary className="flex cursor-pointer items-center justify-between gap-3 p-5 sm:p-6">
         <span>
           <span className="block text-xl font-semibold tracking-tight">Technical details</span>
           <span className="block text-sm text-muted-foreground">
-            Quantum circuit, agent decisions, A2A messages, MCP tool calls. For engineers and reviewers.
+            Supervisor decisions, A2A messages, MCP tool calls and AI model calls. For engineers and reviewers.
           </span>
         </span>
         <ChevronDown className="size-5 transition-transform group-open:rotate-180" />
       </summary>
       <div className="flex flex-col gap-8 border-t p-5 sm:p-6">
-        {q && (
-          <div>
-            <h3 className="mb-3 font-semibold">Quantum run (QAOA on Qiskit Aer)</h3>
-            <KV
-              items={[
-                ["Qubits", q.num_qubits],
-                ["Layers (p)", q.reps],
-                ["Mixer", q.mixer === "xy" ? "XY (keeps exactly k)" : "X (standard)"],
-                ["Circuit depth", q.circuit_depth.toLocaleString()],
-                ["Two-qubit gates", q.two_qubit_gates.toLocaleString()],
-                ["Optimizer steps", `${q.iterations} (${q.optimizer})`],
-                ["Shots", q.shots.toLocaleString()],
-                ["Run time", seconds(q.execution_time)],
-                ["Approximation ratio", num(q.feasible_approximation_ratio, 3)],
-                ["P(best answer)", pct(q.optimal_probability, 2)],
-                ["P(valid answer)", pct(q.feasible_probability, 1)],
-                ["Gap to best", pct(opt?.quantum_gap ?? null, 2)],
-              ]}
-            />
-            <p className="mt-3 text-xs text-muted-foreground">{q.backend}</p>
-            <h4 className="mt-4 mb-1 text-sm font-medium">Angle optimization (energy per step)</h4>
-            <ConvergenceChart values={q.convergence} />
-            <h4 className="mt-4 mb-2 text-sm font-medium">Most likely measured answers</h4>
-            <div className="overflow-x-auto">
-              <table className="w-full text-xs">
-                <thead className="text-left text-muted-foreground">
-                  <tr>
-                    <th className="py-1 pr-3 font-medium">Bitstring (1 = buy, order: {opt?.problem.tickers.join(" ")})</th>
-                    <th className="py-1 pr-3 font-medium">Probability</th>
-                    <th className="py-1 font-medium">Valid</th>
-                  </tr>
-                </thead>
-                <tbody className="font-mono">
-                  {q.top_samples.map((s) => (
-                    <tr key={s.bitstring} className="border-t">
-                      <td className="py-1 pr-3">{s.bitstring}</td>
-                      <td className="py-1 pr-3">{pct(s.probability, 2)}</td>
-                      <td className="py-1">{s.feasible ? "yes" : "no"}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        )}
-
         <div>
           <h3 className="mb-3 font-semibold">Supervisor decisions</h3>
           <ol className="flex flex-col gap-1.5 text-sm">

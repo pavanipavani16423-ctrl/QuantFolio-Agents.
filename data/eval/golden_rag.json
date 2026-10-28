@@ -453,25 +453,25 @@
   "id": "risk-in-00",
   "kind": "risk_india",
   "question": "Which international standards does TCS follow to manage enterprise risk?",
-  "reference": "semi\u2011autonomous operations. In addition, risk, compliance,\n\ncybersecurity, and regulatory\u2011driven transformation\n\nframework to address evolving AI\u2011related regulatory requirements across jurisdictions. This includes initiatives covering AI literacy, risk classification and management, contractual controls across the value chain, strengthened security and data protection\n\nframeworks, and the integration of Responsible AI principles across internal initiatives, products and platforms, and customer engagements. TCS\u2019s sustained focus on customer centricity,\n\nThe TCS Enterprise Risk Management (ERM) framework is a robust and continuously evolving system aligned with globally recognised practices under the COSO 2017 and ISO 31000:2018 frameworks, enabling the Company to effectively navigate an increasingly complex risk environment. Guided by the Risk Management Policy approved by the Board, the ERM framework encompasses risk identification, assessment, response planning, monitoring and governance to",
+  "reference": "Customers continue to extend decision\u2011making cycles while semi\u2011autonomous operations. In addition, risk, compliance, cybersecurity, and regulatory\u2011driven transformation framework to address evolving AI\u2011related regulatory requirements across jurisdictions. This includes initiatives covering AI literacy, risk classification and management, contractual controls across the value chain, strengthened security and data protection frameworks, and the integration of Responsible AI principles across internal initiatives, products and platforms, and customer engagements. TCS\u2019s sustained focus on customer centricity, The TCS Enterprise Risk Management (ERM) framework is a robust and continuously evolving system aligned with globally recognised practices under the COSO 2017 and ISO 31000:2018 frameworks, enabling the Company to effectively navigate an increasingly complex risk environment.",
   "reference_ids": [
-   "TCS_ar_risk#003"
+   "TCS_ar_risk#002"
   ]
  },
  {
   "id": "risk-in-01",
   "kind": "risk_india",
   "question": "What types of risk does HDFC Bank say it has to manage?",
-  "reference": "performance. The Bank operates in a dynamic and regulated\n\nenvironment and manages a wide range of risks including credit, market, liquidity, operational, model, cybersecurity, technology, compliance and reputational risks. The approach ensures\n\nthat risk-taking remains aligned with defined boundaries and strategic priorities.",
+  "reference": "The Government of India has continued to advance its Climate-related risks and sustainability considerations are gaining increasing prominence in financial sector Sustainable Finance and ESG Risk Management frameworks. Its sustainable finance portfolio stands at The framework integrates risk considerations into strategy, business planning and daily operations. This allows for Effective risk management supports resilience and sustained performance. The Bank operates in a dynamic and regulated environment and manages a wide range of risks including credit, market, liquidity, operational, model, cybersecurity, technology, compliance and reputational risks. The approach ensures that risk-taking remains aligned with defined boundaries and strategic priorities.",
   "reference_ids": [
-   "HDFCBANK_ar_risk#012"
+   "HDFCBANK_ar_risk#003"
   ]
  },
  {
   "id": "risk-in-02",
   "kind": "risk_india",
   "question": "What dangers come with Bharti Airtel running businesses in Asia and Africa?",
-  "reference": "Integrated Report and Annual Financial Statements 2025-26Bharti Airtel Limited Overview and Performance Management Discussion & Analysis Statutory Reports Financial Statements Risk and Mitigation Framework\n\nOperating across diverse and dynamic markets in Asia and Africa, Airtel is exposed to a broad spectrum of risks including political and economic volatility and regulatory uncertainty. Rapid technological advancements, intense competition, climate-related disruptions and increasing data privacy obligations further add to the complexity of the operating environment. This necessitates a proactive risk management approach to identify, assess and mitigate risks to ensure long-term sustainability.",
+  "reference": "Integrated Report and Annual Financial Statements 2025-26Bharti Airtel Limited Overview and Performance Management Discussion & Analysis Statutory Reports Financial Statements Risk and Mitigation Framework Operating across diverse and dynamic markets in Asia and Africa, Airtel is exposed to a broad spectrum of risks including political and economic volatility and regulatory uncertainty. Rapid technological advancements, intense competition, climate-related disruptions and increasing data privacy obligations further add to the complexity of the operating environment. This necessitates a proactive risk management approach to identify, assess and mitigate risks to ensure long-term sustainability.",
   "reference_ids": [
    "BHARTIARTL_ar_risk#002"
   ]
@@ -489,25 +489,25 @@
   "id": "risk-in-04",
   "kind": "risk_india",
   "question": "According to TCS, how did conflict and trade disruption change energy prices and costs?",
-  "reference": "as a significant source of uncertainty for the global economy, particularly through disruptions to energy markets and global trade flows. The conflict has led to volatility in oil and gas prices due to supply risks and logistical constraints in critical transit routes, which has translated into higher input costs across\n\nindustries and contributed to renewed inflationary pressures in several economies. Elevated energy prices have weighed\n\non consumer purchasing power and corporate margins, while\n\nheightened geopolitical risk has increased financial market\n\nvolatility, tightened financial conditions, and dampened\n\ninvestment sentiment globally. The broader global economy has experienced slower growth momentum and increased downside\n\nrisks to the medium\u2011term outlook, prompting IMF to lower its 2026 global growth projection by 0.2% to 3.1%1.",
+  "reference": "In recent months, new geopolitical tensions have emerged as a significant source of uncertainty for the global economy, particularly through disruptions to energy markets and global trade flows. The conflict has led to volatility in oil and gas prices due to supply risks and logistical constraints in critical transit routes, which has translated into higher input costs across industries and contributed to renewed inflationary pressures in several economies. Elevated energy prices have weighed on consumer purchasing power and corporate margins, while heightened geopolitical risk has increased financial market volatility, tightened financial conditions, and dampened investment sentiment globally. The broader global economy has experienced slower growth momentum and increased downside risks to the medium\u2011term outlook, prompting IMF to lower its 2026 global growth projection by 0.2% to 3.1%1.",
   "reference_ids": [
-   "TCS_ar_mdna#002"
+   "TCS_ar_mdna#001"
   ]
  },
  {
   "id": "risk-in-05",
   "kind": "risk_india",
   "question": "What hit Maruti Suzuki's business environment late in the year, and what happened to the rupee?",
-  "reference": "domestic consumption, fast-track investment and support\n\nemployment, including GST reform, personal income tax relief, front- loaded capital expenditure, and enhanced credit support to MSMEs.\n\nAt the same time, benign inflation provided the RBI with room to reduce interest rates and support economic growth. Besides, RBI\u2019s astute liquidity management for quicker transmission of policy rate cuts and efforts to contain volatility in forex market were noteworthy.\n\nHowever, towards the end of the year, the West Asia conflict created supply and cost shocks that weighed on economic momentum and led to a sharp depreciation of the rupee against the US dollar. Going forward, the effect of geopolitical tensions on economy may likely prevail. In addition, the risk of an El Ni\u00f1o-induced weak monsoon is emerging.",
+  "reference": "However, towards the end of the year, the West Asia conflict created supply and cost shocks that weighed on economic momentum and led to a sharp depreciation of the rupee against the US dollar. Going forward, the effect of geopolitical tensions on economy may likely prevail. In addition, the risk of an El Ni\u00f1o-induced weak monsoon is emerging.",
   "reference_ids": [
-   "MARUTI_ar_mdna#002"
+   "MARUTI_ar_mdna#001"
   ]
  },
  {
   "id": "risk-in-06",
   "kind": "risk_india",
   "question": "What does Reliance expect for global oil demand next year, and why?",
-  "reference": "Reliance Retail expects to continue focusing on expansion, operational efficiency, and customer-centric innovation, while strengthening its integrated ecosystem across stores and digital platforms with prudent investments and disciplined risk management.\n\nReliance Industries Limited Integrated Annual Report 2025-26 Management Discussion and Analysis - Business Overview Management Discussion and Analysis - Business Overview Strategic\n\n\u2022 Increasing global uncertainties is putting pressure\n\non energy, freight and raw material costs. Broader\n\n\u2022 Content piracy continues to present a persistent risk.\n\n\u2022 Emerging formats such as micro-dramas are unlocking\n\nGlobal oil demand growth is expected to be sluggish due to higher oil prices and economic slowdown in FY 2026-27 amid Middle East conflict. Refinery and oil infrastructure damages which caused product supply losses are likely to take a longer period to recover, resulting in continual volatility in the market. The FY 2026-27 outlook remains extremely vulnerable to geopolitical, macro-economic and policy risks.",
+  "reference": "Reliance Retail expects to continue focusing on expansion, operational efficiency, and customer-centric innovation, while strengthening its integrated ecosystem across stores and digital platforms with prudent investments and disciplined risk management.\n\nReliance Industries Limited Integrated Annual Report 2025-26 Management Discussion and Analysis - Business Overview Management Discussion and Analysis - Business Overview Strategic \u2022 Increasing global uncertainties is putting pressure on energy, freight and raw material costs. Broader \u2022 Content piracy continues to present a persistent risk. \u2022 Emerging formats such as micro-dramas are unlocking Global oil demand growth is expected to be sluggish due to higher oil prices and economic slowdown in FY 2026-27 amid Middle East conflict. Refinery and oil infrastructure damages which caused product supply losses are likely to take a longer period to recover, resulting in continual volatility in the market. The FY 2026-27 outlook remains extremely vulnerable to geopolitical, macro-economic and policy risks.",
   "reference_ids": [
    "RELIANCE_ar_risk#001"
   ]
@@ -516,25 +516,25 @@
   "id": "risk-in-07",
   "kind": "risk_india",
   "question": "How many steps are in Asian Paints' process for handling risks?",
-  "reference": "The Company operates under a risk governance framework that features dedicated risk management roles:\n\nrisks affecting our operations, including\n\nWe have implemented a five-stage risk management process to ensure structured identification, evaluation and mitigation of risks. The process captures both threats and opportunities, enabling timely responses and continuous improvement.\n\nKey organisational risks are identified through inputs from top management and prioritised based on impact, likelihood, and the Company\u2019s risk appetite. The RMC strengthens preparedness for these risks through scenario-based mitigation plans and dynamic scenario planning.\n\nIdentified risks are mapped to business functions/those responsible for developing and implementing of mitigation plans as necessary. Progress is monitored periodically at the Risk Management Committee meetings.\n\nOur risk governance is benchmarked against ISO 31000 standards, ensuring consistency with international best practices and reinforcing our commitment to robust, transparent and effective risk management.",
+  "reference": "of the year due to political uncertainty, Management Discussion and AnalysisAsian Paints Limited 54 We have robust shareholder support mechanisms such as the Stakeholders\u2019 Relationship Committee and the Investors\u2019 Grievance Redressal Policy, designed to address shareholder concerns promptly and efficiently.\n\nEconomic value creation All figures here are on Standalone basis (In J Crores) The Company operates under a risk governance framework that features dedicated risk management roles: risks affecting our operations, including We have implemented a five-stage risk management process to ensure structured identification, evaluation and mitigation of risks. The process captures both threats and opportunities, enabling timely responses and continuous improvement.\n\nKey organisational risks are identified through inputs from top management and prioritised based on impact, likelihood, and the Company\u2019s risk appetite. The RMC strengthens preparedness for these risks through scenario-based mitigation plans and dynamic scenario planning.",
   "reference_ids": [
-   "ASIANPAINT_ar_risk#002"
+   "ASIANPAINT_ar_risk#000"
   ]
  },
  {
   "id": "risk-in-08",
   "kind": "risk_india",
   "question": "How did L&T narrow down which sustainability topics matter most?",
-  "reference": "An initial longlist of 34 topics was identified for evaluation. Following detailed assessment and prioritization, 15 topics were determined to be most material based on their impact and/or financial significance. The identified material topics span environmental, social and governance dimensions and include topics assessed as double material as well as those driven primarily by financial materiality. These topics represent priority areas of focus for L&T\u2019s strategy, risk management and sustainability initiatives.\n\nThe materiality matrix and its associated targets and KPIs are published on the website.",
+  "reference": "Senior management 1:1 interactions and detailed questionnaire Employees including Sustainability teams Questionnaire Sustainability teams across the Company Detailed questionnaire Customers QuestionnaireSupply chain partners Local Communities, NGOs and Civil Societies Focussed group discussions Business and Trade Associations, Academia, investors Survey Outcome An initial longlist of 34 topics was identified for evaluation. Following detailed assessment and prioritization, 15 topics were determined to be most material based on their impact and/or financial significance. The identified material topics span environmental, social and governance dimensions and include topics assessed as double material as well as those driven primarily by financial materiality. These topics represent priority areas of focus for L&T\u2019s strategy, risk management and sustainability initiatives.\n\nThe materiality matrix and its associated targets and KPIs are published on the website.",
   "reference_ids": [
-   "LT_ar_mdna#083"
+   "LT_ar_mdna#020"
   ]
  },
  {
   "id": "risk-in-09",
   "kind": "risk_india",
   "question": "Which committee oversees business risks at Titan, and which risks does it cover?",
-  "reference": "Source: NSE annual report filing, https://nsearchives.nseindia.com/annual_reports/AR_29549_TITAN_2025_2026_A_11906853_03072026125809.pdf\n\nconcern status and Company\u2019s operations in future.\n\n7. Proceedings under Insolvency and Bankruptcy\n\nThe Company has constituted a Risk Management Committee. The Company has in place a risk management framework to identify, evaluate business risks and challenges across the Company both at corporate level as also separately for each business division. These risks include market risk, credit risk and liquidity risk.\n\nThe Company minimises the effects of these risks by using derivative financial instruments to hedge risk exposures. The use of derivative financial instruments and investment of excess liquidity is governed by the Company\u2019s policies approved by the Board of Directors, which provide written principles on the use of such instruments consistent with the Company\u2019s risk management strategy.\n\nThe Company does not enter into or trade financial instruments including derivative financial instruments, for speculative purposes.",
+  "reference": "concern status and Company\u2019s operations in future. 7. Proceedings under Insolvency and Bankruptcy The Company has constituted a Risk Management Committee. The Company has in place a risk management framework to identify, evaluate business risks and challenges across the Company both at corporate level as also separately for each business division. These risks include market risk, credit risk and liquidity risk.\n\nThe Company minimises the effects of these risks by using derivative financial instruments to hedge risk exposures. The use of derivative financial instruments and investment of excess liquidity is governed by the Company\u2019s policies approved by the Board of Directors, which provide written principles on the use of such instruments consistent with the Company\u2019s risk management strategy.\n\nThe Company does not enter into or trade financial instruments including derivative financial instruments, for speculative purposes.",
   "reference_ids": [
    "TITAN_ar_risk#000"
   ]
@@ -561,10 +561,9 @@
   "id": "risk-02",
   "kind": "risk",
   "question": "What harm could hacking or security flaws cause Microsoft?",
-  "reference": "Cyberattacks and security vulnerabilities could lead to reduced revenue, increased costs, liability claims, or harm to our reputation or competitive position. Threats to security can take a variety of forms. Threat actors, including individual and groups of hackers and sophisticated organizations, including nation-states, state-sponsored organizations, or cybercriminal groups, continuously undertake attacks that pose threats to our customers and our internal infrastructure, and we have experienced cybersecurity incidents in which such actors have gained unauthorized access to our systems and data, as well as customer, partner, and supplier systems and data. These actors use a wide variety of methods, which include developing and deploying malicious software; exploiting known, latent, or potential vulnerabilities or intentionally designed processes in our or third-party hardware, software, or other infrastructure to attack our products and services or gain access to our networks and datacenters; using social engineering and AI-assisted techniques to induce our employees, users, partners, suppliers, or customers to disclose sensitive information, such as passwords, or take other acti",
+  "reference": "Threats to security can take a variety of forms. Threat actors, including individual and groups of hackers and sophisticated organizations, including nation-states, state-sponsored organizations, or cybercriminal groups, continuously undertake attacks that pose threats to our customers and our internal infrastructure, and we have experienced cybersecurity incidents in which such actors have gained unauthorized access to our systems and data, as well as customer, partner, and supplier systems and data. These actors use a wide variety of methods, which include developing and deploying malicious software; exploiting known, latent, or potential vulnerabilities or intentionally designed processes in our or third-party hardware, software, or other infrastructure to attack our products and services or gain access to our networks and datacenters; using social engineering and AI-assisted techniques to induce our employees, users, partners, suppliers, or customers to disclose sensitive information, such as passwords, or take other actions to gain access to our data or our users\u2019 or customers\u2019 data; or acting in a coordinated manner or conducting coordinated attacks. For example, as previousl",
   "reference_ids": [
-   "MSFT_risk_factors#024",
-   "MSFT_risk_factors#025"
+   "MSFT_risk_factors#020"
   ]
  },
  {
@@ -573,7 +572,7 @@
   "question": "Why might NVIDIA end up with too much or too little product compared to what customers want?",
   "reference": "Long manufacturing lead times and uncertain supply and capacity availability, combined with a failure to estimate customer demand accurately, has led and could lead to mismatches between supply and demand.\n\nWe have long manufacturing lead times and build finished products and maintain inventory in advance of anticipated demand. In periods of shortages impacting the semiconductor industry and/or limited supply or capacity in our supply chain, the lead times for certain supply may be extended. We have previously experienced and may continue to experience extended lead times of more than 12 months. To secure future supply and capacity, we have paid premiums, provided deposits, and entered into long-term supply agreements and capacity commitments, which have increased our product costs and this may continue. We may still be unable to secure sufficient commitments for capacity to address our business needs.",
   "reference_ids": [
-   "NVDA_risk_factors#014"
+   "NVDA_risk_factors#012"
   ]
  },
  {
@@ -591,36 +590,34 @@
   "question": "How does government supervision shape the way JPMorgan runs its business?",
   "reference": "JPMorganChase\u2019s businesses are highly regulated and are significantly affected by applicable law and supervisory expectations.\n\nJPMorganChase must comply with applicable law in all of the jurisdictions around the world where it does business. Like other financial services firms, JPMorganChase is subject to extensive supervision and regulation that significantly affects the way that it conducts its business and structures its operations. The supervisory and regulatory framework also imposes requirements for JPMorganChase to implement and maintain compliance programs, and the complexity of these programs can increase its risks of non-compliance. In addition, entering into or acquiring a new business or expanding current business could increase the scope of applicable law or supervision and regulation to which JPMorganChase is subject.\n\nJPMorganChase has in the past and could in the future be required to modify its business and operations in response to changes in applicable law, regulatory decisions or supervisory expectations, such as:",
   "reference_ids": [
-   "JPM_risk_factors#009"
+   "JPM_risk_factors#007"
   ]
  },
  {
   "id": "risk-06",
   "kind": "risk",
   "question": "Could lawsuits or government probes hurt Visa?",
-  "reference": "We may be adversely affected by the outcome of litigation or investigations. We are subject to numerous litigation matters, investigations, claims, examinations, information gathering requests, subpoenas, government and regulatory proceedings asserted by civil litigants, governments and enforcement bodies investigating or alleging, among other things, violations of competition and antitrust law, consumer protection law, privacy law and intellectual property law (these are referred to as \u201cactions\u201d in this section). Details of the most significant actions we face are described more fully in Note 20\u2014Legal Matters to our consolidated financial statements included in Item 8 of this report. These actions are inherently uncertain, expensive and disruptive to our operations. In the event we are found liable or reach a settlement in any action, particularly in a large class action lawsuit, such as one involving an antitrust claim entitling the plaintiff to treble damages in the U.S., or we incur liability arising from a government investigation, we may be required to pay significant awards or judgments, settlements, costs or fines.",
+  "reference": "We are subject to numerous litigation matters, investigations, claims, examinations, information gathering requests, subpoenas, government and regulatory proceedings asserted by civil litigants, governments and enforcement bodies investigating or alleging, among other things, violations of competition and antitrust law, consumer protection law, privacy law and intellectual property law (these are referred to as \u201cactions\u201d in this section). Details of the most significant actions we face are described more fully in Note 20\u2014Legal Matters to our consolidated financial statements included in Item 8 of this report. These actions are inherently uncertain, expensive and disruptive to our operations. In the event we are found liable or reach a settlement in any action, particularly in a large class action lawsuit, such as one involving an antitrust claim entitling the plaintiff to treble damages in the U.S., or we incur liability arising from a government investigation, we may be required to pay significant awards or judgments, settlements, costs or fines.",
   "reference_ids": [
-   "V_risk_factors#038",
-   "V_risk_factors#039"
+   "V_risk_factors#033"
   ]
  },
  {
   "id": "risk-07",
   "kind": "risk",
   "question": "What happens to UnitedHealth if it misjudges how much patient care will cost?",
-  "reference": "If we fail to estimate, price for and manage our medical costs or design benefits in an effective manner, the profitability of our risk-based products and services could decline and could materially and adversely affect our results of operations, financial position and cash flows.",
+  "reference": "The risks and uncertainties discussed below are not the only risks we may face. There may be risks and uncertainties not currently known to us or that we may deem to be immaterial that could materially and adversely affect our business, results of operations, financial position, cash flows and prospects.\n\nIf we fail to estimate, price for and manage our medical costs or design benefits in an effective manner, the profitability of our risk-based products and services could decline and could materially and adversely affect our results of operations, financial position and cash flows.",
   "reference_ids": [
-   "UNH_risk_factors#004"
+   "UNH_risk_factors#002"
   ]
  },
  {
   "id": "risk-08",
   "kind": "risk",
   "question": "How dependent is Pfizer on a small number of its best-selling drugs?",
-  "reference": "We recorded revenues of more than $1 billion for each of 12 products that collectively accounted for 65% of Total revenues in 2025. For example, Eliquis accounted for 13% of Total revenues in 2025. See Notes 1 and 17. If these products or any of our other major products were to, or continue to (if applicable), experience loss of patent protection (if applicable), changes in prescription or vaccination purchasing or growth rates, reduced product demand, material product liability litigation, unexpected side effects or safety concerns, regulatory proceedings or investigations, lower governmental and/or regulatory confidence, negative publicity affecting doctor or patient confidence, pressure from competitive products, changes in recommendations and coverage, changes in labeling, pricing and access pressures, including those related to the IRA and MFN, or supply shortages or if a new, more effective product should be introduced, the adverse impact on our revenues could be significant and our revenue forecasts and expectations could prove to be inaccurate and we may fail to meet these expectations.",
+  "reference": "If these products or any of our other major products were to, or continue to (if applicable), experience loss of patent protection (if applicable), changes in prescription or vaccination purchasing or growth rates, reduced product demand, material product liability litigation, unexpected side effects or safety concerns, regulatory proceedings or investigations, lower governmental and/or regulatory confidence, negative publicity affecting doctor or patient confidence, pressure from competitive products, changes in recommendations and coverage, changes in labeling, pricing and access pressures, including those related to the IRA and MFN, or supply shortages or if a new, more effective product should be introduced, the adverse impact on our revenues could be significant and our revenue forecasts and expectations could prove to be inaccurate and we may fail to meet these expectations.",
   "reference_ids": [
-   "PFE_risk_factors#011",
-   "PFE_risk_factors#012"
+   "PFE_risk_factors#010"
   ]
  },
  {
@@ -629,7 +626,7 @@
   "question": "Why are fake medicines a risk for Pfizer?",
   "reference": "Our reputation, in-line and pipeline portfolios render our medicines and vaccines prime targets for counterfeiters. Counterfeits pose a significant risk to patient health and safety because of the conditions under which they are manufactured\u2014often in unregulated, unlicensed, uninspected, and unsanitary sites\u2014as well as the lack of regulation of their contents. Failure to mitigate this threat could adversely impact consumers who use our products, potentially causing them harm. This situation, in turn, may result in the loss of patient confidence in the Pfizer name and in the integrity of our medicines and vaccines, and potentially impact our business through lost sales, product recalls, and possible litigation. The prevalence of counterfeit medicines is an industry-wide issue due to a variety of factors, including the adoption of e-commerce and the proliferation of heavily marketed compounded medicines.",
   "reference_ids": [
-   "PFE_risk_factors#030"
+   "PFE_risk_factors#026"
   ]
  },
  {
@@ -645,29 +642,27 @@
   "id": "risk-11",
   "kind": "risk",
   "question": "Could worries about sugar and weight gain reduce demand for Coca-Cola drinks?",
-  "reference": "Obesity and other health-related concerns may reduce demand for some of our products. There is ongoing concern among consumers, public health professionals and government agencies about the health problems associated with obesity and other chronic diseases. Recent activities and proposals by U.S. federal and state government agencies and initiatives have focused on potential drivers behind the rise in childhood chronic diseases. Continued governmental focus on such initiatives, as well as ongoing public concern about obesity; other health-related public concerns surrounding consumption of sweetened beverages; the effects or perceived effects of the usage of weight-loss drugs on consumption patterns; potential new or increased taxes on sweetened beverages by government entities to reduce consumption or to raise revenue; potential new or increased governmental regulations on particular ingredients or additives in our beverages and packaging, or on manufacturing processes; additional governmental regulations concerning the advertising, marketing, labeling, packaging or sale of our sweetened beverages; changes in funding for or restrictions on the inclusion of our products in benefit p",
+  "reference": "There is ongoing concern among consumers, public health professionals and government agencies about the health problems associated with obesity and other chronic diseases. Recent activities and proposals by U.S. federal and state government agencies and initiatives have focused on potential drivers behind the rise in childhood chronic diseases. Continued governmental focus on such initiatives, as well as ongoing public concern about obesity; other health-related public concerns surrounding consumption of sweetened beverages; the effects or perceived effects of the usage of weight-loss drugs on consumption patterns; potential new or increased taxes on sweetened beverages by government entities to reduce consumption or to raise revenue; potential new or increased governmental regulations on particular ingredients or additives in our beverages and packaging, or on manufacturing processes; additional governmental regulations concerning the advertising, marketing, labeling, packaging or sale of our sweetened beverages; changes in funding for or restrictions on the inclusion of our products in benefit programs, such as the Supplemental Nutrition Assistance Program (SNAP) in the United St",
   "reference_ids": [
-   "KO_risk_factors#024",
-   "KO_risk_factors#025"
+   "KO_risk_factors#022"
   ]
  },
  {
   "id": "risk-12",
   "kind": "risk",
   "question": "Why are relationships with bottlers important to Coca-Cola?",
-  "reference": "We rely on our bottling partners for a significant portion of our business. If we are unable to maintain good relationships with our bottling partners, our business could suffer.",
+  "reference": "Such endeavors may also involve significant risks and uncertainties, including greater execution risks; higher costs; lower rates of sales; distraction of management from existing operations; lower product, category or industry knowledge and expertise; slower than expected or inadequate return on investments; increased competitive pressures; stakeholder scrutiny; and reliance on the performance of third parties. As we become subject to additional governmental regulations, including alcohol regulations related to licensing, trade and pricing practices; labeling, advertising, promotion and marketing practices; and relationships with distributors, we may become exposed to the risk of increased compliance costs and disruptions to our existing business.\n\nWe rely on our bottling partners for a significant portion of our business. If we are unable to maintain good relationships with our bottling partners, our business could suffer.",
   "reference_ids": [
-   "KO_risk_factors#044"
+   "KO_risk_factors#036"
   ]
  },
  {
   "id": "risk-13",
   "kind": "risk",
   "question": "How could a disease outbreak affect Walmart?",
-  "reference": "Global or regional health pandemics or epidemics could negatively impact our business, financial position and results of operations. The emergence, severity, magnitude and duration of global or regional pandemics, epidemics or other health crises are uncertain and difficult to predict. A pandemic, epidemic or contagious disease outbreak that affects humans or the food supply, such as the avian flu impact on poultry and egg production could impact our business operations, demand for our products and services, in-stock positions, costs of doing business, access to inventory, supply chain operations, ability to predict future performance, exposure to litigation and financial performance, among other things. In the event of any global or regional health crisis, customer demand for certain products may fluctuate, customer behaviors may change and consumer disposable income could be negatively impacted, which may challenge our ability to anticipate and/or adjust inventory levels to meet that demand. These risks and their impacts are difficult to predict and could otherwise disrupt and adversely affect our operations and our financial performance.",
+  "reference": "The emergence, severity, magnitude and duration of global or regional pandemics, epidemics or other health crises are uncertain and difficult to predict. A pandemic, epidemic or contagious disease outbreak that affects humans or the food supply, such as the avian flu impact on poultry and egg production could impact our business operations, demand for our products and services, in-stock positions, costs of doing business, access to inventory, supply chain operations, ability to predict future performance, exposure to litigation and financial performance, among other things. In the event of any global or regional health crisis, customer demand for certain products may fluctuate, customer behaviors may change and consumer disposable income could be negatively impacted, which may challenge our ability to anticipate and/or adjust inventory levels to meet that demand. These risks and their impacts are difficult to predict and could otherwise disrupt and adversely affect our operations and our financial performance.",
   "reference_ids": [
-   "WMT_risk_factors#018",
-   "WMT_risk_factors#019"
+   "WMT_risk_factors#018"
   ]
  },
  {
@@ -676,7 +671,7 @@
   "question": "What would new limits on carbon emissions mean for NextEra Energy?",
   "reference": "NEE's and FPL's business could be negatively affected by federal or state laws or regulations mandating new or additional limits on the production of greenhouse gas emissions.\n\nFederal or state laws or regulations may be adopted that would impose new or additional limits on greenhouse gas emissions, including, but not limited to, carbon dioxide and methane, from electric generation units using fuels, such as natural gas. The potential effects of greenhouse gas emission limits on NEE's and FPL's electric generation units are subject to significant uncertainties based on, among other things, the timing of the implementation of any new requirements, the required levels of emission reductions, the nature of any market-based or tax-based mechanisms adopted to facilitate reductions, the relative availability of greenhouse gas emission reduction offsets, the development of cost-effective, commercial-scale carbon capture and storage technology and supporting regulations and liability mitigation measures, and the range of available compliance alternatives.",
   "reference_ids": [
-   "NEE_risk_factors#019"
+   "NEE_risk_factors#017"
   ]
  },
  {
@@ -692,10 +687,9 @@
   "id": "risk-16",
   "kind": "risk",
   "question": "Why is Caterpillar sensitive to the economic cycle?",
-  "reference": "Our business and the industries we serve are highly sensitive to global and regional economic conditions. Our results of operations are materially affected by economic conditions globally and regionally and in the particular industries we serve. The demand for our products and services tends to be cyclical and can be significantly reduced in periods of economic weakness characterized by lower levels of government and business investment, lower levels of business confidence, lower corporate earnings, high real interest rates, lower credit activity or tighter credit conditions, perceived or actual industry overcapacity, higher unemployment and lower consumer spending. A prolonged period of economic weakness may also result in increased expenses due to higher allowances for doubtful accounts and potential goodwill and asset impairment charges. Economic conditions vary across regions and countries, and demand for our products and services generally increases in those regions and countries experiencing economic growth and investment. Slower economic growth or a change in the global mix of regions and countries experiencing economic growth and investment could have an adverse effect on o",
+  "reference": "Our results of operations are materially affected by economic conditions globally and regionally and in the particular industries we serve. The demand for our products and services tends to be cyclical and can be significantly reduced in periods of economic weakness characterized by lower levels of government and business investment, lower levels of business confidence, lower corporate earnings, high real interest rates, lower credit activity or tighter credit conditions, perceived or actual industry overcapacity, higher unemployment and lower consumer spending. A prolonged period of economic weakness may also result in increased expenses due to higher allowances for doubtful accounts and potential goodwill and asset impairment charges. Economic conditions vary across regions and countries, and demand for our products and services generally increases in those regions and countries experiencing economic growth and investment. Slower economic growth or a change in the global mix of regions and countries experiencing economic growth and investment could have an adverse effect on our business, results of operations and financial condition.",
   "reference_ids": [
-   "CAT_risk_factors#004",
-   "CAT_risk_factors#005"
+   "CAT_risk_factors#003"
   ]
  },
  {
@@ -704,7 +698,7 @@
   "question": "Why does Home Depot care so much about its brand and reputation?",
   "reference": "A positive brand and reputation are critical to our business success, and, if our brand and reputation are damaged, it could negatively impact our relationships with our customers, associates and jobseekers, suppliers, service providers, vendors, shareholders, regulators, and the communities we serve, and, consequently, our business, results of operations and the price of our stock.\n\nOur brand and reputation are critical to attracting customers, associates and jobseekers, suppliers, service providers, and vendors to do business with us. We must continue to manage and protect our brand and reputation.",
   "reference_ids": [
-   "HD_risk_factors#002"
+   "HD_risk_factors#001"
   ]
  }
 ]

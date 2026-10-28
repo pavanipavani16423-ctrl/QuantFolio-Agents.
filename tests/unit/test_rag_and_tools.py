@@ -30,7 +30,7 @@ def test_every_mode_finds_the_mandate_section(mode: str) -> None:
 def test_acl_is_least_privilege() -> None:
     assert is_allowed("trader_agent", "broker", "execute_orders")
     assert not is_allowed("research_agent", "broker", "execute_orders")
-    assert not is_allowed("compliance_agent", "optimizer", "select_quantum")
+    assert not is_allowed("compliance_agent", "optimizer", "select_stocks")
 
 
 @pytest.mark.anyio
@@ -38,23 +38,66 @@ async def test_toolbox_denies_tools_outside_the_acl() -> None:
     async with MCPHub("inprocess") as hub:
         with pytest.raises(MCPPermissionError):
             await hub.toolbox("research_agent").call("broker", "execute_orders", client_id="C-101",
-                                                    trades=[], approval_id="x", approved_by="y")
+                                                    trades=[], approval_token="x")
         with pytest.raises(MCPToolError):  # the server validates input too
             await hub.toolbox("risk_agent").call("market", "get_market_stats", tickers=["NOPE"],
                                                  start="2024-01-02", end="2026-04-30")
 
 
 @pytest.mark.anyio
-async def test_broker_needs_approval_and_is_idempotent() -> None:
-    broker.reset_account("C-101")
+async def test_tool_call_budget_is_enforced() -> None:
+    async with MCPHub("inprocess", max_calls=1) as hub:
+        tools = hub.toolbox("supervisor")
+        await tools.call("market", "list_universe")
+        with pytest.raises(MCPPermissionError, match="budget"):
+            await tools.call("market", "list_universe")
+
+
+TARGET = {"KO": 0.25, "PG": 0.25, "JNJ": 0.25, "WMT": 0.25}
+
+
+@pytest.mark.anyio
+async def test_broker_needs_a_valid_approval_token_and_is_single_use() -> None:
     from mcp.server.mcpserver.exceptions import ToolError
 
-    with pytest.raises(ToolError):
-        await broker.execute_orders("C-101", [], approval_id="", approved_by="")
-    preview = await broker.preview_rebalance("C-101", {"KO": 0.5, "PG": 0.5})
-    assert preview["trades"]
-    first = await broker.execute_orders("C-101", preview["trades"], approval_id="test-1", approved_by="tester")
-    again = await broker.execute_orders("C-101", preview["trades"], approval_id="test-1", approved_by="tester")
-    assert not first["replayed"] and again["replayed"]
-    assert set(first["account"]["positions"]) == {"KO", "PG"}
+    from app.security import approvals
+
+    broker.reset_account("C-101")
+    preview = await broker.preview_rebalance("C-101", TARGET)
+    assert preview["trades"] and preview["allowed"]
+    trades = preview["trades"]
+    with pytest.raises(ToolError, match="malformed"):
+        await broker.execute_orders("C-101", trades, approval_token="")
+    token = approvals.issue("run_t", "C-101", "tester", trades)
+    with pytest.raises(ToolError, match="another client"):
+        await broker.execute_orders("C-102", trades, approval_token=token)
+    tampered = [{**trades[0], "shares": trades[0]["shares"] + 1}, *trades[1:]]
+    with pytest.raises(ToolError, match="differ"):
+        await broker.execute_orders("C-101", tampered, approval_token=token)
+    forged = token[:-3] + ("AAA" if not token.endswith("AAA") else "BBB")
+    with pytest.raises(ToolError, match="signature"):
+        await broker.execute_orders("C-101", trades, approval_token=forged)
+    first = await broker.execute_orders("C-101", trades, approval_token=token)
+    again = await broker.execute_orders("C-101", trades, approval_token=token)
+    assert not first["replayed"] and again["replayed"] and first["approved_by"] == "tester"
+    assert set(first["account"]["positions"]) == set(TARGET)
+    broker.reset_account("C-101")
+
+
+@pytest.mark.anyio
+async def test_broker_order_limits() -> None:
+    from mcp.server.mcpserver.exceptions import ToolError
+
+    from app.security import approvals
+
+    broker.reset_account("C-101")
+    concentrated = await broker.preview_rebalance("C-101", {"KO": 0.5, "PG": 0.5})
+    assert not concentrated["allowed"]
+    assert {c["check"] for c in concentrated["limits"] if not c["passed"]} == {"max_order_size"}
+    # an approved token does not override the limits
+    token = approvals.issue("run_l", "C-101", "tester", concentrated["trades"])
+    with pytest.raises(ToolError, match="refused"):
+        await broker.execute_orders("C-101", concentrated["trades"], approval_token=token)
+    with pytest.raises(ToolError, match="not tradable"):
+        await broker.preview_rebalance("C-101", {"RELIANCE": 1.0})  # an Indian stock for a US client
     broker.reset_account("C-101")

@@ -40,14 +40,69 @@ export interface Source {
   dense_rank: number | null;
 }
 
+export interface KeyFigures {
+  ticker: string;
+  company: string;
+  fiscal_year: number;
+  period_end: string;
+  items: { label: string; value: string; note?: string }[];
+  source: string;
+  source_url: string | null;
+}
+
+export interface CompanyFindings {
+  ticker: string;
+  key_points: string[];
+  risks: string[];
+}
+
 export interface Research {
   question: string;
   answer: string;
+  companies?: CompanyFindings[];
+  not_covered?: string[];
+  key_figures?: KeyFigures[];
   risk_flags: { ticker: string; risk: string; source: number }[];
   sources: Source[];
   queries: string[];
   method: string;
   retrieval_mode: string;
+  quarantined?: { chunk_id: string; ticker: string | null; title: string; signals: string[] }[];
+  guardrails?: Guardrail[];
+  self_corrections?: number;
+  cache?: { similarity: number; question: string; run_id: string | null; when: string } | null;
+}
+
+export type Verdict = "pass" | "warn" | "fixed" | "block";
+
+export interface Guardrail {
+  layer: "input" | "retrieval" | "memory" | "output" | "action";
+  check: string;
+  verdict: Verdict;
+  detail: string;
+  step?: string;
+  revision?: number;
+}
+
+export interface Memory {
+  semantic: Preference[];
+  procedural: Preference[];
+  episodic: { run_id: string; outcome: "approved" | "rejected" | "changed"; summary: string; when: string; created_at: string | null }[];
+  quarantined: Guardrail[];
+  counts?: { episodic: number; semantic: number; procedural: number };
+  research_cache_entries?: number;
+}
+
+export interface AuditEntry {
+  seq: number;
+  at: string;
+  run_id: string | null;
+  client_id: string | null;
+  actor: string;
+  action: string;
+  details: Record<string, unknown>;
+  prev_hash: string;
+  hash: string;
 }
 
 export interface Rules {
@@ -65,7 +120,7 @@ export interface Rules {
 }
 
 export interface Proposal {
-  method: "classical" | "quantum" | "hybrid" | "greedy";
+  method: "optimal" | "baseline";
   label: string;
   selected: string[];
   weights: Record<string, number>;
@@ -79,39 +134,13 @@ export interface Proposal {
   details: { sector_weights: Record<string, number>; weight_status: string };
 }
 
-export interface QuantumInfo {
-  num_qubits: number;
-  reps: number;
-  shots: number;
-  optimizer: string;
-  backend: string;
-  circuit_depth: number;
-  two_qubit_gates: number;
-  gate_counts: Record<string, number>;
-  iterations: number;
-  optimal_parameters: Record<string, number>;
-  approximation_ratio: number | null;
-  feasible_approximation_ratio: number | null;
-  optimal_probability: number | null;
-  feasible_probability: number | null;
-  feasible_sample_fraction: number | null;
-  mixer: string;
-  hamming_weight: number | null;
-  execution_time: number;
-  timings: { optimize_seconds: number; sample_seconds: number };
-  convergence: number[];
-  top_samples: { bitstring: string; probability: number; feasible: boolean }[];
-}
-
 export interface Optimization {
   problem: { tickers: string[]; k: number; risk_aversion: number };
-  qubits: number;
+  candidates: number;
+  combinations?: number;
   errors: Record<string, string>;
-  classical: { subsets_evaluated: number; feasible_subsets: number; optimality: string };
-  quantum?: QuantumInfo;
-  hybrid?: { swap_moves: number; repaired: boolean; start_utility: number };
-  quantum_gap?: number;
-  quantum_found_optimum?: boolean;
+  search: { subsets_evaluated: number | null; feasible_subsets?: number; optimality: string; swap_moves?: number };
+  baseline_gap?: number;
   proposals: Record<string, Proposal>;
   recommended: string;
 }
@@ -146,8 +175,8 @@ export interface Memo {
   summary: string;
   key_changes: string[];
   risks: string[];
-  quantum_note: string;
   method: string;
+  self_corrections?: number;
 }
 
 export interface Score {
@@ -167,6 +196,8 @@ export interface Trade {
 }
 
 export interface RunResult {
+  input_guard?: { verdict: Verdict; blocked: boolean; reason: string | null };
+  memory?: Memory;
   intake?: { client_id: string; research_question: string; focus_tickers: string[]; method: string };
   research?: Research;
   risk_profile?: {
@@ -179,7 +210,7 @@ export interface RunResult {
     notes: string[];
   };
   rules?: Rules;
-  mandate_meta?: { method: string; notes: string[]; retrieved_chunks: string[] };
+  mandate_meta?: { method: string; notes: string[]; retrieved_chunks: string[]; quarantined?: { chunk_id: string }[] };
   optimization?: Optimization;
   backtest?: Backtest;
   compliance?: { passed: boolean; checks: RuleCheck[] };
@@ -203,9 +234,19 @@ export interface RunResult {
   applied?: { removed: string[]; max_weight: number | null; lower_risk: number; notes: string[]; sources: string[] };
   effective_rules?: Rules;
   revision?: number;
-  trades?: { trades: Trade[]; turnover: number; cash_after: number; account_value: number; price_date: string };
+  trades?: {
+    trades: Trade[];
+    turnover: number;
+    cash_after: number;
+    account_value: number;
+    price_date: string;
+    limits?: { check: string; passed: boolean; detail: string }[];
+    allowed?: boolean;
+  };
   approval?: { approved: boolean; action?: string; reviewer: string; note: string | null };
   execution?: {
+    approval_id?: string;
+    approved_by?: string;
     fills: { ticker: string; side: string; shares: number; price: number; value: number }[];
     account: { market_value: number; cash: number; positions: Record<string, number> };
   };
@@ -253,8 +294,9 @@ export interface Run {
   research_sources: string;
   feedback: { action: string; reviewer: string; note: string | null; changes: ChangeRequest | null }[];
   request: string;
-  methods: string[];
+  pii_redacted?: Record<string, number>;
   status: RunStatus;
+  blocked_reason?: string | null;
   created_at: string;
   updated_at: string;
   trace_id: string | null;
@@ -267,6 +309,7 @@ export interface Run {
   tool_calls: ToolCall[];
   llm_calls: { agent: string; status: string; model?: string; latency_ms?: number; via?: string }[];
   a2a_calls: { agent: string; url: string; transport: string; skill: string; card: string | null }[];
+  guardrails?: Guardrail[];
   result: RunResult;
 }
 
@@ -283,7 +326,7 @@ export interface RunSummary {
   market?: string;
   currency_symbol?: string;
   recommended: string | null;
-  quantum_gap: number | null;
+  blocked_reason?: string | null;
 }
 
 export interface Client {
@@ -300,4 +343,34 @@ export interface Client {
   currency_symbol: string;
   benchmark_name: string;
   research_sources: string;
+  who: string;
+  rules_summary: string;
+  examples: string[];
+  custom: boolean;
+}
+
+export interface NewClient {
+  name: string;
+  who: string;
+  market: "US" | "IN";
+  goal: "income" | "balanced" | "growth" | "esg";
+  risk: "low" | "medium" | "high";
+  horizon_years: number;
+  holdings: number;
+  max_weight: number;
+  min_weight: number;
+  max_sector_weight: number;
+  max_volatility: number;
+  excluded_sectors: string[];
+  excluded_tickers: string[];
+  cash: number;
+  positions: Record<string, number>;
+  notes: string;
+}
+
+export interface ClientRules {
+  client_id: string;
+  title: string;
+  rules: Rules;
+  names: Record<string, string>;
 }

@@ -13,7 +13,9 @@ Why hybrid: finance questions mix exact tokens (tickers, "Item 1A", "$215.9 bill
 concentration") that embeddings find better. The other modes exist so the evaluation can
 measure each stage on its own.
 
-The index is built once from the committed corpus and cached in data/index/.
+The index is built once from the committed corpus and cached in data/index/. Policies of
+clients the advisor adds in the UI are embedded on top (a few chunks each) and swapped in as a
+new index object, so a search in flight always sees one consistent index.
 """
 
 import hashlib
@@ -29,7 +31,7 @@ import numpy as np
 from rank_bm25 import BM25Okapi
 
 from app.config import get_settings
-from app.data.store import documents
+from app.data.store import Document, client_documents, documents
 from app.rag.chunking import Chunk, chunk_document
 
 logger = logging.getLogger(__name__)
@@ -93,15 +95,53 @@ class SearchTrace:
     timings_ms: dict[str, float] = field(default_factory=dict)
 
 
+# retrieval instructions some embedding models were trained with (queries only)
+QUERY_PREFIXES = {
+    "snowflake/": "Represent this sentence for searching relevant passages: ",
+    "BAAI/bge-": "Represent this sentence for searching relevant passages: ",
+    "nomic-ai/": "search_query: ",
+}
+
+
+def query_prefix(model_name: str) -> str:
+    from app.config import get_settings
+
+    if not get_settings().embedding_query_prefix:
+        return ""
+    return next((p for k, p in QUERY_PREFIXES.items() if model_name.startswith(k)), "")
+
+
 class HybridIndex:
-    def __init__(self, chunks: list[Chunk], embeddings: np.ndarray, embed_model, reranker) -> None:  # noqa: ANN001
+    def __init__(self, chunks: list[Chunk], embeddings: np.ndarray, embed_model, reranker,  # noqa: ANN001
+                 lock: "threading.Lock | None" = None, tokens: list[list[str]] | None = None) -> None:
         self.chunks = chunks
         self.by_id = {c.chunk_id: i for i, c in enumerate(chunks)}
         self.embeddings = embeddings  # (n, d), L2-normalized
         self.embed_model = embed_model
         self.reranker = reranker
-        self.bm25 = BM25Okapi([tokenize(c.index_text) for c in chunks])
-        self._lock = threading.Lock()  # onnxruntime sessions are not re-entrant across threads
+        self.digest = ""
+        self.query_prefix = query_prefix(getattr(embed_model, "model_name", "") or "")
+        self._tokens = tokens if tokens is not None else [tokenize(c.index_text) for c in chunks]
+        self.bm25 = BM25Okapi(self._tokens)
+        self._lock = lock or threading.Lock()  # onnxruntime sessions are not re-entrant across threads
+
+    def embed_passages(self, texts: list[str]) -> np.ndarray:
+        with self._lock:
+            vectors = np.asarray(list(self.embed_model.passage_embed(texts, batch_size=32)), dtype=np.float32)
+        return vectors / np.linalg.norm(vectors, axis=1, keepdims=True)
+
+    def with_client_documents(self, docs: list[Document], drop_client: str | None = None) -> "HybridIndex":
+        """A new index with `drop_client`'s policy chunks removed and `docs` added (this one is not changed)."""
+        keep = [i for i, c in enumerate(self.chunks)
+                if not (drop_client and c.doc_type == "mandate" and c.client_id == drop_client)]
+        added = [chunk for doc in docs for chunk in chunk_document(doc)]
+        vectors = self.embed_passages([c.index_text for c in added]) if added else None
+        embeddings = self.embeddings[keep] if vectors is None else np.vstack([self.embeddings[keep], vectors])
+        out = HybridIndex([self.chunks[i] for i in keep] + added, embeddings, self.embed_model, self.reranker,
+                          lock=self._lock,
+                          tokens=[self._tokens[i] for i in keep] + [tokenize(c.index_text) for c in added])
+        out.digest = self.digest  # the research cache is keyed by the company corpus, unchanged here
+        return out
 
     # ---- filters -------------------------------------------------------------------------
     def _mask(self, tickers, doc_types, client_id, market=None) -> np.ndarray:  # noqa: ANN001
@@ -129,7 +169,8 @@ class HybridIndex:
 
     def embed_query(self, query: str) -> np.ndarray:
         with self._lock:
-            vec = np.asarray(next(iter(self.embed_model.query_embed([query]))), dtype=np.float32)
+            vec = np.asarray(next(iter(self.embed_model.query_embed([self.query_prefix + query]))),
+                             dtype=np.float32)
         return vec / (np.linalg.norm(vec) or 1.0)
 
     def rerank_scores(self, query: str, texts: list[str]) -> list[float]:
@@ -145,12 +186,15 @@ class HybridIndex:
         tickers: list[str] | None = None,
         doc_types: list[str] | None = None,
         client_id: str | None = None,
-        candidates: int = 40,
-        rerank_top: int = 20,
+        candidates: int | None = None,
+        rerank_top: int | None = None,
         market: str | None = None,
     ) -> tuple[list[Hit], SearchTrace]:
         if mode not in MODES:
             raise ValueError(f"mode must be one of {MODES}")
+        settings = get_settings()
+        candidates = candidates or settings.rag_candidates
+        rerank_top = rerank_top or settings.rag_rerank_top
         mask = self._mask(tickers, doc_types, client_id, market)
         trace = SearchTrace(mode=mode, filtered_pool=int(mask.sum()))
         t0 = time.perf_counter()
@@ -260,7 +304,7 @@ def get_index() -> HybridIndex:
         meta_path, vec_path = folder / "manifest.json", folder / "dense.npy"
         embeddings = None
         if meta_path.exists() and vec_path.exists():
-            meta = json.loads(meta_path.read_text())
+            meta = json.loads(meta_path.read_text("utf-8"))
             if meta.get("hash") == digest:
                 embeddings = np.load(vec_path)
         if embeddings is None:
@@ -278,8 +322,29 @@ def get_index() -> HybridIndex:
                 "dim": int(embeddings.shape[1]),
                 "build_seconds": round(time.perf_counter() - started, 1),
             }, indent=2))
-        _INDEX = HybridIndex(chunks, embeddings, embed, rerank)
+        index = HybridIndex(chunks, embeddings, embed, rerank)
+        index.digest = digest  # corpus + model version (keys the research cache)
+        added = client_documents()
+        _INDEX = index.with_client_documents(added) if added else index
         return _INDEX
+
+
+def ensure_client(client_id: str) -> None:
+    """Index an added client's policy if this process has not seen it yet."""
+    from app.data import clients
+
+    index = get_index()
+    if clients.is_custom(client_id) and not any(c.client_id == client_id for c in index.chunks):
+        refresh_client(client_id)
+
+
+def refresh_client(client_id: str) -> None:
+    """Re-index one added client's policy after it is created or removed."""
+    global _INDEX
+    get_index()
+    docs = [d for d in client_documents() if d.client_id == client_id]
+    with _BUILD_LOCK:
+        _INDEX = _INDEX.with_client_documents(docs, drop_client=client_id)
 
 
 def corpus_stats() -> dict:

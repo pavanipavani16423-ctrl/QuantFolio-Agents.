@@ -195,3 +195,11 @@ details > summary {
 details > summary::-webkit-details-marker {
   display: none;
 }
+
+/* Print / Save as PDF: only the report content */
+@media print {
+  body > header, body > footer, nav, .no-print, [role="tablist"] { display: none !important; }
+  body { background: #fff !important; color: #111 !important; }
+  .hero-glow { background: none !important; }
+  section, article { break-inside: avoid; box-shadow: none !important; }
+}

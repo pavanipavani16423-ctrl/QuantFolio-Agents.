@@ -39,13 +39,21 @@ def prices(market: str = "US") -> pd.DataFrame:
 
 @lru_cache
 def prices_meta(market: str = "US") -> dict:
-    return json.loads((data_dir() / "market" / f"{PRICE_FILES[market]}.meta.json").read_text())
+    return json.loads((data_dir() / "market" / f"{PRICE_FILES[market]}.meta.json").read_text("utf-8"))
 
 
 @lru_cache
-def accounts() -> dict[str, dict]:
-    raw = json.loads((data_dir() / "accounts.json").read_text())["accounts"]
+def seed_accounts() -> dict[str, dict]:
+    """The committed demo clients."""
+    raw = json.loads((data_dir() / "accounts.json").read_text("utf-8"))["accounts"]
     return {cid: {"market": "US", **acc} for cid, acc in raw.items()}
+
+
+def accounts() -> dict[str, dict]:
+    """Demo clients plus the ones the advisor added in the UI (app.data.clients)."""
+    from app.data import clients
+
+    return {**seed_accounts(), **clients.accounts()}
 
 
 def account(client_id: str) -> dict:
@@ -62,7 +70,7 @@ def market_of_client(client_id: str) -> str:
 @lru_cache
 def filings_manifest(folder: str = "filings") -> dict:
     path = data_dir() / "corpus" / folder / "manifest.json"
-    return json.loads(path.read_text()) if path.exists() else {}
+    return json.loads(path.read_text("utf-8")) if path.exists() else {}
 
 
 def _title(text: str) -> str:
@@ -99,13 +107,24 @@ def documents() -> tuple[Document, ...]:
         text = path.read_text("utf-8")
         docs.append(Document(
             doc_id=f"mandate_{path.stem}", doc_type="mandate", title=_title(text), text=text,
-            client_id=path.stem, market=accounts().get(path.stem, {}).get("market"),
+            client_id=path.stem, market=seed_accounts().get(path.stem, {}).get("market"),
         ))
     return tuple(docs)
 
 
+def client_documents() -> list[Document]:
+    """Policies of the clients added in the UI. Kept out of documents(), the committed corpus
+    that the evaluations and the cached index are built from."""
+    from app.data import clients
+
+    added = clients.accounts()
+    return [Document(doc_id=f"mandate_{cid}", doc_type="mandate", title=_title(text), text=text,
+                     client_id=cid, market=added[cid]["market"])
+            for cid, text in clients.mandate_texts().items()]
+
+
 def document(doc_id: str) -> Document:
-    for doc in documents():
+    for doc in (*documents(), *client_documents()):
         if doc.doc_id == doc_id:
             return doc
     raise KeyError(f"unknown document {doc_id!r}")

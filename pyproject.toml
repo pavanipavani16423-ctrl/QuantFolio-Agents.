@@ -1,11 +1,12 @@
 [project]
 name = "quantfolio-agents"
 version = "0.1.0"
-description = "Multi-agent investment research and portfolio rebalancing with hybrid RAG, A2A, MCP, quantum (QAOA) optimization, Langfuse tracing and RAGAS evaluation."
+description = "Multi-agent investment research and portfolio rebalancing with hybrid RAG, A2A, MCP, guardrails, layered memory, human approval, Langfuse tracing and RAGAS evaluation."
 requires-python = ">=3.11,<3.13"
 dependencies = [
     "a2a-sdk>=1.2.3",
     "aiosqlite>=0.22.1",
+    "asyncpg>=0.30",
     "fastapi[standard]>=0.162.0",
     "fastembed>=0.9.1",
     "fonttools>=4.67.0",
@@ -17,14 +18,14 @@ dependencies = [
     "langchain-openai>=1.7.2",
     "langfuse>=5.0.4",
     "langgraph>=1.2.17",
+    "langgraph-checkpoint-postgres>=2.0",
     "langgraph-checkpoint-sqlite>=3.1.2",
     "mcp>=2.3.0",
     "numpy>=2.4.6",
     "pandas>=3.1.0",
+    "psycopg[binary,pool]>=3.2",
     "pydantic-settings>=2.16.1",
     "pypdf>=6.21.2",
-    "qiskit>=2.6.1",
-    "qiskit-aer>=0.18.0",
     "ragas>=0.4.3",
     "rank-bm25>=0.2.2",
     "scipy>=1.17.1",

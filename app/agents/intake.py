@@ -77,6 +77,10 @@ async def run_intake(ctx: RunContext, request: str, client_id: str) -> tuple[Int
     result.client_id = client_id
     result.focus_tickers = [t.upper() for t in result.focus_tickers
                             if t.upper() in BY_TICKER and BY_TICKER[t.upper()].market == account["market"]]
+    # a company the request names always counts, even if the model left it out
+    for ticker in mentioned_tickers(request, account["market"]):
+        if ticker not in result.focus_tickers:
+            result.focus_tickers.append(ticker)
     if not result.research_question.strip():
         result.research_question = heuristic_intake(request, client_id).research_question
     return result, method
