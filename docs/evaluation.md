@@ -175,6 +175,43 @@ the passages.
   * adding and removing a client;
   * the A2A fallback.
 
+## 7. Speed: how structured output is requested
+
+Every agent asks the model for a typed object (the intake task, the research report, the policy
+rules, the memo). It was asked through a **tool call**, and sometimes the model named the tool
+wrongly, for example `memo` instead of `Memo`. The provider rejected that call, and the retry cost
+10–20 seconds. The comparison below used Groq's **Structured Output API** (`json_schema`), where
+the provider holds the output to the schema. Both methods ran the same GreenLeaf request 3 times,
+on live Groq, with the research cache and background judging off.
+
+| | tool call | `json_schema` |
+|---|---|---|
+| failed model calls | 5 of 17 | **0 of 12** |
+| median time to the decision box | 75.3 s | **37.2 s** |
+| median report-writer time | 17.3 s | **6.2 s** |
+| answers from the model (not the rule-based fallback) | 6 of 6 | 6 of 6 |
+
+`json_schema` is now the default on Groq and OpenAI (`LLM_STRUCTURED_METHOD` overrides it);
+plain JSON mode stays as the fallback.
+
+## 8. What the background RAGAS judging costs
+
+RAGAS runs **after** the decision box appears, so the advisor never waits for it. Measured on the
+GreenLeaf run: the plan was ready at 51 s, and the judge's scores arrived at 206 s (about 155 s of
+background work, about 10 judge calls on Groq).
+
+| Cost | Effect | What the design does about it |
+|---|---|---|
+| Waiting time | none for the advisor | runs off the request path; the Checks tab fills in later |
+| Model tokens and rate limits | about 10 judge calls per run | a different model from the agents (separate per-model limits); `ONLINE_EVALUATION_SAMPLE_RATE` judges a stable share of runs (0.2 = 1 in 5) |
+| Memory | the RAGAS libraries add about 70 MB | loaded only when a run is judged; off on a 512 MB server |
+| CPU | embeddings for answer relevancy | small next to the agents |
+
+The deterministic checks (citations, numbers against the facts, the client's rules, the
+guardrails) run on every run in milliseconds. The offline evaluation (sections 1–5) measures
+quality on fixed datasets. That is the usual split: cheap checks on all traffic, an LLM judge on
+a sample.
+
 ## What is not measured yet
 
 * Factual correctness against short hand-written reference answers (the current reference is the

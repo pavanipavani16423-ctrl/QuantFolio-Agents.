@@ -161,6 +161,14 @@ trades also need a signed approval and pass hard broker limits.
 **Citation gate:** 95% of correctly cited claims accepted; 94% of claims checked against the
 wrong passage of the same company rejected.
 
+**Speed and cost:**
+* **Speed:** a plan takes a median **37 s** on Groq's free tier. It took 75 s until structured
+  output moved to Groq's `json_schema` API, which removed every failed model call (0 of 12, from
+  5 of 17).
+* **RAGAS judging** runs in the background after the plan is shown, so the advisor never waits
+  for it. It can be sampled (`ONLINE_EVALUATION_SAMPLE_RATE`).
+* **Every run** gets the deterministic checks.
+
 **Tests:** 96, each run on SQLite and on Postgres in CI, plus a Docker build that is started and
 checked.
 

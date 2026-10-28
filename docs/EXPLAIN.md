@@ -104,6 +104,22 @@ The citation gate had blocked the model's drafts because they cited sources for 
 sources do not say ("the report does not discuss dividends [6]"). So the gate was right, and the
 fix was in retrieval and the prompt, not the threshold. Each fix has a regression test.
 
+**Does running RAGAS on every run slow it down?**
+No, the advisor never waits for it. The plan is shown first, and RAGAS judges it in the
+background: in one measured run the decision box appeared at 51 s and the scores at 206 s. It
+does cost about 10 judge calls and about 70 MB of memory. So:
+* the judge uses a different model from the agents, so they don't share one rate limit;
+* the RAGAS libraries load only when needed;
+* `ONLINE_EVALUATION_SAMPLE_RATE` judges a stable fraction of runs;
+* cheap deterministic checks (citations, numbers, rules, guardrails) run on every request.
+
+**How did you make it faster?**
+By measuring where the time went. The report writer's first model call sometimes failed, because
+the model named the structured-output tool wrongly, and the retry cost 10–20 s. Switching to
+Groq's Structured Output API (`json_schema`) and comparing 3 runs of each:
+* failed calls went from 5 of 17 to 0 of 12;
+* the median plan went from 75 s to 37 s.
+
 **What would you do next?**
 A learned prompt-injection classifier as a third stage (for example Llama Prompt Guard), a short
 hand-written reference answer per question so factual correctness becomes meaningful, pgvector
