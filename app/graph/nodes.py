@@ -9,6 +9,7 @@ each tagged with the step and the proposal revision it belongs to.
 """
 
 import asyncio
+import hashlib
 import math
 from typing import Any
 
@@ -349,7 +350,8 @@ async def evaluate_node(state: dict[str, Any]) -> dict[str, Any]:
             ctx.tracer.score(trace_id=ctx.trace_id, name=name, value=score["value"],
                              comment=score.get("comment"), metadata={"source": score["source"],
                                                                      "run_id": state["run_id"]})
-        background = ctx.spawn is not None and ctx.settings.online_evaluation
+        background = (ctx.spawn is not None and ctx.settings.online_evaluation
+                      and sampled(state["run_id"], ctx.settings.online_evaluation_sample_rate))
         parent = ctx.tracer.current_observation_id()
         if background:
             snapshot = {k: state[k] for k in ("research", "memo", "memo_facts")}
@@ -359,6 +361,11 @@ async def evaluate_node(state: dict[str, Any]) -> dict[str, Any]:
                   output={k: round(v["value"], 4) for k, v in scores.items()})
     return {"evaluation": {"scores": scores, "judge": None, "notes": [], "revision": state.get("revision", 0),
                            "ragas_status": "running" if background else "off"}}
+
+
+def sampled(run_id: str, rate: float) -> bool:
+    """Whether this run is judged: a stable fraction of runs, decided by the run id."""
+    return int(hashlib.sha256(run_id.encode()).hexdigest()[:8], 16) / 0xFFFFFFFF < rate
 
 
 async def _ragas_in_background(ctx, state: dict[str, Any], parent_span_id: str | None,  # noqa: ANN001

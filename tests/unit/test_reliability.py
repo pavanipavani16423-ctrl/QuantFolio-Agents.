@@ -1,4 +1,3 @@
-import time
 
 import pytest
 
@@ -33,18 +32,21 @@ async def test_retry_retries_transient_errors_only() -> None:
 
 
 def test_circuit_breaker_opens_and_recovers() -> None:
-    cb = CircuitBreaker("test", failure_threshold=2, reset_seconds=0.05)
+    now = [0.0]
+    cb = CircuitBreaker("test", failure_threshold=2, reset_seconds=60, clock=lambda: now[0])
     assert cb.allow()
     cb.failure()
     assert cb.allow()
     cb.failure()
     assert not cb.allow() and cb.state == "open"
-    time.sleep(0.06)
+    now[0] += 59
+    assert not cb.allow()  # still cooling down
+    now[0] += 1
     assert cb.allow() and cb.state == "half_open"  # one trial call
     assert not cb.allow()  # ... and only one at a time
     cb.failure()
     assert not cb.allow()  # the trial failed: open again
-    time.sleep(0.06)
+    now[0] += 60
     cb.success()
     assert cb.state == "closed" and cb.allow()
 

@@ -18,7 +18,8 @@ import urllib.request
 API = "http://localhost:8000"
 FREE_PLAN = ["--memory", "512m", "--memory-swap", "512m", "--cpus", "0.1"]
 LEAN = {"LLM_PROVIDER": "mock", "ONLINE_EVALUATION": "false", "RAG_RERANK_TOP": "10", "ONNX_THREADS": "1",
-        "ONNX_MEMORY_ARENA": "false"}
+        "ONNX_MEMORY_ARENA": "false", "ONNX_GRAPH_OPTIMIZATION": "extended",
+        "RERANKER_MODEL": "Xenova/ms-marco-MiniLM-L-6-v2-int8", "MAX_CONCURRENT_RUNS": "1"}
 # Meera Iyer: the largest search (10 of 20 stocks, 184,756 combinations)
 REQUEST = {"client_id": "C-101", "request": "Rebalance Meera's portfolio. What risks do Johnson & Johnson and Coca-Cola report?"}
 

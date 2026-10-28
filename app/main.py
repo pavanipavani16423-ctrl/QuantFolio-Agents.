@@ -6,7 +6,6 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from langgraph.checkpoint.sqlite.aio import AsyncSqliteSaver
 
 from app.a2a import registry
 from app.api import routes
@@ -27,6 +26,8 @@ async def open_checkpointer(settings: Settings):  # noqa: ANN201
     """Where paused runs live: a SQLite file on a laptop; Postgres (Neon) when DATABASE_URL is
     Postgres, so a run waiting for approval survives a restart or a redeploy."""
     if not is_postgres(settings.database_url):
+        from langgraph.checkpoint.sqlite.aio import AsyncSqliteSaver  # 28 MB: only when it is used
+
         async with AsyncSqliteSaver.from_conn_string(settings.checkpoint_db) as saver:
             yield saver
         return
@@ -54,7 +55,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         tracer = get_tracer()
         await asyncio.to_thread(tracer.setup)  # Langfuse score configs (network)
         async with open_checkpointer(settings) as checkpointer:
-            service = RunService(settings, db, EventBus(), checkpointer)
+            service = RunService(settings, db, EventBus(), checkpointer, settings.max_concurrent_runs)
             await service.recover()
             app.state.settings = settings
             app.state.db = db

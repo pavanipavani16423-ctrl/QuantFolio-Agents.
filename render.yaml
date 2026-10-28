@@ -20,6 +20,12 @@ services:
         value: "1"
       - key: ONNX_MEMORY_ARENA
         value: "false"
+      - key: ONNX_GRAPH_OPTIMIZATION
+        value: extended   # 73 MB instead of 114 MB for the embedding model
+      - key: RERANKER_MODEL
+        value: Xenova/ms-marco-MiniLM-L-6-v2-int8   # 35 MB instead of 96 MB
+      - key: MAX_CONCURRENT_RUNS
+        value: "1"            # one plan at a time; others wait in line
       - key: LLM_PROVIDER
         value: groq
       - key: GROQ_API_KEY

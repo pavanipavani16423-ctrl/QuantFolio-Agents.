@@ -82,3 +82,13 @@ async def test_judge_pool_falls_back_to_json_mode_when_tool_calls_fail() -> None
     # both models' tool calls failed, then the first model answered in JSON mode
     assert first.methods == ["function_calling", "json_mode"] and second.methods == ["function_calling"]
     assert judge.model_name == "m1 + m2"
+
+
+def test_online_judging_samples_a_stable_share_of_runs() -> None:
+    from app.graph.nodes import sampled
+
+    ids = [f"run_{i:012x}" for i in range(4000)]
+    share = sum(sampled(i, 0.2) for i in ids) / len(ids)
+    assert 0.17 < share < 0.23
+    assert all(sampled(i, 1.0) for i in ids) and not any(sampled(i, 0.0) for i in ids)
+    assert [sampled(i, 0.2) for i in ids[:50]] == [sampled(i, 0.2) for i in ids[:50]]  # the same run, the same answer

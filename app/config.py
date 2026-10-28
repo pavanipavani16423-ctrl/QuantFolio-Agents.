@@ -63,6 +63,9 @@ class Settings(BaseSettings):
     judge_provider: Literal["mock", "groq", "openai", "anthropic", "ollama"] | None = None
     judge_model: str | None = None
     online_evaluation: bool = True
+    # share of runs judged by RAGAS in the background (the deterministic checks run on every run);
+    # chosen from the run id, so the same run is always in or out
+    online_evaluation_sample_rate: float = 1.0
 
     # Langfuse (tracing is off when the keys are missing)
     langfuse_public_key: str | None = None
@@ -83,6 +86,11 @@ class Settings(BaseSettings):
     rag_rerank_top: int = 20
     onnx_threads: int | None = None  # threads per ONNX model (embedding, reranker); None = one per core
     onnx_memory_arena: bool = True  # False: ONNX frees inference buffers (lower peak memory, a little slower)
+    # "extended" skips the last ONNX optimisations, which turn the int8 embedding model back into float
+    # copies: 73 MB instead of 114 MB of memory
+    onnx_graph_optimization: Literal["basic", "extended", "all"] = "all"
+    max_concurrent_runs: int = 2  # plans executing at once; more wait in line (1 on a 512 MB server)
+    rerank_batch_size: int = 4  # passages scored per reranker call (1 = lowest peak memory)
     prompt_passage_chars: int = 1600  # passage text given to the research model and the judge (whole chunks)
     rag_mode: Literal["bm25", "dense", "hybrid", "hybrid_rerank"] = "hybrid_rerank"
 

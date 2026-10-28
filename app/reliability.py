@@ -43,7 +43,9 @@ async def retry_async(fn: Callable[[], Awaitable[T]], *, attempts: int = 3, base
 
 
 class CircuitBreaker:
-    def __init__(self, name: str, failure_threshold: int = 4, reset_seconds: float = 60.0) -> None:
+    def __init__(self, name: str, failure_threshold: int = 4, reset_seconds: float = 60.0,
+                 clock: Callable[[], float] = time.monotonic) -> None:
+        self.clock = clock  # injectable, so tests control time instead of sleeping
         self.name = name
         self.failure_threshold = failure_threshold
         self.reset_seconds = reset_seconds
@@ -55,7 +57,7 @@ class CircuitBreaker:
     def state(self) -> str:
         if self.opened_at is None:
             return "closed"
-        return "half_open" if time.monotonic() - self.opened_at >= self.reset_seconds else "open"
+        return "half_open" if self.clock() - self.opened_at >= self.reset_seconds else "open"
 
     def allow(self) -> bool:
         """False while open; in half-open exactly one trial call is let through."""
@@ -83,7 +85,7 @@ class CircuitBreaker:
         if was_trial or self.failures >= self.failure_threshold:
             if self.opened_at is None or was_trial:
                 logger.warning("circuit %s opened after %d failures", self.name, self.failures)
-            self.opened_at = time.monotonic()
+            self.opened_at = self.clock()
 
     def snapshot(self) -> dict[str, Any]:
         return {"name": self.name, "state": self.state, "failures": self.failures}

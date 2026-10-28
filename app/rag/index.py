@@ -175,8 +175,8 @@ class HybridIndex:
 
     def rerank_scores(self, query: str, texts: list[str]) -> list[float]:
         with self._lock:
-            # small batches: the same speed on a CPU, a fraction of the peak memory of one batch of 20
-            return [float(s) for s in self.reranker.rerank(query, texts, batch_size=4)]
+            # small batches: about the same speed on a CPU, a fraction of the peak memory of one batch
+            return [float(s) for s in self.reranker.rerank(query, texts, batch_size=get_settings().rerank_batch_size)]
 
     # ---- search --------------------------------------------------------------------------
     def search(
@@ -274,11 +274,50 @@ def _corpus_hash(chunks: list[Chunk], model: str) -> str:
     return h.hexdigest()[:16]
 
 
+# the same reranker quantised to int8 by its publisher: 35 MB of memory instead of 96 MB; on the 78
+# labelled questions 93.6% hit rate and MRR 0.904 (fp32: 94.9%, 0.901). Used on the free plan.
+QUANTIZED_RERANKERS = {
+    "Xenova/ms-marco-MiniLM-L-6-v2-int8": ("Xenova/ms-marco-MiniLM-L-6-v2", "onnx/model_quantized.onnx"),
+}
+
+
+def _cap_onnx_optimisation(level: str) -> None:
+    """fastembed always asks ONNX for every graph optimisation; cap it (see onnx_graph_optimization)."""
+    import onnxruntime as ort
+    from fastembed.common import onnx_model
+
+    if level == "all" or getattr(onnx_model.ort, "capped", False):
+        return
+    chosen = {"basic": ort.GraphOptimizationLevel.ORT_ENABLE_BASIC,
+              "extended": ort.GraphOptimizationLevel.ORT_ENABLE_EXTENDED}[level]
+
+    class CappedOrt:
+        capped = True
+
+        def __getattr__(self, name: str):  # noqa: ANN204
+            return getattr(ort, name)
+
+        @staticmethod
+        def InferenceSession(path, *args, sess_options=None, **kwargs):  # noqa: ANN001, ANN205, N802
+            if sess_options is not None:
+                sess_options.graph_optimization_level = chosen
+            return ort.InferenceSession(path, *args, sess_options=sess_options, **kwargs)
+
+    onnx_model.ort = CappedOrt()
+
+
 def _models():  # noqa: ANN202
     from fastembed import TextEmbedding
+    from fastembed.common.model_description import ModelSource
     from fastembed.rerank.cross_encoder import TextCrossEncoder
 
     settings = get_settings()
+    _cap_onnx_optimisation(settings.onnx_graph_optimization)
+    if settings.reranker_model in QUANTIZED_RERANKERS and not any(
+            m["model"] == settings.reranker_model for m in TextCrossEncoder.list_supported_models()):
+        repo, file = QUANTIZED_RERANKERS[settings.reranker_model]
+        TextCrossEncoder.add_custom_model(settings.reranker_model, sources=ModelSource(hf=repo), model_file=file,
+                                          size_in_gb=0.03)
     cache = str(Path(settings.data_dir) / "models")
     # ONNX_THREADS=1 on small hosts: by default ONNX starts a thread per machine core, which thrashes
     # on a fractional CPU (Render's free plan has 0.1 CPU on a many-core machine)

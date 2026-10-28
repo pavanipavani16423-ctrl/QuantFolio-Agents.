@@ -16,6 +16,8 @@ RUN uv sync --frozen --no-dev --no-install-project
 COPY app ./app
 COPY data ./data
 RUN .venv/bin/python -c "from app.rag.index import get_index; i = get_index(); print(len(i.chunks), 'chunks ready')"
+# the int8 reranker of the free-plan settings, so a small server does not download it at start-up
+RUN RERANKER_MODEL=Xenova/ms-marco-MiniLM-L-6-v2-int8 .venv/bin/python -c "from app.rag.index import _models; _models()"
 
 FROM python:3.11-slim
 # MALLOC_ARENA_MAX: glibc keeps a memory pool per thread by default, which inflates a Python
