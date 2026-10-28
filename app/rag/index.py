@@ -281,18 +281,24 @@ QUANTIZED_RERANKERS = {
 }
 
 
-def _cap_onnx_optimisation(level: str) -> None:
-    """fastembed always asks ONNX for every graph optimisation; cap it (see onnx_graph_optimization)."""
+def _tune_onnx_sessions(level: str, low_memory: bool) -> None:
+    """fastembed always asks ONNX for every graph optimisation and its default memory planning;
+    on a small server cap both (see onnx_graph_optimization and onnx_memory_arena).
+
+    low_memory also turns off ONNX's memory pattern: by default the first inference plans one
+    buffer for all intermediate tensors of that input shape and keeps it (measured on Linux: +81 MB
+    on the first query embedding)."""
     import onnxruntime as ort
     from fastembed.common import onnx_model
 
-    if level == "all" or getattr(onnx_model.ort, "capped", False):
+    if (level == "all" and not low_memory) or getattr(onnx_model.ort, "tuned", False):
         return
     chosen = {"basic": ort.GraphOptimizationLevel.ORT_ENABLE_BASIC,
-              "extended": ort.GraphOptimizationLevel.ORT_ENABLE_EXTENDED}[level]
+              "extended": ort.GraphOptimizationLevel.ORT_ENABLE_EXTENDED,
+              "all": ort.GraphOptimizationLevel.ORT_ENABLE_ALL}[level]
 
-    class CappedOrt:
-        capped = True
+    class TunedOrt:
+        tuned = True
 
         def __getattr__(self, name: str):  # noqa: ANN204
             return getattr(ort, name)
@@ -301,9 +307,12 @@ def _cap_onnx_optimisation(level: str) -> None:
         def InferenceSession(path, *args, sess_options=None, **kwargs):  # noqa: ANN001, ANN205, N802
             if sess_options is not None:
                 sess_options.graph_optimization_level = chosen
+                if low_memory:
+                    sess_options.enable_mem_pattern = False
+                    sess_options.enable_cpu_mem_arena = False
             return ort.InferenceSession(path, *args, sess_options=sess_options, **kwargs)
 
-    onnx_model.ort = CappedOrt()
+    onnx_model.ort = TunedOrt()
 
 
 def _models():  # noqa: ANN202
@@ -312,7 +321,7 @@ def _models():  # noqa: ANN202
     from fastembed.rerank.cross_encoder import TextCrossEncoder
 
     settings = get_settings()
-    _cap_onnx_optimisation(settings.onnx_graph_optimization)
+    _tune_onnx_sessions(settings.onnx_graph_optimization, low_memory=not settings.onnx_memory_arena)
     if settings.reranker_model in QUANTIZED_RERANKERS and not any(
             m["model"] == settings.reranker_model for m in TextCrossEncoder.list_supported_models()):
         repo, file = QUANTIZED_RERANKERS[settings.reranker_model]
