@@ -291,8 +291,11 @@ def vercel(cfg: dict[str, str], api_url: str) -> str:
     run("link", "--yes", "--project", VERCEL_PROJECT)
     log = run("deploy", "--prod", "--yes", "--build-env", f"NEXT_PUBLIC_API_URL={api_url}",
               "--env", f"NEXT_PUBLIC_API_URL={api_url}")
-    aliases = re.findall(r"https://[a-z0-9-]+\.vercel\.app", log)
-    url = next((a for a in aliases if a.startswith(f"https://{VERCEL_PROJECT}")), aliases[-1] if aliases else "")
+    # the stable production address (the deploy log shows the per-deployment one, which Vercel protects)
+    project = http("GET", f"https://api.vercel.com/v9/projects/{VERCEL_PROJECT}", token)
+    aliases = project.get("targets", {}).get("production", {}).get("alias") or []
+    found = re.findall(r"https://[a-z0-9-]+\.vercel\.app", log)
+    url = f"https://{aliases[0]}" if aliases else (found[-1] if found else "")
     print(f"live at {url}")
     return url
 
