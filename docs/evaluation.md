@@ -220,12 +220,12 @@ memory (what the kernel cannot reclaim) at the plan's peak:
 
 | Change | Plan peak |
 |---|---|
-| starting point (full settings) | killed at 512 MB (585 MiB unlimited) |
+| starting point (full settings) | killed at 512 MB (585 MiB total peak without a limit, page cache included) |
 | exact search in blocks of 20,000 subsets (same answers on 40 random problems) | 102 → 14 MB for the search itself |
 | int8 reranker, lighter ONNX optimisation, one plan at a time | 554 MiB |
 | glibc allocator thresholds fixed (`MALLOC_MMAP_THRESHOLD_`, `MALLOC_TRIM_THRESHOLD_`) | **386 MiB** |
 | plus one tokenizer thread instead of one per host core | **366 MiB** |
-| at the free plan's limits (512 MB, 0.1 CPU) | passes: peak 428 MiB, plan 74 s |
+| at the free plan's limits (512 MB, 0.1 CPU) | passes: peak 428–433 MiB, plan 41–74 s (two runs) |
 
 The biggest win was not in the app. After the first large buffer is freed, glibc raises its
 threshold and keeps later large buffers (ONNX tensors, numpy arrays) in its own heap, so each new

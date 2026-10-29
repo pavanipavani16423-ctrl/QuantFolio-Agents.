@@ -40,10 +40,10 @@ The image also fixes glibc's allocator thresholds, so large buffers go back to t
 they are freed. That one change took a plan's peak memory from 554 to 386 MiB.
 
 CI checks this on every push: `scripts/check_free_plan.py` runs a whole plan in the image at
-512 MB without swap and 0.1 CPU, and posts the result as the `free-plan` commit status. Latest
-result: ready in 58 s, a whole plan in 74 s (mock model), peak 428 MiB.
+512 MB without swap and 0.1 CPU, and posts the result as the `free-plan` commit status. In two
+runs: ready in 35–58 s, a whole plan in 41–74 s (mock model), peak about 430 MiB.
 
-At 0.1 CPU the search steps are slow. Estimate for a real plan with Groq: about 1.5–2 minutes (74 s of
+At 0.1 CPU the search steps are slow. Estimate for a real plan with Groq: about 1–2 minutes (41–74 s of
 measured CPU work plus about 30 s of model calls), against about 40 s on a laptop. Search quality on the 78 labelled questions: 92.3% hit rate and MRR 0.902
 in lean mode, against 94.9% and 0.901 with the full settings.
 
@@ -91,7 +91,7 @@ Each part can be run alone: `--only neon`, `--only render` or `--only vercel`.
   `"rag_index_ready":true`. After 15 idle minutes, the first request takes about a minute while
   the service wakes.
 * Open the Vercel address. The header says **Ready · groq**.
-* Run the GreenLeaf example. On the free plan, expect the decision box after about 1.5–2 minutes.
+* Run the GreenLeaf example. On the free plan, expect the decision box after about 1–2 minutes.
 * Approve the plan, then restart the service (Manual Deploy → Restart). The run, its audit trail and
   the new account value are still there, because they live in Neon.
 
