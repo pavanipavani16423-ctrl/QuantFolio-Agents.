@@ -233,6 +233,14 @@ size of query added memory that was never returned. The first query embedding co
 Linux and almost nothing on Windows, which pointed to the allocator. With the thresholds fixed,
 the same query costs +1 MB.
 
+The first live plan on Render showed one more thing to fix. The citation gate scores each claim
+with the reranker against a threshold calibrated for the full-precision model, and the int8 model
+scores on a slightly different scale. So 6 of 11 correctly cited claims failed, and the research
+answer fell back to quoting the filings. Recalibrating gave **1.045** for int8 (1.24 for fp32,
+reproduced exactly). It accepts 95% of supported claims and rejects 93.9% of same-company
+wrong-source claims, against 94.3% for fp32. The threshold is now looked up per reranker, and a
+model with no calibrated value refuses to start the gate rather than guess.
+
 ## What is not measured yet
 
 * Factual correctness against short hand-written reference answers (the current reference is the

@@ -30,6 +30,13 @@ DEFAULT_JUDGE_MODELS = {
 }
 
 
+# scripts/calibrate_citations.py, per reranker (experiments/results/citation_calibration_*.json)
+CITATION_THRESHOLDS = {
+    "Xenova/ms-marco-MiniLM-L-6-v2": 1.24,  # rejects 94.3% of hard negatives
+    "Xenova/ms-marco-MiniLM-L-6-v2-int8": 1.045,  # rejects 93.9% of hard negatives
+}
+
+
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore")
 
@@ -121,9 +128,10 @@ class Settings(BaseSettings):
     # scripts/eval_guardrails.py (highest benign similarity + 0.02, bge-small); None switches it off
     semantic_injection_threshold: float | None = 0.706
     citation_gate_enabled: bool = True
-    # cross-encoder score (MiniLM-L-6): 5th percentile of correctly cited claims, from
-    # scripts/calibrate_citations.py; accepts 95% of them, rejects 94% of same-company wrong-source claims
-    citation_support_threshold: float = 1.24
+    # cross-encoder score: 5th percentile of correctly cited claims, from scripts/calibrate_citations.py;
+    # accepts 95% of them, rejects about 94% of same-company wrong-source claims. Each reranker scores
+    # on its own scale, so unset means the value calibrated for RERANKER_MODEL.
+    citation_support_threshold: float | None = None
     approval_secret: SecretStr | None = None  # signs approval tokens; a local file is used if unset
     approval_ttl_seconds: int = 900
     rate_limit_runs: int = 12  # new runs per client address per rate_limit_window_seconds
@@ -145,6 +153,15 @@ class Settings(BaseSettings):
     @property
     def resolved_llm_model(self) -> str:
         return self.llm_model or DEFAULT_LLM_MODELS[self.llm_provider]
+
+    @property
+    def resolved_citation_threshold(self) -> float:
+        if self.citation_support_threshold is not None:
+            return self.citation_support_threshold
+        if self.reranker_model not in CITATION_THRESHOLDS:
+            raise ValueError(f"no calibrated citation threshold for {self.reranker_model}: run "
+                             "scripts/calibrate_citations.py and set CITATION_SUPPORT_THRESHOLD")
+        return CITATION_THRESHOLDS[self.reranker_model]
 
     @property
     def resolved_structured_method(self) -> str:

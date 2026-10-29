@@ -87,7 +87,7 @@ Each part can be run alone: `--only neon`, `--only render` or `--only vercel`.
 
 ## Checking it works
 
-* `https://quantfolio-api.onrender.com/health` shows `"status":"ok"`, the LLM, Langfuse on and
+* `https://<service>.onrender.com/health` (the address `deploy.py` prints; Render may add a suffix such as `-2qmc`) shows `"status":"ok"`, the LLM, Langfuse on and
   `"rag_index_ready":true`. After 15 idle minutes, the first request takes about a minute while
   the service wakes.
 * Open the Vercel address. The header says **Ready · groq**.

@@ -146,7 +146,7 @@ async def verify(ctx: RunContext, answer: str, sources: list[Source]) -> list[Fi
 
         index = await asyncio.to_thread(get_index)
         _, gate = await asyncio.to_thread(check_support, answer, {x.n: x.text for x in sources},
-                                          index.rerank_scores, s.citation_support_threshold)
+                                          index.rerank_scores, s.resolved_citation_threshold)
         findings.append(gate)
     return findings
 

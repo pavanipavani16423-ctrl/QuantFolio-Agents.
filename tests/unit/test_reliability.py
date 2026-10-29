@@ -68,3 +68,13 @@ def test_citation_gate() -> None:
     assert finding.verdict == "warn"  # 1 of 3 unsupported
     _, finding = check_support("Apple sells cars [1]. Apple makes planes [2].", sources, score, threshold=0.5)
     assert finding.verdict == "block"
+
+
+def test_citation_threshold_follows_the_reranker() -> None:
+    from app.config import CITATION_THRESHOLDS, Settings
+
+    for model, threshold in CITATION_THRESHOLDS.items():
+        assert Settings(reranker_model=model).resolved_citation_threshold == threshold
+    assert Settings(citation_support_threshold=1.5).resolved_citation_threshold == 1.5  # an explicit value wins
+    with pytest.raises(ValueError, match="calibrate_citations"):
+        _ = Settings(reranker_model="some/uncalibrated-model").resolved_citation_threshold
