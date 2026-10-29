@@ -74,22 +74,11 @@ ANON_PEAK = {"ready": 0, "plan": 0}
 BY_STEP: dict[str, int] = {}  # highest anonymous memory seen while each step was running
 
 
-# allocator settings compared without a memory limit; the lowest peak then runs at the free plan's
-FIXED_MALLOC = {"MALLOC_MMAP_THRESHOLD_": "131072", "MALLOC_TRIM_THRESHOLD_": "131072"}  # big buffers go back to the OS
-ONE_TOKENIZER_THREAD = {"TOKENIZERS_PARALLELISM": "false", "RAYON_NUM_THREADS": "1"}  # not a thread per host core
-VARIANTS = {
-    "base": {},
-    "malloc": FIXED_MALLOC,
-    "tokenizer": ONE_TOKENIZER_THREAD,
-    "both": {**FIXED_MALLOC, **ONE_TOKENIZER_THREAD},
-}
-
-
-def run_plan(image: str, limits: list[str], label: str, extra: dict[str, str] | None = None) -> tuple[float, float, int]:
+def run_plan(image: str, limits: list[str], label: str) -> tuple[float, float, int]:
     """Start the container, wait until ready, run one plan; (ready s, plan s, peak MiB)."""
     subprocess.run(["docker", "rm", "-f", "api"], capture_output=True)
     BY_STEP.clear()
-    env = [arg for k, v in {**LEAN, **(extra or {})}.items() for arg in ("-e", f"{k}={v}")]
+    env = [arg for k, v in LEAN.items() for arg in ("-e", f"{k}={v}")]
     out = subprocess.run(["docker", "run", "-d", "--name", "api", "-p", "8000:8000", *limits, *env, image],
                          capture_output=True, text=True)
     if out.returncode:
@@ -141,20 +130,16 @@ def run_plan(image: str, limits: list[str], label: str, extra: dict[str, str] | 
 
 def main() -> None:
     image = sys.argv[1]
-    status("pending", f"comparing {len(VARIANTS)} allocator settings without a memory limit")
-    peaks = {}
-    for name, extra in VARIANTS.items():
-        _, plan_s, _ = run_plan(image, ["--cpus", "1"], name, extra)
-        profile = docker("exec", "api", "python", "scripts/profile_memory.py").splitlines()
-        steps = " ".join(f"{k}={v}" for k, v in sorted(BY_STEP.items(), key=lambda kv: -kv[1])[:3])
-        peaks[name] = ANON_PEAK["plan"]
-        status("pending", f"{name}: anon ready {ANON_PEAK['ready']}, plan peak {ANON_PEAK['plan']} MiB ({steps}); "
-                          f"search: {(profile[-1] if profile else 'no profile')[-60:]}")
-        time.sleep(1)
-    best = min(peaks, key=peaks.get)
-    ready, plan, peak = run_plan(image, FREE_PLAN, f"free plan ({best})", VARIANTS[best])
-    status("success", f"512 MB/0.1 CPU with {best}: ready {ready:.0f}s, plan {plan:.0f}s, anon peak "
-                      f"{ANON_PEAK['plan']} MiB; unlimited peaks " + ", ".join(f"{k} {v}" for k, v in peaks.items()))
+    status("pending", "measuring the peak memory of a whole plan (no limit)")
+    _, plan_free, _ = run_plan(image, ["--cpus", "1"], "no limit")
+    unlimited = ANON_PEAK["plan"]
+    steps = " ".join(f"{k}={v}" for k, v in sorted(BY_STEP.items(), key=lambda kv: -kv[1])[:3])
+    profile = docker("exec", "api", "python", "scripts/profile_memory.py").splitlines()
+    status("pending", f"no limit: anon ready {ANON_PEAK['ready']}, plan peak {unlimited} MiB ({steps}); "
+                      f"search: {(profile[-1] if profile else 'no profile')[-50:]}")
+    ready, plan, _ = run_plan(image, FREE_PLAN, "free plan")
+    status("success", f"512 MB, 0.1 CPU: ready {ready:.0f}s, whole plan {plan:.0f}s, peak {ANON_PEAK['plan']} MiB "
+                      f"(no limit: peak {unlimited} MiB, plan {plan_free:.0f}s at 1 CPU)")
 
 
 if __name__ == "__main__":

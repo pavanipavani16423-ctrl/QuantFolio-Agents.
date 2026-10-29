@@ -24,9 +24,14 @@ FROM python:3.11-slim
 # server's memory with every worker thread; two pools are plenty.
 # *_NUM_THREADS=1: numpy's BLAS starts a thread (with its own buffer) per host core on the first
 # matrix product; the matrices here are small, and a 0.1-CPU slice of a many-core host would get
-# dozens of threads
+# dozens of threads.
+# MALLOC_MMAP/TRIM_THRESHOLD_: fixed, so large buffers (ONNX tensors, numpy arrays) are mapped and
+# returned to the OS when freed. By default glibc raises the threshold after the first such free
+# and keeps later ones in its heap. Measured in CI, the peak of a whole plan went from 554 to
+# 386 MiB; with one tokenizer thread, 366 MiB.
 ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1 PATH="/app/.venv/bin:$PATH" PORT=8000 ENVIRONMENT=production \
-    MALLOC_ARENA_MAX=2 OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1
+    MALLOC_ARENA_MAX=2 OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 \
+    MALLOC_MMAP_THRESHOLD_=131072 MALLOC_TRIM_THRESHOLD_=131072 TOKENIZERS_PARALLELISM=false RAYON_NUM_THREADS=1
 WORKDIR /app
 RUN useradd --create-home --uid 1000 app  # uid 1000: what Hugging Face Spaces runs containers as
 COPY --from=build /app/.venv ./.venv

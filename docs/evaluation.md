@@ -212,6 +212,27 @@ guardrails) run on every run in milliseconds. The offline evaluation (sections 1
 quality on fixed datasets. That is the usual split: cheap checks on all traffic, an LLM judge on
 a sample.
 
+## 9. Memory: fitting a whole plan in 512 MB
+
+The free Render plan has 512 MB without swap and 0.1 CPU. In CI, `scripts/check_free_plan.py` runs
+a whole plan (the largest client, 184,756 portfolio candidates) in the Docker image. Anonymous
+memory (what the kernel cannot reclaim) at the plan's peak:
+
+| Change | Plan peak |
+|---|---|
+| starting point (full settings) | killed at 512 MB (585 MiB unlimited) |
+| exact search in blocks of 20,000 subsets (same answers on 40 random problems) | 102 → 14 MB for the search itself |
+| int8 reranker, lighter ONNX optimisation, one plan at a time | 554 MiB |
+| glibc allocator thresholds fixed (`MALLOC_MMAP_THRESHOLD_`, `MALLOC_TRIM_THRESHOLD_`) | **386 MiB** |
+| plus one tokenizer thread instead of one per host core | **366 MiB** |
+| at the free plan's limits (512 MB, 0.1 CPU) | passes: peak 428 MiB, plan 74 s |
+
+The biggest win was not in the app. After the first large buffer is freed, glibc raises its
+threshold and keeps later large buffers (ONNX tensors, numpy arrays) in its own heap, so each new
+size of query added memory that was never returned. The first query embedding cost +81 MB on
+Linux and almost nothing on Windows, which pointed to the allocator. With the thresholds fixed,
+the same query costs +1 MB.
+
 ## What is not measured yet
 
 * Factual correctness against short hand-written reference answers (the current reference is the

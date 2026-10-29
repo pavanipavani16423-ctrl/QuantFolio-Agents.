@@ -4,7 +4,7 @@
 Browser ──► Vercel (Next.js UI, web/)
                │  HTTPS: REST + live progress (SSE)
                ▼
-            Hugging Face Space (Docker: FastAPI API + the risk and compliance A2A agents)
+            Render web service (Docker: FastAPI API + the risk and compliance A2A agents)
                │  TLS
                ▼
             Neon (Postgres)
@@ -13,7 +13,7 @@ Browser ──► Vercel (Next.js UI, web/)
 | Part | Host and free plan | What the free plan means |
 |---|---|---|
 | UI | **Vercel Hobby** | free for personal, non-commercial projects |
-| API + A2A agents | **Hugging Face Spaces, CPU basic** | 2 vCPU, 16 GB memory. The Space sleeps after 48 hours without visits; the next visit wakes it in about a minute |
+| API + A2A agents | **Render Free** | 512 MB memory, 0.1 CPU. The service sleeps after 15 idle minutes; the next visit wakes it in about a minute |
 | Database | **Neon Free** | 0.5 GB storage. The database suspends after 5 idle minutes and wakes on the next query (under a second) |
 
 The database holds everything that must survive a restart:
@@ -25,8 +25,27 @@ The database holds everything that must survive a restart:
 * the paper-broker ledger;
 * the clients you add.
 
-The search models and the RAG index are built into the Docker image, so the Space needs no disk
-of its own.
+The search models and the RAG index are built into the Docker image, so the service needs no
+disk of its own.
+
+### Fitting in 512 MB
+
+The free plan runs the app in a lean mode, set in `render.yaml` and by `scripts/deploy.py`:
+* no background RAGAS judging (the deterministic checks still run on every plan);
+* the int8 version of the reranker;
+* lighter ONNX settings;
+* one plan at a time (others wait in line).
+
+The image also fixes glibc's allocator thresholds, so large buffers go back to the system when
+they are freed. That one change took a plan's peak memory from 554 to 386 MiB.
+
+CI checks this on every push: `scripts/check_free_plan.py` runs a whole plan in the image at
+512 MB without swap and 0.1 CPU, and posts the result as the `free-plan` commit status. Latest
+result: ready in 58 s, a whole plan in 74 s (mock model), peak 428 MiB.
+
+At 0.1 CPU the search steps are slow. Estimate for a real plan with Groq: about 1.5–2 minutes (74 s of
+measured CPU work plus about 30 s of model calls), against about 40 s on a laptop. Search quality on the 78 labelled questions: 92.3% hit rate and MRR 0.902
+in lean mode, against 94.9% and 0.901 with the full settings.
 
 ## One command
 
@@ -34,7 +53,7 @@ of its own.
    git-ignored; never commit it.
 
    ```bash
-   HF_TOKEN=hf_...          # huggingface.co → Settings → Access Tokens → New token, type "Write"
+   RENDER_API_KEY=rnd_...   # dashboard.render.com → Account Settings → API Keys
    NEON_API_KEY=napi_...    # console.neon.tech → Account settings → API keys
    VERCEL_TOKEN=...         # vercel.com → Account Settings → Tokens
    ```
@@ -45,7 +64,7 @@ of its own.
 2. Run:
 
    ```bash
-   uv run --with huggingface_hub python scripts/deploy.py
+   uv run python scripts/deploy.py
    ```
 
 What it does, step by step. Running it again updates the same projects.
@@ -53,34 +72,34 @@ What it does, step by step. Running it again updates the same projects.
 1. **Neon:**
    * creates (or reuses) the project `quantfolio` in Singapore;
    * saves its connection string to `.env.deploy`.
-2. **Hugging Face:**
-   * creates (or reuses) the Docker Space `<your-account>/quantfolio-api`;
-   * stores the secrets (Neon URL, Groq and Langfuse keys, a generated approval key) as Space
-     secrets;
-   * sets the variables (CORS for the Vercel address, the public URL);
-   * uploads the backend files from git, then waits for the build (about 10 minutes the first
-     time) and for `/health`.
+2. **Render:**
+   * creates (or reuses) the free Docker web service `quantfolio-api` in Singapore, built from
+     the GitHub repository, which redeploys on every push to `main`;
+   * sets its environment: the Neon URL, the Groq and Langfuse keys, a generated approval key,
+     CORS for the Vercel address, and the lean settings;
+   * waits for the build (about 10 minutes the first time) and for `/health`.
 3. **Vercel:**
    * creates (or reuses) the project `quantfolio-agents` from `web/`;
-   * sets `NEXT_PUBLIC_API_URL` to the Space address;
+   * sets `NEXT_PUBLIC_API_URL` to the Render address;
    * deploys to production and prints the address.
 
-Each part can be run alone: `--only neon`, `--only space` or `--only vercel`.
+Each part can be run alone: `--only neon`, `--only render` or `--only vercel`.
 
 ## Checking it works
 
-* `https://<your-account>-quantfolio-api.hf.space/health` shows `"status":"ok"`, the LLM,
-  Langfuse on and `"rag_index_ready":true`.
+* `https://quantfolio-api.onrender.com/health` shows `"status":"ok"`, the LLM, Langfuse on and
+  `"rag_index_ready":true`. After 15 idle minutes, the first request takes about a minute while
+  the service wakes.
 * Open the Vercel address. The header says **Ready · groq**.
-* Run the GreenLeaf example. The decision box appears in about 20–40 seconds.
-* Approve the plan, then restart the Space (Settings → Restart). The run, its audit trail and
+* Run the GreenLeaf example. On the free plan, expect the decision box after about 1.5–2 minutes.
+* Approve the plan, then restart the service (Manual Deploy → Restart). The run, its audit trail and
   the new account value are still there, because they live in Neon.
 
 ## Security notes
 
 * No secret is in the repository:
   * the tokens are in `.env.deploy` (git-ignored);
-  * the app secrets are Space secrets, which the Space's public page does not show;
+  * the app secrets are Render environment variables, visible only to the account;
   * Vercel only holds the API address.
 * The browser calls the API directly, so no API key is sent from the browser; it would be visible
   to anyone. The API is protected by:
@@ -92,14 +111,14 @@ Each part can be run alone: `--only neon`, `--only space` or `--only vercel`.
 * Trades are paper trades; the broker never touches real money.
 * You can revoke the three deploy tokens after deploying. They are only needed to deploy again.
 
-## Alternative: Render instead of Hugging Face
+## Alternatives
 
-`render.yaml` describes the same backend as a Render web service. Render's free plan (0.1 CPU,
-512 MB, sleeps after 15 idle minutes) is very small for this app. On it, a plan takes minutes, so
-the file asks for the Standard plan (paid). Steps:
-1. **New > Blueprint**, then pick the repository;
-2. fill in `DATABASE_URL` and the keys;
-3. set `CORS_ORIGINS` to the Vercel address.
+* **Render from the dashboard:** **New > Blueprint** and pick the repository. `render.yaml` holds
+  the same service and lean settings. Fill in `DATABASE_URL`, the keys and `CORS_ORIGINS`.
+* **More speed:** a paid Render plan (Starter: 512 MB, 0.5 CPU; Standard: 2 GB, 1 CPU). There you
+  can drop the lean settings, so background judging and the full reranker are back.
+* **Hugging Face Spaces:** `--only space` deploys the same image as a Docker Space (2 vCPU,
+  16 GB). Docker Spaces need a PRO account since 2026.
 
 ## Running the same thing locally
 
