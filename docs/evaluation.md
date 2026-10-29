@@ -238,8 +238,10 @@ with the reranker against a threshold calibrated for the full-precision model, a
 scores on a slightly different scale. So 6 of 11 correctly cited claims failed, and the research
 answer fell back to quoting the filings. Recalibrating gave **1.045** for int8 (1.24 for fp32,
 reproduced exactly). It accepts 95% of supported claims and rejects 93.9% of same-company
-wrong-source claims, against 94.3% for fp32. The threshold is now looked up per reranker, and a
-model with no calibrated value refuses to start the gate rather than guess.
+wrong-source claims, against 94.3% for fp32. The threshold is now looked up per reranker. For a
+model with no calibrated value, the gate raises an error naming the calibration script rather than
+guessing. With the new value, the same live request got the model's answer (9 of 10 cited claims
+verified) in 65 s.
 
 ## What is not measured yet
 

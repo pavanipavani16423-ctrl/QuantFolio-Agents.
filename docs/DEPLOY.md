@@ -74,7 +74,9 @@ What it does, step by step. Running it again updates the same projects.
    * saves its connection string to `.env.deploy`.
 2. **Render:**
    * creates (or reuses) the free Docker web service `quantfolio-api` in Singapore, built from
-     the GitHub repository, which redeploys on every push to `main`;
+     the public GitHub repository. A repository linked by URL gets no push notifications, so run
+     `--only render` again to deploy new commits. For deploys on every push, connect Render's
+     GitHub app to the repository;
    * sets its environment: the Neon URL, the Groq and Langfuse keys, a generated approval key,
      CORS for the Vercel address, and the lean settings;
    * waits for the build (about 10 minutes the first time) and for `/health`.
