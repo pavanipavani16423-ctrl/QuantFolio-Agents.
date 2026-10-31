@@ -20,7 +20,7 @@ rules, for example:
 
 Every few months someone has to check those shares: read the companies' annual reports,
 decide what to buy and sell, check every rule, and explain the decision. That takes a person
-hours. This project does it in about 20 seconds, shows every reason, checks its own work at
+hours. This project does it in under a minute, shows every reason, checks its own work at
 every step, remembers what you taught it, and **waits for a person to approve** before anything
 is bought or sold.
 
@@ -240,7 +240,7 @@ Open the app (for example http://localhost:3000).
    sentence of the policy it comes from. Under the cards you see what the team remembers about
    the client.
 2. **What should the agents do?** Type a request, or click an example.
-3. Press **Start**. It takes about 20 seconds.
+3. Press **Start**. It takes about 40 seconds on a laptop, 1 to 2 minutes on the free server.
 
 **Adding your own client**
 

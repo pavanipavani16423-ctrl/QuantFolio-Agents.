@@ -5,16 +5,17 @@ a question in plain English. A team of AI agents researches the companies from t
 regulatory filings, reads the client's investment rules, picks the best portfolio under those
 rules, and explains the plan with sources. **Nothing is traded until a person approves.**
 
-[![ci](https://github.com/pavanipavani16423-ctrl/QuantFolio-Agents/actions/workflows/ci.yml/badge.svg)](https://github.com/pavanipavani16423-ctrl/QuantFolio-Agents/actions/workflows/ci.yml)
+[![ci](https://github.com/pavanipavani16423-ctrl/QuantFolio-Agents./actions/workflows/ci.yml/badge.svg)](https://github.com/pavanipavani16423-ctrl/QuantFolio-Agents./actions/workflows/ci.yml)
 
 | | |
 |---|---|
-| **Live demo** | _filled in after deployment_ |
+| **Live demo** | https://quantfolio-agents.vercel.app (backend: https://quantfolio-api-2qmc.onrender.com/health; free plan, sleeps after 15 idle minutes) |
+| **New here? Start with** | [docs/HANDOVER-GUIDE.html](docs/HANDOVER-GUIDE.html) (how to use, run and deploy it) · [docs/PROJECT-EXPLAINED.md](docs/PROJECT-EXPLAINED.md) (the whole project in plain words) · [docs/ARCHITECTURE-MAP.html](docs/ARCHITECTURE-MAP.html) (clickable architecture with a real run replay). Open the .html files in a browser. |
 | **Plain-English guide** | [docs/GUIDE.md](docs/GUIDE.md) · visual guide [docs/quantfolio-guide.html](docs/quantfolio-guide.html) (one file, open it in a browser) |
 | **How it is built** | [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md): every layer, design decisions, failure modes |
 | **Numbers** | [docs/evaluation.md](docs/evaluation.md) · [experiments/results/REPORT.md](experiments/results/REPORT.md) |
 | **Presenting it** | [docs/EXPLAIN.md](docs/EXPLAIN.md): pitch, demo script, interview questions |
-| **Deploying it** | [docs/DEPLOY.md](docs/DEPLOY.md): free tiers (Vercel, Hugging Face Spaces, Neon) |
+| **Deploying it** | [docs/DEPLOY.md](docs/DEPLOY.md): free tiers (Vercel, Render, Neon) |
 
 ![Home](docs/screenshots/guide-1-start.png)
 
@@ -28,8 +29,8 @@ Every quarter an advisor rebalances each client's portfolio. That means:
   exclude, how much risk;
 * choosing what to buy and sell, checking every rule, explaining the change, getting sign-off.
 
-It is slow, repetitive, rule-bound and audited. QuantFolio Agents does the routine part in about
-20 seconds, shows its reasons and sources, and leaves the decision to the advisor.
+It is slow, repetitive, rule-bound and audited. QuantFolio Agents does the routine part in under
+a minute, shows its reasons and sources, and leaves the decision to the advisor.
 
 ## Using it, with a real example
 
@@ -46,7 +47,7 @@ It is slow, repetitive, rule-bound and audited. QuantFolio Agents does the routi
 
 > Rebalance the GreenLeaf endowment. What climate or environmental risks do NVIDIA and NextEra disclose?
 
-**3. About 20 seconds later you get:**
+**3. Under a minute later (about 40 s on a laptop, 1–2 minutes on the free server) you get:**
 
 * **A research report.** A summary, then one section per company: key figures taken from the
   filings (revenue, profit, margin), key points, risks, and what the reports do not cover.
@@ -169,15 +170,15 @@ wrong passage of the same company rejected.
   for it. It can be sampled (`ONLINE_EVALUATION_SAMPLE_RATE`).
 * **Every run** gets the deterministic checks.
 
-**Tests:** 96, each run on SQLite and on Postgres in CI, plus a Docker build that is started and
-checked.
+**Tests:** 98, each run on SQLite and on Postgres in CI, plus a Docker build that runs a whole plan
+within 512 MB and 0.1 CPU, like the free server.
 
 ## Run it on your computer
 
 You need Python 3.11 with [uv](https://docs.astral.sh/uv/) and Node 20+.
 
 ```bash
-git clone https://github.com/pavanipavani16423-ctrl/QuantFolio-Agents.git
+git clone https://github.com/pavanipavani16423-ctrl/QuantFolio-Agents..git QuantFolio-Agents   # the repository name ends with a dot
 cd QuantFolio-Agents
 uv sync
 cp .env.example .env          # add GROQ_API_KEY (free at console.groq.com) and, optionally, Langfuse keys
@@ -191,7 +192,7 @@ Without keys it still runs, on rule-based fallbacks, and the UI says so. With Do
 the UI.
 
 ```bash
-uv run pytest                              # 96 tests, offline
+uv run pytest                              # 98 tests, offline
 uv run python scripts/run_evals.py         # guardrails, citation gate, retrieval -> REPORT.md
 ```
 
@@ -200,13 +201,14 @@ uv run python scripts/run_evals.py         # guardrails, citation gate, retrieva
 | Part | Free host | |
 |---|---|---|
 | UI (`web/`) | **Vercel** (Hobby) | Next.js |
-| API and A2A agents | **Hugging Face Spaces** (free CPU: 2 vCPU, 16 GB) | the Docker image, with the models and index built in |
+| API and A2A agents | **Render** (free: 512 MB, 0.1 CPU, lean mode) | the Docker image, with the models and index built in |
 | Database | **Neon** (free) | Postgres for runs, memory, audit, paused runs, the broker ledger and added clients |
 
 One command does all three, once the three tokens are in `.env.deploy`:
 
 ```bash
-uv run --with huggingface_hub python scripts/deploy.py
+uv run python scripts/deploy.py                  # everything
+uv run python scripts/deploy.py --only render    # deploy new backend code (Render doesn't deploy pushes by itself)
 ```
 
 Step by step, and what each free tier means (sleeping, limits): [docs/DEPLOY.md](docs/DEPLOY.md).
